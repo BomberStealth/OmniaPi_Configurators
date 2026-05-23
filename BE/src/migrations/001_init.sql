@@ -29,6 +29,6 @@ CREATE TABLE IF NOT EXISTS ftv_calcs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Default admin user: admin@omniapi.com / admin123
--- bcrypt hash of 'admin123' with 10 rounds
+-- bcrypt hash of 'admin123' with 10 rounds (generated with bcryptjs)
 INSERT IGNORE INTO users (email, password_hash, role) VALUES
-  ('admin@omniapi.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'admin');
+  ('admin@omniapi.com', '$2a$10$jMT6FORFME3k0FpyR84crOeDGnvduIpY4qhFCsqTRR4hPAfN4Ob5S', 'admin');
