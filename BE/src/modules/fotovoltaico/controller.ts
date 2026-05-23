@@ -12,7 +12,7 @@ export async function list(req: AuthRequest, res: Response): Promise<void> {
 }
 
 export async function get(req: AuthRequest, res: Response): Promise<void> {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params['id'] as string);
   if (isNaN(id)) { res.status(400).json({ message: 'ID non valido' }); return; }
   try {
     const calc = await service.getCalc(id, req.user!.userId);
@@ -47,7 +47,7 @@ export async function save(req: AuthRequest, res: Response): Promise<void> {
 }
 
 export async function remove(req: AuthRequest, res: Response): Promise<void> {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params['id'] as string);
   if (isNaN(id)) { res.status(400).json({ message: 'ID non valido' }); return; }
   try {
     const ok = await service.deleteCalc(id, req.user!.userId);
