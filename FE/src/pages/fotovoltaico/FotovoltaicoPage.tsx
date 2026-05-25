@@ -142,7 +142,7 @@ export default function FotovoltaicoPage() {
         </div>
 
         {/* Grid */}
-        <div className="card ftv-section">
+        <div className="card ftv-section ftv-grid-card">
           <PanelGrid
             orient={orient}
             gridRows={gridRows}

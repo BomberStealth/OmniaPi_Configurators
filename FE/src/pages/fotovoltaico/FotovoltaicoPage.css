@@ -19,6 +19,11 @@
   /* inherits .card styles from index.css */
 }
 
+.ftv-grid-card {
+  align-self: flex-start;
+  width: fit-content;
+}
+
 .ftv-btn-row {
   display: flex;
   gap: 12px;
