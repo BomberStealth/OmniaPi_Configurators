@@ -1,7 +1,7 @@
 .macro-preview {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(52,152,219,0.25);
-  border-radius: 10px;
+  background: var(--glass);
+  border: 1px solid rgba(52,152,219,0.2);
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
@@ -12,14 +12,14 @@
   flex-wrap: wrap;
   gap: 10px;
   padding: 12px 16px;
-  background: rgba(52,152,219,0.06);
-  border-bottom: 1px solid rgba(52,152,219,0.15);
+  background: rgba(52,152,219,0.05);
+  border-bottom: 1px solid rgba(52,152,219,0.12);
 }
 
 .macro-preview-title {
   font-size: 13px;
   font-weight: 700;
-  color: #8892a4;
+  color: var(--text-muted);
 }
 
 .macro-info {
@@ -36,14 +36,14 @@
 .macro-filename {
   font-size: 12px;
   font-family: 'JetBrains Mono', monospace;
-  color: #8892a4;
+  color: var(--text-muted);
 }
 
 .macro-content {
   padding: 14px 16px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  color: #8892a4;
+  color: var(--text-muted);
   white-space: pre;
   overflow-x: auto;
   max-height: 240px;

@@ -1,22 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --bg:        #0d1117;
-  --surface:   #161b22;
-  --border:    rgba(255, 255, 255, 0.08);
-  --accent:    #f0983a;
-  --accent-dim: rgba(240, 152, 58, 0.15);
-  --accent-glow: rgba(240, 152, 58, 0.3);
-  --text:      #e6edf3;
-  --text-muted: #8892a4;
-  --success:   #2ecc71;
-  --danger:    #e74c3c;
-  --danger-dim: rgba(231, 76, 60, 0.08);
-  --danger-border: rgba(231, 76, 60, 0.25);
-  --radius:    12px;
-  --radius-sm: 8px;
-  --glass:     rgba(255, 255, 255, 0.03);
-  --glass-hover: rgba(255, 255, 255, 0.06);
+  --bg:           #0a0a0c;
+  --surface:      #1e1c18;
+  --surface-2:    #262420;
+  --border:       rgba(240, 152, 58, 0.12);
+  --border-hover: rgba(240, 152, 58, 0.32);
+  --accent:       #f0983a;
+  --accent-dim:   rgba(240, 152, 58, 0.12);
+  --accent-glow:  rgba(240, 152, 58, 0.25);
+  --text:         #f0ece4;
+  --text-secondary: rgba(240, 236, 228, 0.75);
+  --text-muted:   rgba(240, 236, 228, 0.45);
+  --success:      #10b981;
+  --danger:       #ef4444;
+  --danger-dim:   rgba(239, 68, 68, 0.08);
+  --danger-border: rgba(239, 68, 68, 0.25);
+  --radius:       16px;
+  --radius-sm:    12px;
+  --radius-xs:    8px;
+  --glass:        rgba(255, 248, 235, 0.03);
+  --glass-hover:  rgba(255, 248, 235, 0.06);
+  --card-gradient: linear-gradient(165deg, #2a2722 0%, #1e1c18 50%, #1a1816 100%);
+  --shadow-card:  0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-lit:   0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -25,27 +33,35 @@ html, body, #root {
   height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background:
+    radial-gradient(ellipse 80% 40% at 50% -5%, rgba(240,152,58,0.07) 0%, transparent 60%),
+    linear-gradient(to bottom, #12100e 0%, #0a0a0c 100%);
+  min-height: 100vh;
 }
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 button {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   cursor: pointer;
   border: none;
   outline: none;
 }
 
 input, textarea, select {
-  font-family: 'Outfit', sans-serif;
-  background: rgba(255,255,255,0.04);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: rgba(255,248,235,0.04);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
   color: var(--text);
   padding: 8px 12px;
   font-size: 14px;
@@ -55,13 +71,14 @@ input, textarea, select {
 
 input:focus, textarea:focus, select:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+::-webkit-scrollbar-thumb { background: rgba(240,152,58,0.2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(240,152,58,0.4); }
 
 /* ── Layout ── */
 .page { min-height: 100vh; display: flex; flex-direction: column; }
@@ -75,7 +92,7 @@ input:focus, textarea:focus, select:focus {
 
 /* ── Header ── */
 .app-header {
-  background: rgba(22, 27, 34, 0.95);
+  background: rgba(26, 24, 20, 0.95);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   padding: 14px 24px;
@@ -85,11 +102,10 @@ input:focus, textarea:focus, select:focus {
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.4);
 }
 
-.app-header-icon {
-  font-size: 22px;
-}
+.app-header-icon { font-size: 22px; }
 
 .app-header-title {
   font-size: 17px;
@@ -111,15 +127,29 @@ input:focus, textarea:focus, select:focus {
 
 /* ── Card / Glass ── */
 .card {
-  background: var(--glass);
+  background: var(--card-gradient);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px;
+  box-shadow: var(--shadow-lit);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 25%; right: 25%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(240,152,58,0.25), transparent);
+  pointer-events: none;
 }
 
 .card-hover:hover {
-  background: var(--glass-hover);
-  border-color: rgba(255,255,255,0.14);
+  border-color: var(--border-hover);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  transform: translateY(-1px);
+  transition: all 0.2s;
 }
 
 /* ── Buttons ── */
@@ -138,9 +168,14 @@ input:focus, textarea:focus, select:focus {
 .btn:active { transform: translateY(0); }
 
 .btn-primary {
-  background: linear-gradient(90deg, #f7941d, #f15a24);
-  color: #fff;
+  background: linear-gradient(135deg, #f7941d, #f15a24);
+  color: #0a0a0c;
+  font-weight: 700;
   box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 28px rgba(240,152,58,0.45);
 }
 
 .btn-secondary {
@@ -149,42 +184,37 @@ input:focus, textarea:focus, select:focus {
   border: 1px solid var(--border);
 }
 
-.btn-secondary:hover {
-  border-color: rgba(255,255,255,0.2);
-}
+.btn-secondary:hover { border-color: var(--border-hover); }
 
 .btn-blue {
-  background: linear-gradient(90deg, #3498db, #2980b9);
+  background: linear-gradient(135deg, #3498db, #2980b9);
   color: #fff;
   box-shadow: 0 4px 20px rgba(52,152,219,0.3);
 }
 
 .btn-success {
-  background: linear-gradient(90deg, #2ecc71, #27ae60);
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
   color: #fff;
   box-shadow: 0 4px 20px rgba(46,204,113,0.3);
 }
 
 .btn-danger {
-  background: rgba(231,76,60,0.15);
+  background: var(--danger-dim);
   color: var(--danger);
-  border: 1px solid rgba(231,76,60,0.3);
+  border: 1px solid var(--danger-border);
 }
 
-.btn-sm {
-  padding: 6px 14px;
-  font-size: 13px;
-}
+.btn-sm { padding: 6px 14px; font-size: 13px; }
 
 .btn-icon {
   padding: 8px;
   background: var(--glass-hover);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
   color: var(--text-muted);
   transition: color 0.2s, border-color 0.2s;
 }
-.btn-icon:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+.btn-icon:hover { color: var(--text); border-color: var(--border-hover); }
 
 /* ── Badge ── */
 .badge {
@@ -210,7 +240,7 @@ input:focus, textarea:focus, select:focus {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: #1c2128;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 12px 20px;
@@ -230,7 +260,7 @@ input:focus, textarea:focus, select:focus {
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0,0,0,0.75);
   backdrop-filter: blur(4px);
   z-index: 200;
   display: flex;
@@ -240,7 +270,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .modal {
-  background: var(--surface);
+  background: var(--card-gradient);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   width: 100%;
@@ -248,7 +278,18 @@ input:focus, textarea:focus, select:focus {
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+  position: relative;
+  overflow: hidden;
+}
+
+.modal::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 25%; right: 25%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(240,152,58,0.3), transparent);
+  pointer-events: none;
 }
 
 .modal-header {
@@ -259,10 +300,7 @@ input:focus, textarea:focus, select:focus {
   justify-content: space-between;
 }
 
-.modal-title {
-  font-size: 16px;
-  font-weight: 700;
-}
+.modal-title { font-size: 16px; font-weight: 700; }
 
 .modal-body {
   padding: 20px 24px;
@@ -284,13 +322,12 @@ input:focus, textarea:focus, select:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse at 50% 0%, rgba(240,152,58,0.06) 0%, transparent 60%), var(--bg);
 }
 
 .login-card {
   width: 100%;
   max-width: 380px;
-  background: var(--surface);
+  background: var(--card-gradient);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 36px 32px;
@@ -317,7 +354,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .home-tool-card {
-  background: var(--glass);
+  background: var(--card-gradient);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 24px;
@@ -325,13 +362,25 @@ input:focus, textarea:focus, select:focus {
   flex-direction: column;
   gap: 10px;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+}
+
+.home-tool-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 25%; right: 25%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(240,152,58,0.2), transparent);
+  pointer-events: none;
 }
 
 .home-tool-card:hover {
-  background: var(--glass-hover);
-  border-color: rgba(240,152,58,0.3);
+  border-color: var(--border-hover);
   transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
 }
 
 .home-tool-icon { font-size: 28px; }
@@ -339,7 +388,4 @@ input:focus, textarea:focus, select:focus {
 .home-tool-desc  { font-size: 13px; color: var(--text-muted); }
 
 /* ── Mono text ── */
-.mono {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-}
+.mono { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
