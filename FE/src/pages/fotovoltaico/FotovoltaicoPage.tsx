@@ -13,6 +13,8 @@ import MacroPreview from './components/MacroPreview';
 import SettingsModal from './components/SettingsModal';
 import './FotovoltaicoPage.css';
 
+const VERSION = 'v1.1.0';
+
 function showToast(msg: string) {
   const existing = document.querySelector('.toast');
   if (existing) existing.remove();
@@ -114,7 +116,10 @@ export default function FotovoltaicoPage() {
         <button className="btn-icon" onClick={() => navigate('/')}>←</button>
         <span className="app-header-icon">☀</span>
         <div>
-          <div className="app-header-title">Preventivatore Struttura FTV</div>
+          <div className="app-header-title">
+            Preventivatore Struttura FTV
+            <span className="ftv-version">{VERSION}</span>
+          </div>
           <div className="app-header-sub">Calcolo materiali + generazione macro AS400</div>
         </div>
         <div className="app-header-right">
