@@ -23,6 +23,12 @@ const TOOLS: Tool[] = [
     category: 'Energia', color: '#f0983a', status: 'active',
   },
   {
+    id: 'western', path: '/western', icon: '🔋',
+    title: 'Configuratore Western & Co',
+    desc: 'Configurazione inverter fotovoltaici mono e trifase, on-grid e ibridi con accumulo, macro AS400.',
+    category: 'Energia', color: '#f5a623', status: 'active',
+  },
+  {
     id: 'elettrico', path: null, icon: '⚡',
     title: 'Preventivatore Elettrico',
     desc: 'Calcolo materiale per impianti elettrici civili e industriali, quadri e dorsali.',
@@ -59,14 +65,10 @@ export default function Home() {
   const session = getSession();
   const activeCount = TOOLS.filter(t => t.status === 'active').length;
 
-  const handleLogout = () => {
-    logout();
-    window.location.reload();
-  };
+  const handleLogout = () => { logout(); window.location.reload(); };
 
   return (
     <div className="page home-page">
-      {/* Header */}
       <header className="app-header">
         <span className="app-header-icon">⚙</span>
         <div>
@@ -81,15 +83,12 @@ export default function Home() {
               <button className="btn btn-secondary btn-sm" onClick={handleLogout}>Esci</button>
             </div>
           ) : (
-            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/login')}>
-              Accedi
-            </button>
+            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/login')}>Accedi</button>
           )}
         </div>
       </header>
 
       <div className="container">
-        {/* Hero */}
         <section className="home-hero">
           <div className="home-hero-eyebrow">OmniaPi · Suite</div>
           <h1 className="home-hero-title">Configuratori &amp;<br/>Preventivatori</h1>
@@ -105,7 +104,6 @@ export default function Home() {
           <div className="home-hero-deco">⚙</div>
         </section>
 
-        {/* Grid */}
         <div className="home-section-head">
           <span className="home-section-label">Tutti gli strumenti</span>
           <span className="home-section-count">{TOOLS.length} disponibili</span>
@@ -119,7 +117,6 @@ export default function Home() {
               style={{ '--tc': tool.color, animationDelay: `${i * 55}ms` } as React.CSSProperties}
               onClick={() => { if (tool.path) navigate(tool.path); }}
             >
-              {/* accent top stripe via ::after */}
               <div className="tc-head">
                 <div className="tc-icon" style={{
                   background: `${tool.color}18`,
@@ -131,10 +128,8 @@ export default function Home() {
                   {tool.status === 'active' ? 'Attivo' : 'In sviluppo'}
                 </span>
               </div>
-
               <div className="tc-title">{tool.title}</div>
               <div className="tc-desc">{tool.desc}</div>
-
               <div className="tc-foot">
                 <span className="tc-category" style={{ color: tool.color }}>{tool.category}</span>
                 {tool.status === 'active' && (

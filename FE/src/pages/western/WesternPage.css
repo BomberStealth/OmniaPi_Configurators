@@ -1,0 +1,199 @@
+.wes-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.wes-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 28px 20px;
+  width: 100%;
+}
+
+/* Config card */
+.wes-config-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.wes-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.wes-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 130px;
+  flex-shrink: 0;
+}
+
+.wes-btn-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.wes-opt-btn {
+  padding: 9px 20px;
+  border-radius: var(--radius-xs);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--glass-hover);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+
+.wes-opt-btn:hover {
+  border-color: var(--border-hover);
+  color: var(--text);
+}
+
+.wes-opt-btn.active {
+  background: var(--accent-dim);
+  border-color: rgba(240,152,58,0.55);
+  color: var(--accent);
+  font-weight: 700;
+  box-shadow: 0 0 0 1px rgba(240,152,58,0.15);
+}
+
+.wes-select {
+  min-width: 230px;
+  background-color: #1e1c18;
+  color: #f0ece4;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 9px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.wes-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+  outline: none;
+}
+
+.wes-select option {
+  background-color: #1e1c18;
+  color: #f0ece4;
+}
+
+/* Summary chip */
+.wes-summary {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid rgba(240,152,58,0.2);
+  border-radius: 99px;
+  padding: 5px 14px;
+  width: fit-content;
+  letter-spacing: 0.02em;
+}
+
+/* Calc row */
+.wes-calc-row {
+  display: flex;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.wes-calc-btn {
+  min-width: 200px;
+  justify-content: center;
+}
+
+.wes-calc-btn.done {
+  background: linear-gradient(135deg, #27ae60, #1e8449);
+  box-shadow: 0 4px 20px rgba(39,174,96,0.28);
+}
+
+.wes-calc-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Results */
+.wes-results-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.wes-warning {
+  padding: 11px 16px;
+  background: var(--danger-dim);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-xs);
+  font-size: 13px;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.wes-table {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.wes-t-head, .wes-t-row {
+  display: grid;
+  grid-template-columns: 60px 130px 1fr 56px;
+  padding: 10px 16px;
+  align-items: center;
+  gap: 0;
+}
+
+.wes-t-head {
+  background: rgba(240,152,58,0.05);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.wes-t-row {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+
+.wes-t-row:last-child { border-bottom: none; }
+.wes-t-row:hover { background: var(--glass-hover); }
+
+.wt-prec  { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+.wt-code  { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text); }
+.wt-desc  { padding: 0 10px; }
+.wt-qty   { text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--accent); }
+
+.wt-v-prec { font-weight: 700; }
+.wt-v-code { font-weight: 500; }
+.wt-v-desc { font-size: 13px; color: var(--text); }
+.wt-v-note { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.wes-footer {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--text-muted);
+  padding-top: 2px;
+}
+
+.wes-footer strong { color: var(--accent); font-size: 16px; margin-left: 6px; }
