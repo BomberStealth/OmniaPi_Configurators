@@ -164,10 +164,10 @@
 
 .wes-t-head, .wes-t-row {
   display: grid;
-  grid-template-columns: 60px 130px 1fr 56px;
+  grid-template-columns: 52px 90px 72px 1fr 48px;
   padding: 10px 16px;
   align-items: center;
-  gap: 0;
+  gap: 8px;
 }
 
 .wes-t-head {
@@ -188,15 +188,18 @@
 .wes-t-row:last-child { border-bottom: none; }
 .wes-t-row:hover { background: var(--glass-hover); }
 
-.wt-prec  { font-size: 12px; font-weight: 700; color: var(--text-muted); }
-.wt-code  { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text); }
-.wt-desc  { padding: 0 10px; }
-.wt-qty   { text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--accent); }
+.wt-prec   { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+.wt-codint { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text); }
+.wt-art    { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+.wt-desc   { padding: 0 10px; }
+.wt-qty    { text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--accent); }
 
-.wt-v-prec { font-weight: 700; }
-.wt-v-code { font-weight: 500; }
-.wt-v-desc { font-size: 13px; color: var(--text); }
-.wt-v-note { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.wt-v-prec   { font-weight: 700; }
+.wt-v-codint { font-weight: 500; }
+.wt-v-art    { font-size: 11px; color: var(--text-muted); }
+.wt-v-desc   { font-size: 13px; color: var(--text); }
+.wt-v-note   { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.wt-v-qty    { }
 
 .wes-footer {
   display: flex;
@@ -207,3 +210,33 @@
 }
 
 .wes-footer strong { color: var(--accent); font-size: 16px; margin-left: 6px; }
+
+/* CT/Meter checkbox */
+.wes-meter-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.wes-meter-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.wes-meter-included {
+  color: var(--text-muted);
+  font-style: italic;
+  cursor: default;
+}
+
+.wes-meter-included input[type="checkbox"] {
+  cursor: default;
+  opacity: 0.6;
+}

@@ -9,14 +9,13 @@ interface Props {
   onClose: () => void;
 }
 
-// Gruppi ordinati: prima per fase+tipo, poi per serie all'interno
 const GROUPS = [
-  { label: 'Monofase — On-grid — W-HPK (1 MPPT)',          phase: 'mono', wtype: 'ongrid',  series: 'W-HPK' },
-  { label: 'Monofase — On-grid — W-HPS PRO (2 MPPT)',       phase: 'mono', wtype: 'ongrid',  series: 'W-HPS' },
-  { label: 'Monofase — Ibrido — W-HES (bassa tensione 48V)', phase: 'mono', wtype: 'hybrid', series: 'W-HES' },
-  { label: 'Monofase — Ibrido — W-HHS (alta tensione)',      phase: 'mono', wtype: 'hybrid', series: 'W-HHS' },
-  { label: 'Trifase — On-grid — W-HPT',                     phase: 'tri',  wtype: 'ongrid',  series: 'W-HPT' },
-  { label: 'Trifase — Ibrido — W-HHT (alta tensione)',       phase: 'tri',  wtype: 'hybrid', series: 'W-HHT' },
+  { label: 'Monofase — Di Stringa — W-HPK (1 MPPT)',          phase: 'mono', wtype: 'ongrid',  series: 'W-HPK' },
+  { label: 'Monofase — Di Stringa — W-HPS PRO (2 MPPT)',       phase: 'mono', wtype: 'ongrid',  series: 'W-HPS' },
+  { label: 'Monofase — Ibrido — W-HES (bassa tensione 48V)',   phase: 'mono', wtype: 'hybrid',  series: 'W-HES' },
+  { label: 'Monofase — Ibrido — W-HHS (alta tensione)',        phase: 'mono', wtype: 'hybrid',  series: 'W-HHS' },
+  { label: 'Trifase — Di Stringa — W-HPT',                     phase: 'tri',  wtype: 'ongrid',  series: 'W-HPT' },
+  { label: 'Trifase — Ibrido — W-HHT (alta tensione)',         phase: 'tri',  wtype: 'hybrid',  series: 'W-HHT' },
 ] as const;
 
 export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
@@ -34,6 +33,12 @@ export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
     setLocal(p => ({
       ...p,
       batteries: p.batteries.map(b => b.id === id ? { ...b, [field]: val } : b),
+    }));
+
+  const setAcc = (id: string, field: 'prefix' | 'code' | 'catalogCode', val: string) =>
+    setLocal(p => ({
+      ...p,
+      accessories: p.accessories.map(a => a.id === id ? { ...a, [field]: val } : a),
     }));
 
   const handleReset = () => {
@@ -60,7 +65,7 @@ export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
               <div key={grp.label} className="wset-section">
                 <div className="wset-section-title">{grp.label}</div>
                 <div className="wset-row wset-header-row">
-                  <span>Modello</span><span>Prec.</span><span>Codice WHi</span>
+                  <span>Modello</span><span>Prec.</span><span>Cod. Int.</span><span>WHi</span>
                 </div>
                 {items.map(inv => (
                   <div key={inv.id} className="wset-row">
@@ -72,7 +77,9 @@ export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
                       placeholder="prec."
                       onChange={e => setInv(inv.id, 'prefix', e.target.value)} />
                     <input className="wset-input" value={inv.code}
+                      placeholder="cod. interno"
                       onChange={e => setInv(inv.id, 'code', e.target.value)} />
+                    <span className="wset-catalog-ref">{inv.catalogCode || '—'}</span>
                   </div>
                 ))}
               </div>
@@ -83,7 +90,7 @@ export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
           <div className="wset-section">
             <div className="wset-section-title">Batterie (modulo × N)</div>
             <div className="wset-row wset-header-row">
-              <span>Modello</span><span>Prec.</span><span>Codice WHi</span>
+              <span>Modello</span><span>Prec.</span><span>Cod. Int.</span><span>WHi</span>
             </div>
             {local.batteries.map(bat => (
               <div key={bat.id} className="wset-row">
@@ -98,14 +105,38 @@ export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
                   placeholder="prec."
                   onChange={e => setBat(bat.id, 'prefix', e.target.value)} />
                 <input className="wset-input" value={bat.code}
+                  placeholder="cod. interno"
                   onChange={e => setBat(bat.id, 'code', e.target.value)} />
+                <span className="wset-catalog-ref">{bat.catalogCode || '—'}</span>
               </div>
             ))}
             <div className="wset-note">
               ⚠ W-HP51100: codice 019090 da catalogo pag.25 (in grigio) — verificare con W&amp;Co
             </div>
-            <div className="wset-note" style={{marginTop: 4}}>
-              ⚠ Force-H3 FH10050: codice AS400 non presente nel datasheet — da inserire
+          </div>
+
+          {/* Accessori */}
+          <div className="wset-section">
+            <div className="wset-section-title">Accessori (BMS, CT/Meter)</div>
+            <div className="wset-row wset-header-row">
+              <span>Accessorio</span><span>Prec.</span><span>Cod. Int.</span><span>Articolo</span>
+            </div>
+            {local.accessories.map(acc => (
+              <div key={acc.id} className="wset-row">
+                <span className="wset-desc">{acc.label}</span>
+                <input className="wset-input wset-input-prec" value={acc.prefix}
+                  placeholder="prec."
+                  onChange={e => setAcc(acc.id, 'prefix', e.target.value)} />
+                <input className="wset-input" value={acc.code}
+                  placeholder="cod. interno"
+                  onChange={e => setAcc(acc.id, 'code', e.target.value)} />
+                <input className="wset-input" value={acc.catalogCode}
+                  placeholder="articolo"
+                  onChange={e => setAcc(acc.id, 'catalogCode', e.target.value)} />
+              </div>
+            ))}
+            <div className="wset-note">
+              ⚠ Force-H3 BMS e CT/Meter: codici articolo non disponibili — inserire manualmente
             </div>
           </div>
         </div>
