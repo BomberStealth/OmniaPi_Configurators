@@ -17,6 +17,9 @@ export default function PanelGrid({ orient, gridRows, gridCols, gridState, onTog
   const cW = isV ? 40 : 60;
   const cH = isV ? 60 : 40;
 
+  // Natural width of .panel-grid (padding*2 + cells + gaps + border*2)
+  const gridNaturalW = 16 + gridCols * cW + (gridCols - 1) * 4 + 2;
+
   const drag = useRef<{ type: 'right' | 'bottom' | 'corner'; sx: number; sy: number; sc: number; sr: number } | null>(null);
 
   const startDrag = useCallback((type: 'right' | 'bottom' | 'corner', e: React.MouseEvent | React.TouchEvent) => {
@@ -56,7 +59,7 @@ export default function PanelGrid({ orient, gridRows, gridCols, gridState, onTog
   const totalPanels = groups.reduce((s, g) => s + g.count, 0);
 
   return (
-    <div className="panel-grid-wrap">
+    <div className="panel-grid-wrap" style={{ maxWidth: gridNaturalW }}>
       <div className="panel-grid-outer">
         <div
           className="panel-grid"

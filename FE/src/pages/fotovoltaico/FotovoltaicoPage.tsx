@@ -13,7 +13,7 @@ import MacroPreview from './components/MacroPreview';
 import SettingsModal from './components/SettingsModal';
 import './FotovoltaicoPage.css';
 
-const VERSION = 'v1.4.1';
+const VERSION = 'v1.4.2';
 
 function showToast(msg: string) {
   const existing = document.querySelector('.toast');
