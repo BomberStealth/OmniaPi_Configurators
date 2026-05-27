@@ -22,11 +22,7 @@
   min-width: 100px;
 }
 
-.btn-group {
-  display: flex;
-  gap: 8px;
-}
-
+.btn-group { display: flex; gap: 8px; }
 .btn-group-wrap { flex-wrap: wrap; }
 
 .orient-btn,
@@ -90,13 +86,18 @@
   padding: 6px 10px;
   font-size: 13px;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background: var(--glass-hover);
+  background-color: #1e1c18;
   border: 1px solid var(--border);
   border-radius: var(--radius-xs);
-  color: var(--text);
+  color: #f0ece4;
   cursor: pointer;
   transition: border-color 0.15s;
   min-width: 170px;
+}
+
+.dim-select option {
+  background-color: #1e1c18;
+  color: #f0ece4;
 }
 
 .dim-select:focus {
@@ -131,10 +132,7 @@
   box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
-.dim-unit {
-  font-size: 11px;
-  color: var(--text-muted);
-}
+.dim-unit { font-size: 11px; color: var(--text-muted); }
 
 .info-bar {
   background: var(--glass);

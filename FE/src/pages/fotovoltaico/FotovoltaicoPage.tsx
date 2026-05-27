@@ -1,19 +1,19 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Orientation, StructType, GridState } from './utils/calculator';
-import { calcola, calcDimensions, getGroups } from './utils/calculator';
+import { calcola, getGroups } from './utils/calculator';
 import { loadCatalog } from './utils/catalog';
 import type { Catalog } from './utils/catalog';
 import { genMacro } from './utils/macroGenerator';
 import PanelGrid from './components/PanelGrid';
 import ControlBar from './components/ControlBar';
 import ResultsTable from './components/ResultsTable';
-import DimensionsBox from './components/DimensionsBox';
+import GridDiagram from './components/GridDiagram';
 import MacroPreview from './components/MacroPreview';
 import SettingsModal from './components/SettingsModal';
 import './FotovoltaicoPage.css';
 
-const VERSION = 'v1.2.0';
+const VERSION = 'v1.3.0';
 
 function showToast(msg: string) {
   const existing = document.querySelector('.toast');
@@ -105,13 +105,10 @@ export default function FotovoltaicoPage() {
     showToast('✅ ' + macro.filename);
   };
 
-  const dims = result ? calcDimensions(gridState, gridRows, gridCols, orient, panW, panH) : null;
-
   const avanzoText = result?.avanzoText ?? null;
 
   return (
     <div className="ftv-page">
-      {/* Header */}
       <div className="app-header">
         <button className="btn-icon" onClick={() => navigate('/')}>←</button>
         <span className="app-header-icon">☀</span>
@@ -130,35 +127,23 @@ export default function FotovoltaicoPage() {
       </div>
 
       <div className="ftv-body">
-        {/* Controls */}
         <div className="card ftv-section">
           <ControlBar
-            orient={orient}
-            struct={struct}
-            controvento={controvento}
-            panW={panW}
-            panH={panH}
-            onOrient={handleOrient}
-            onStruct={handleStruct}
-            onControvento={handleControvento}
+            orient={orient} struct={struct} controvento={controvento}
+            panW={panW} panH={panH}
+            onOrient={handleOrient} onStruct={handleStruct} onControvento={handleControvento}
             onPanW={v => { setPanW(v); clearResult(); }}
             onPanH={v => { setPanH(v); clearResult(); }}
           />
         </div>
 
-        {/* Grid */}
         <div className="card ftv-section ftv-grid-card">
           <PanelGrid
-            orient={orient}
-            gridRows={gridRows}
-            gridCols={gridCols}
-            gridState={gridState}
-            onToggleCell={handleToggleCell}
-            onResize={handleResize}
+            orient={orient} gridRows={gridRows} gridCols={gridCols}
+            gridState={gridState} onToggleCell={handleToggleCell} onResize={handleResize}
           />
         </div>
 
-        {/* Action buttons */}
         <div className="ftv-btn-row">
           <button
             className={`btn btn-primary ftv-calc-btn${calcDone ? ' done' : ''}`}
@@ -173,42 +158,33 @@ export default function FotovoltaicoPage() {
           )}
         </div>
 
-        {/* Avanzo bar */}
         {avanzoText && (
           <div className="avanzo-bar" dangerouslySetInnerHTML={{ __html: avanzoText }} />
         )}
 
-        {/* Results */}
         {result && (
           <div className="card ftv-section">
             <ResultsTable items={result.items} cat={catalog} />
           </div>
         )}
 
-        {/* Dimensions */}
-        {dims && (
-          <div className="ftv-section">
-            <DimensionsBox dims={dims} />
-          </div>
+        {result && (
+          <GridDiagram
+            gridState={gridState} gridRows={gridRows} gridCols={gridCols}
+            orient={orient} panW={panW} panH={panH}
+          />
         )}
 
-        {/* Macro preview */}
         {macroData && (
           <div className="ftv-section">
             <MacroPreview
-              xml={macroData.xml}
-              filename={macroData.filename}
-              previewInfo={macroData.previewInfo}
-              onDownload={() => {
-                downloadFile(macroData.xml, macroData.filename);
-                showToast('✅ ' + macroData.filename);
-              }}
+              xml={macroData.xml} filename={macroData.filename} previewInfo={macroData.previewInfo}
+              onDownload={() => { downloadFile(macroData.xml, macroData.filename); showToast('✅ ' + macroData.filename); }}
             />
           </div>
         )}
       </div>
 
-      {/* Settings modal */}
       {showSettings && (
         <SettingsModal
           catalog={catalog}
