@@ -11,9 +11,10 @@ import ResultsTable from './components/ResultsTable';
 import GridDiagram from './components/GridDiagram';
 import MacroPreview from './components/MacroPreview';
 import SettingsModal from './components/SettingsModal';
+import { getSession } from '../../auth';
 import './FotovoltaicoPage.css';
 
-const VERSION = 'v1.4.2';
+const VERSION = 'v1.5.0';
 
 function showToast(msg: string) {
   const existing = document.querySelector('.toast');
@@ -120,9 +121,11 @@ export default function FotovoltaicoPage() {
           <div className="app-header-sub">Calcolo materiali + generazione macro AS400</div>
         </div>
         <div className="app-header-right">
-          <button className="btn btn-secondary btn-sm" onClick={() => setShowSettings(true)}>
-            ⚙ Codici
-          </button>
+          {getSession() && (
+            <button className="btn btn-secondary btn-sm" onClick={() => setShowSettings(true)}>
+              ⚙ Codici
+            </button>
+          )}
         </div>
       </div>
 

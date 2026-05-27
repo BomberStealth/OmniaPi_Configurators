@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { login, getSession } from '../auth';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -9,23 +9,23 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (getSession()) navigate('/', { replace: true });
+  }, [navigate]);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    try {
-      const res = await axios.post('/api/configuratori/auth/login', { email, password });
-      localStorage.setItem('cfg_token', res.data.token);
-      navigate('/');
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message ?? 'Credenziali non valide');
-      } else {
-        setError('Errore di rete');
-      }
-    } finally {
+    setTimeout(() => {
+      const session = login(email, password);
       setLoading(false);
-    }
+      if (session) {
+        navigate('/', { replace: true });
+      } else {
+        setError('Email o password non validi');
+      }
+    }, 350);
   };
 
   return (
@@ -34,47 +34,32 @@ export default function Login() {
         <div className="login-logo">
           <span className="login-logo-icon">⚙</span>
           <div>
-            <div className="login-logo-title">Configuratori</div>
-            <div className="login-logo-sub">OmniaPi</div>
+            <div className="login-logo-title">OmniaPi</div>
+            <div className="login-logo-sub">Configuratori — Accesso riservato</div>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="form-group">
             <label className="form-label">Email</label>
-            <input
-              className="form-input"
-              type="email"
-              value={email}
+            <input className="form-input" type="email" value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="admin@omniapi.com"
-              required
-              autoFocus
-            />
+              placeholder="email@esempio.com" required autoFocus />
           </div>
-
           <div className="form-group">
             <label className="form-label">Password</label>
-            <input
-              className="form-input"
-              type="password"
-              value={password}
+            <input className="form-input" type="password" value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
+              placeholder="••••••••" required />
           </div>
-
           {error && (
-            <div style={{ color: '#e74c3c', fontSize: 13 }}>{error}</div>
+            <div style={{
+              background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)',
+              color: '#ef4444', borderRadius: 8, padding: '10px 14px', fontSize: 13, fontWeight: 500
+            }}>{error}</div>
           )}
-
-          <button
-            className="btn btn-primary"
-            type="submit"
-            disabled={loading}
-            style={{ justifyContent: 'center', marginTop: 4 }}
-          >
+          <button className="btn btn-primary" type="submit" disabled={loading}
+            style={{ justifyContent: 'center', marginTop: 4 }}>
             {loading ? 'Accesso in corso…' : 'Accedi'}
           </button>
         </form>
