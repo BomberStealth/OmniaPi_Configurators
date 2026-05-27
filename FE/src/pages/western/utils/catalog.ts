@@ -10,6 +10,7 @@ export interface InverterEntry {
   powerKw: number;
   mppt: number;
   battVoltage?: BattVoltage;
+  maxBattV?: number;   // tensione max batteria supportata (V); per calcolo max moduli serie
   label: string;
   prefix: string;
   code: string;
@@ -19,15 +20,33 @@ export interface InverterEntry {
 // Batteria modulare: qty = numero di moduli ordinati
 export interface BatteryEntry {
   id: string;
-  moduleKwh: number;
-  usableKwh: number;
-  nominalV: number;
+  moduleKwh: number;    // kWh per singolo modulo
+  usableKwh: number;    // kWh utilizzabili per modulo
+  nominalV: number;     // V nominale per modulo
   battVoltage: BattVoltage;
-  maxModules: number;
+  minModules: number;   // moduli minimi richiesti
+  maxModules: number;   // moduli massimi per gruppo
   label: string;
   prefix: string;
   code: string;
   desc: string;
+}
+
+// Calcola i moduli effettivi compatibili con un inverter
+// - bassa tensione (parallelo): la tensione non cambia con i moduli
+// - alta tensione (serie): tensione = moduli × nominalV
+export function effectiveModuleRange(
+  bat: BatteryEntry, inv: InverterEntry,
+): { min: number; max: number } {
+  if (!inv.maxBattV) return { min: bat.minModules, max: bat.maxModules };
+  if (bat.battVoltage === 'high') {
+    const maxBySeries = Math.floor(inv.maxBattV / bat.nominalV);
+    return { min: bat.minModules, max: Math.min(bat.maxModules, maxBySeries) };
+  }
+  // parallelo: tensione fissa = nominalV
+  return bat.nominalV <= inv.maxBattV
+    ? { min: bat.minModules, max: bat.maxModules }
+    : { min: 0, max: 0 };
 }
 
 export interface WCatalog {
@@ -38,9 +57,9 @@ export interface WCatalog {
 function inv(
   id: string, phase: Phase, wtype: WType, series: string,
   powerKw: number, mppt: number, label: string, code: string, desc: string,
-  battVoltage?: BattVoltage,
+  battVoltage?: BattVoltage, maxBattV?: number,
 ): InverterEntry {
-  return { id, phase, wtype, series, powerKw, mppt, battVoltage, label, prefix: '', code, desc };
+  return { id, phase, wtype, series, powerKw, mppt, battVoltage, maxBattV, label, prefix: '', code, desc };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -63,18 +82,18 @@ export const DEFAULT_CATALOG: WCatalog = {
     inv('w-hps-5kp',     'mono','ongrid','W-HPS',  5.0,  2, 'W-HPS-5KP',     '019743', 'INVERTER STRINGA MONO 5kW 2MPPT W-HPS-5KP'),
     inv('w-hps-6kp',     'mono','ongrid','W-HPS',  6.0,  2, 'W-HPS-6KP',     '019744', 'INVERTER STRINGA MONO 6kW 2MPPT W-HPS-6KP'),
 
-    // ── Monofase Ibrido — W-HES (bassa tensione 48V, comp. W-HP51100) — pag. 23 ──
-    inv('w-hes-3k',      'mono','hybrid','W-HES',  3.0,  2, 'W-HES-3K',      '019090', 'INVERTER IBRIDO MONO BT 3kW 2MPPT W-HES-3K',    'low'),
-    inv('w-hes-3.68k',   'mono','hybrid','W-HES',  3.68, 2, 'W-HES-3.68K',   '019091', 'INVERTER IBRIDO MONO BT 3.68kW 2MPPT W-HES-3.68K', 'low'),
-    inv('w-hes-4k',      'mono','hybrid','W-HES',  4.0,  2, 'W-HES-4K',      '019092', 'INVERTER IBRIDO MONO BT 4kW 2MPPT W-HES-4K',    'low'),
-    inv('w-hes-5k',      'mono','hybrid','W-HES',  5.0,  2, 'W-HES-5K',      '019093', 'INVERTER IBRIDO MONO BT 5kW 2MPPT W-HES-5K',    'low'),
-    inv('w-hes-6k',      'mono','hybrid','W-HES',  6.0,  2, 'W-HES-6K',      '019094', 'INVERTER IBRIDO MONO BT 6kW 2MPPT W-HES-6K',    'low'),
+    // ── Monofase Ibrido — W-HES (bassa tensione 40-60V, parallelo, comp. W-HP51100) — pag. 23 ──
+    inv('w-hes-3k',      'mono','hybrid','W-HES',  3.0,  2, 'W-HES-3K',      '019090', 'INVERTER IBRIDO MONO BT 3kW 2MPPT W-HES-3K',    'low',  60),
+    inv('w-hes-3.68k',   'mono','hybrid','W-HES',  3.68, 2, 'W-HES-3.68K',   '019091', 'INVERTER IBRIDO MONO BT 3.68kW 2MPPT W-HES-3.68K', 'low', 60),
+    inv('w-hes-4k',      'mono','hybrid','W-HES',  4.0,  2, 'W-HES-4K',      '019092', 'INVERTER IBRIDO MONO BT 4kW 2MPPT W-HES-4K',    'low',  60),
+    inv('w-hes-5k',      'mono','hybrid','W-HES',  5.0,  2, 'W-HES-5K',      '019093', 'INVERTER IBRIDO MONO BT 5kW 2MPPT W-HES-5K',    'low',  60),
+    inv('w-hes-6k',      'mono','hybrid','W-HES',  6.0,  2, 'W-HES-6K',      '019094', 'INVERTER IBRIDO MONO BT 6kW 2MPPT W-HES-6K',    'low',  60),
 
-    // ── Monofase Ibrido — W-HHS (alta tensione 80-480V) — pag. 27 ────────────
-    inv('w-hhs-3k',      'mono','hybrid','W-HHS',  3.0,  2, 'W-HHS-3K',      '018121', 'INVERTER IBRIDO MONO AT 3kW 2MPPT W-HHS-3K',    'high'),
-    inv('w-hhs-3.68k',   'mono','hybrid','W-HHS',  3.68, 2, 'W-HHS-3.68K',   '018122', 'INVERTER IBRIDO MONO AT 3.68kW 2MPPT W-HHS-3.68K', 'high'),
-    inv('w-hhs-5k',      'mono','hybrid','W-HHS',  5.0,  2, 'W-HHS-5K',      '018123', 'INVERTER IBRIDO MONO AT 5kW 2MPPT W-HHS-5K',    'high'),
-    inv('w-hhs-6k',      'mono','hybrid','W-HHS',  6.0,  2, 'W-HHS-6K',      '018124', 'INVERTER IBRIDO MONO AT 6kW 2MPPT W-HHS-6K',    'high'),
+    // ── Monofase Ibrido — W-HHS (alta tensione 80-480V, serie, comp. Force-H3 max 4 mod) — pag. 27 ──
+    inv('w-hhs-3k',      'mono','hybrid','W-HHS',  3.0,  2, 'W-HHS-3K',      '018121', 'INVERTER IBRIDO MONO AT 3kW 2MPPT W-HHS-3K',    'high', 480),
+    inv('w-hhs-3.68k',   'mono','hybrid','W-HHS',  3.68, 2, 'W-HHS-3.68K',   '018122', 'INVERTER IBRIDO MONO AT 3.68kW 2MPPT W-HHS-3.68K', 'high', 480),
+    inv('w-hhs-5k',      'mono','hybrid','W-HHS',  5.0,  2, 'W-HHS-5K',      '018123', 'INVERTER IBRIDO MONO AT 5kW 2MPPT W-HHS-5K',    'high', 480),
+    inv('w-hhs-6k',      'mono','hybrid','W-HHS',  6.0,  2, 'W-HHS-6K',      '018124', 'INVERTER IBRIDO MONO AT 6kW 2MPPT W-HHS-6K',    'high', 480),
 
     // ── Trifase On-grid — W-HPT PRO (2 MPPT, 3-15kW) — pag. 13 ─────────────
     inv('w-hpt-3kp',     'tri','ongrid','W-HPT',   3.0,  2, 'W-HPT-3KP',     '019796', 'INVERTER STRINGA TRI 3kW 2MPPT W-HPT-3KP'),
@@ -97,28 +116,46 @@ export const DEFAULT_CATALOG: WCatalog = {
     // ── Trifase On-grid — W-HPT (6 MPPT, 80kW) — pag. 19 ───────────────────
     inv('w-hpt-80k',     'tri','ongrid','W-HPT',  80.0,  6, 'W-HPT-80K',     '019357', 'INVERTER STRINGA TRI 80kW 6MPPT W-HPT-80K'),
 
-    // ── Trifase Ibrido — W-HHT (alta tensione 160-800V) — pag. 31 ───────────
-    inv('w-hht-5k',      'tri','hybrid','W-HHT',   5.0,  2, 'W-HHT-5K',      '018638', 'INVERTER IBRIDO TRI AT 5kW 2MPPT W-HHT-5K',    'high'),
-    inv('w-hht-6k',      'tri','hybrid','W-HHT',   6.0,  2, 'W-HHT-6K',      '018639', 'INVERTER IBRIDO TRI AT 6kW 2MPPT W-HHT-6K',    'high'),
-    inv('w-hht-8k',      'tri','hybrid','W-HHT',   8.0,  2, 'W-HHT-8K',      '018640', 'INVERTER IBRIDO TRI AT 8kW 2MPPT W-HHT-8K',    'high'),
-    inv('w-hht-10k',     'tri','hybrid','W-HHT',  10.0,  2, 'W-HHT-10K',     '018641', 'INVERTER IBRIDO TRI AT 10kW 2MPPT W-HHT-10K',  'high'),
+    // ── Trifase Ibrido — W-HHT (alta tensione 160-800V, serie, comp. Force-H3 max 7 mod) — pag. 31 ──
+    inv('w-hht-5k',      'tri','hybrid','W-HHT',   5.0,  2, 'W-HHT-5K',      '018638', 'INVERTER IBRIDO TRI AT 5kW 2MPPT W-HHT-5K',    'high', 800),
+    inv('w-hht-6k',      'tri','hybrid','W-HHT',   6.0,  2, 'W-HHT-6K',      '018639', 'INVERTER IBRIDO TRI AT 6kW 2MPPT W-HHT-6K',    'high', 800),
+    inv('w-hht-8k',      'tri','hybrid','W-HHT',   8.0,  2, 'W-HHT-8K',      '018640', 'INVERTER IBRIDO TRI AT 8kW 2MPPT W-HHT-8K',    'high', 800),
+    inv('w-hht-10k',     'tri','hybrid','W-HHT',  10.0,  2, 'W-HHT-10K',     '018641', 'INVERTER IBRIDO TRI AT 10kW 2MPPT W-HHT-10K',  'high', 800),
   ],
 
   batteries: [
-    // ── W-HP51100 — pag. 25 ──────────────────────────────────────────────────
-    // Nota: il catalogo riporta codice 019090 (grigio) — verificare con W&Co se corretto
-    // (coincide con il codice del W-HES-3K; possibile errore tipografico nel catalogo)
+    // ── W-HP51100 — bassa tensione (parallelo), comp. W-HES — pag. 25 ────────
+    // Nota: codice 019090 estratto dal catalogo (grigio) — verificare con W&Co
+    // (coincide con W-HES-3K; possibile errore tipografico nel catalogo)
     {
       id: 'w-hp51100',
       moduleKwh: 5.12,
       usableKwh: 4.608,
       nominalV: 51.2,
-      battVoltage: 'low',
+      battVoltage: 'low' as const,
+      minModules: 1,
       maxModules: 16,
       label: 'W-HP51100',
       prefix: '',
       code: '019090',
       desc: 'MODULO BATTERIA LiFePO4 5.12kWh 51.2V W-HP51100',
+    },
+    // ── Force-H3 FH10050 — alta tensione (serie), comp. W-HHS / W-HHT ────────
+    // W-HHS (max 480V): max 4 moduli × 102.4V = 409.6V
+    // W-HHT (max 800V): max 7 moduli × 102.4V = 716.8V
+    // Codice AS400 da inserire — fornire a Western & Co
+    {
+      id: 'force-h3-fh10050',
+      moduleKwh: 5.12,
+      usableKwh: 4.845,   // 9.69kWh / 2 mod → 4.845 per modulo
+      nominalV: 102.4,
+      battVoltage: 'high' as const,
+      minModules: 2,
+      maxModules: 7,
+      label: 'Force-H3 FH10050',
+      prefix: '',
+      code: '',
+      desc: 'MODULO BATTERIA AT LiFePO4 5.12kWh 102.4V FORCE-H3 FH10050',
     },
   ],
 };

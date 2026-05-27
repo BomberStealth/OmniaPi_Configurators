@@ -89,7 +89,10 @@ export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
               <div key={bat.id} className="wset-row">
                 <span className="wset-desc">
                   {bat.label}
-                  <span className="wset-kw"> — {bat.moduleKwh} kWh/mod · max {bat.maxModules} mod</span>
+                  <span className="wset-kw">
+                    {' '}— {bat.moduleKwh} kWh/mod · {bat.minModules}–{bat.maxModules} mod
+                    {bat.battVoltage === 'high' ? ` (${(bat.minModules * bat.nominalV).toFixed(0)}–${(bat.maxModules * bat.nominalV).toFixed(0)}V)` : ''}
+                  </span>
                 </span>
                 <input className="wset-input wset-input-prec" value={bat.prefix}
                   placeholder="prec."
@@ -99,7 +102,10 @@ export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
               </div>
             ))}
             <div className="wset-note">
-              ⚠ Il codice della batteria W-HP51100 (pag.25 catalogo) va verificato con Western &amp; Co
+              ⚠ W-HP51100: codice 019090 da catalogo pag.25 (in grigio) — verificare con W&amp;Co
+            </div>
+            <div className="wset-note" style={{marginTop: 4}}>
+              ⚠ Force-H3 FH10050: codice AS400 non presente nel datasheet — da inserire
             </div>
           </div>
         </div>

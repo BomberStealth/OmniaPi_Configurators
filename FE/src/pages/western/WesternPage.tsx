@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSession } from '../../auth';
 import type { Phase, WType, WCatalog, BatteryEntry } from './utils/catalog';
-import { loadCatalog, saveCatalog } from './utils/catalog';
+import { loadCatalog, saveCatalog, effectiveModuleRange } from './utils/catalog';
 import { calcola } from './utils/calculator';
 import type { WResultItem } from './utils/calculator';
 import { genMacro } from './utils/macroGenerator';
@@ -117,18 +117,29 @@ export default function WesternPage() {
     .filter(i => i.phase === phase && i.wtype === wtype)
     .sort((a, b) => a.powerKw - b.powerKw || a.label.localeCompare(b.label));
 
-  // Opzioni moduli batteria (1..maxModules)
-  const batteryModuleOptions = compatBattery
-    ? Array.from({ length: compatBattery.maxModules }, (_, i) => i + 1)
+  // Range effettivo moduli tenendo conto della tensione max dell'inverter
+  const modRange = compatBattery && selectedInverter
+    ? effectiveModuleRange(compatBattery, selectedInverter)
+    : { min: 0, max: 0 };
+  const batteryModuleOptions = modRange.max >= modRange.min && modRange.min > 0
+    ? Array.from({ length: modRange.max - modRange.min + 1 }, (_, i) => modRange.min + i)
     : [];
+
+  const battSummary = (() => {
+    if (!compatBattery || !battModules) return null;
+    const totKwh = (battModules * compatBattery.moduleKwh).toFixed(2);
+    if (compatBattery.battVoltage === 'high') {
+      const sysV = (battModules * compatBattery.nominalV).toFixed(1);
+      return `${battModules}× ${compatBattery.label} — ${totKwh} kWh / ${sysV}V`;
+    }
+    return `${battModules}× ${compatBattery.label} — ${totKwh} kWh`;
+  })();
 
   const summary = [
     phase === 'mono' ? 'Monofase' : 'Trifase',
     wtype === 'ongrid' ? 'On-grid' : 'Ibrido',
     selectedInverter?.label ?? null,
-    compatBattery && battModules
-      ? `${(battModules * compatBattery.moduleKwh).toFixed(2)} kWh acc.`
-      : null,
+    battSummary,
   ].filter(Boolean).join(' · ');
 
   return (
@@ -217,11 +228,17 @@ export default function WesternPage() {
                   onChange={e => { setBattModules(e.target.value ? Number(e.target.value) : null); clearResult(); }}
                 >
                   <option value="">Seleziona moduli…</option>
-                  {batteryModuleOptions.map(n => (
-                    <option key={n} value={n}>
-                      {n}× {compatBattery.label} — {(n * compatBattery.moduleKwh).toFixed(2)} kWh
-                    </option>
-                  ))}
+                  {batteryModuleOptions.map(n => {
+                    const kwh = (n * compatBattery.moduleKwh).toFixed(2);
+                    const suffix = compatBattery.battVoltage === 'high'
+                      ? ` / ${(n * compatBattery.nominalV).toFixed(0)}V`
+                      : '';
+                    return (
+                      <option key={n} value={n}>
+                        {n}× {compatBattery.label} — {kwh} kWh{suffix}
+                      </option>
+                    );
+                  })}
                 </select>
               ) : (
                 <span className="wes-no-batt">
