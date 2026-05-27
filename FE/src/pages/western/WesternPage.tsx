@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSession } from '../../auth';
-import type { Phase, WType, WCatalog } from './utils/catalog';
+import type { Phase, WType, WCatalog, BatteryEntry } from './utils/catalog';
 import { loadCatalog, saveCatalog } from './utils/catalog';
 import { calcola } from './utils/calculator';
 import type { WResultItem } from './utils/calculator';
@@ -11,20 +11,13 @@ import WSettingsModal from './components/WSettingsModal';
 import MacroPreview from '../fotovoltaico/components/MacroPreview';
 import './WesternPage.css';
 
-const VERSION = 'v1.0.0';
+const VERSION = 'v1.1.0';
 
-const POWERS: Record<Phase, Record<WType, number[]>> = {
-  mono: {
-    ongrid: [3.0, 3.6, 4.0, 4.6, 5.0, 6.0],
-    hybrid: [3.0, 3.6, 4.0, 4.6, 5.0, 6.0],
-  },
-  tri: {
-    ongrid: [5.0, 6.0, 8.0, 10.0, 12.0, 15.0, 17.0, 20.0],
-    hybrid: [5.0, 6.0, 8.0, 10.0, 12.0, 15.0],
-  },
-};
-
-const BATTERY_KWH = [5, 10, 15, 20, 25, 30];
+// Mostra kW con precisione minima: 3.0 → "3.0", 3.68 → "3.68"
+function fmtKw(kw: number): string {
+  const s = kw.toString();
+  return (s.includes('.') ? s : s + '.0') + ' kW';
+}
 
 function showToast(msg: string) {
   const existing = document.querySelector('.toast');
@@ -44,14 +37,24 @@ function downloadFile(content: string, filename: string) {
   URL.revokeObjectURL(url); document.body.removeChild(a);
 }
 
+// Label descrittiva per inverter nel dropdown
+function invOptionLabel(series: string, label: string, kw: number, mppt: number, battVoltage?: string): string {
+  const kwStr = fmtKw(kw);
+  if (battVoltage) {
+    const tens = battVoltage === 'low' ? 'bassa tensione' : 'alta tensione';
+    return `${label} — ${kwStr} (${tens})`;
+  }
+  return `${label} — ${kwStr} (${mppt} MPPT)`;
+}
+
 export default function WesternPage() {
   const navigate = useNavigate();
   const session = getSession();
 
   const [phase, setPhase] = useState<Phase>('mono');
   const [wtype, setWtype] = useState<WType>('ongrid');
-  const [powerKw, setPowerKw] = useState<number | null>(null);
-  const [batteryKwh, setBatteryKwh] = useState<number | null>(null);
+  const [inverterId, setInverterId] = useState<string | null>(null);
+  const [battModules, setBattModules] = useState<number | null>(null);
   const [result, setResult] = useState<WResultItem[] | null>(null);
   const [calcDone, setCalcDone] = useState(false);
   const [macroData, setMacroData] = useState<WMacroResult | null>(null);
@@ -62,43 +65,70 @@ export default function WesternPage() {
     setResult(null); setCalcDone(false); setMacroData(null);
   }, []);
 
+  // Inverter selezionato e batteria compatibile (derivati dallo stato)
+  const selectedInverter = inverterId
+    ? (catalog.inverters.find(i => i.id === inverterId) ?? null)
+    : null;
+  const compatBattery: BatteryEntry | null =
+    selectedInverter?.wtype === 'hybrid' && selectedInverter.battVoltage != null
+      ? (catalog.batteries.find(b => b.battVoltage === selectedInverter!.battVoltage) ?? null)
+      : null;
+
   const handlePhase = (p: Phase) => {
     setPhase(p);
-    if (powerKw !== null && !POWERS[p][wtype].includes(powerKw)) setPowerKw(null);
+    if (selectedInverter && selectedInverter.phase !== p) setInverterId(null);
+    setBattModules(null);
     clearResult();
   };
 
   const handleWtype = (t: WType) => {
     setWtype(t);
-    if (powerKw !== null && !POWERS[phase][t].includes(powerKw)) setPowerKw(null);
-    if (t === 'ongrid') setBatteryKwh(null);
+    if (selectedInverter && selectedInverter.wtype !== t) setInverterId(null);
+    if (t === 'ongrid') setBattModules(null);
     clearResult();
   };
 
-  const canCalcola = powerKw !== null && (wtype === 'ongrid' || batteryKwh !== null);
+  // Ibrido senza batteria compatibile (AT) → permetti calcola senza batteria
+  const canCalcola = inverterId !== null && (
+    wtype === 'ongrid' ||
+    battModules !== null ||
+    (wtype === 'hybrid' && compatBattery === null && selectedInverter !== null)
+  );
 
   const handleCalcola = () => {
-    if (!canCalcola || powerKw === null) return;
-    const res = calcola(phase, wtype, powerKw, wtype === 'hybrid' ? batteryKwh : null, catalog);
+    if (!inverterId) return;
+    const res = calcola(inverterId, battModules, catalog);
     setResult(res); setCalcDone(true); setMacroData(null);
   };
 
   const handleGenMacro = () => {
-    if (!result || powerKw === null) return;
-    const macro = genMacro(result, phase, wtype, powerKw, wtype === 'hybrid' ? batteryKwh : null);
+    if (!result || !selectedInverter) return;
+    const battTotKwh = compatBattery && battModules
+      ? battModules * compatBattery.moduleKwh
+      : null;
+    const macro = genMacro(result, selectedInverter.label, phase, wtype, battTotKwh);
     setMacroData(macro);
     downloadFile(macro.xml, macro.filename);
     showToast('✅ ' + macro.filename);
   };
 
-  const availablePowers = POWERS[phase][wtype];
+  // Inverter disponibili per la selezione corrente, ordinati per kW poi label
+  const availableInverters = catalog.inverters
+    .filter(i => i.phase === phase && i.wtype === wtype)
+    .sort((a, b) => a.powerKw - b.powerKw || a.label.localeCompare(b.label));
 
-  // Config summary chip
+  // Opzioni moduli batteria (1..maxModules)
+  const batteryModuleOptions = compatBattery
+    ? Array.from({ length: compatBattery.maxModules }, (_, i) => i + 1)
+    : [];
+
   const summary = [
     phase === 'mono' ? 'Monofase' : 'Trifase',
     wtype === 'ongrid' ? 'On-grid' : 'Ibrido',
-    powerKw !== null ? `${powerKw.toFixed(1)} kW` : null,
-    wtype === 'hybrid' && batteryKwh !== null ? `${batteryKwh} kWh acc.` : null,
+    selectedInverter?.label ?? null,
+    compatBattery && battModules
+      ? `${(battModules * compatBattery.moduleKwh).toFixed(2)} kWh acc.`
+      : null,
   ].filter(Boolean).join(' · ');
 
   return (
@@ -155,35 +185,49 @@ export default function WesternPage() {
             </div>
           </div>
 
-          {/* Potenza inverter */}
+          {/* Modello inverter */}
           <div className="wes-row">
-            <span className="wes-label">Potenza inverter</span>
+            <span className="wes-label">Modello inverter</span>
             <select
               className="wes-select"
-              value={powerKw ?? ''}
-              onChange={e => { setPowerKw(e.target.value ? Number(e.target.value) : null); clearResult(); }}
+              value={inverterId ?? ''}
+              onChange={e => {
+                setInverterId(e.target.value || null);
+                setBattModules(null);
+                clearResult();
+              }}
             >
-              <option value="">Seleziona potenza…</option>
-              {availablePowers.map(kw => (
-                <option key={kw} value={kw}>{kw.toFixed(1)} kW</option>
+              <option value="">Seleziona modello…</option>
+              {availableInverters.map(inv => (
+                <option key={inv.id} value={inv.id}>
+                  {invOptionLabel(inv.series, inv.label, inv.powerKw, inv.mppt, inv.battVoltage)}
+                </option>
               ))}
             </select>
           </div>
 
           {/* Accumulo (solo se ibrido) */}
-          {wtype === 'hybrid' && (
+          {wtype === 'hybrid' && selectedInverter && (
             <div className="wes-row">
               <span className="wes-label">Accumulo</span>
-              <select
-                className="wes-select"
-                value={batteryKwh ?? ''}
-                onChange={e => { setBatteryKwh(e.target.value ? Number(e.target.value) : null); clearResult(); }}
-              >
-                <option value="">Seleziona capacità…</option>
-                {BATTERY_KWH.map(kwh => (
-                  <option key={kwh} value={kwh}>{kwh} kWh</option>
-                ))}
-              </select>
+              {compatBattery ? (
+                <select
+                  className="wes-select"
+                  value={battModules ?? ''}
+                  onChange={e => { setBattModules(e.target.value ? Number(e.target.value) : null); clearResult(); }}
+                >
+                  <option value="">Seleziona moduli…</option>
+                  {batteryModuleOptions.map(n => (
+                    <option key={n} value={n}>
+                      {n}× {compatBattery.label} — {(n * compatBattery.moduleKwh).toFixed(2)} kWh
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span className="wes-no-batt">
+                  ⚠ Batteria alta tensione — in arrivo
+                </span>
+              )}
             </div>
           )}
 
@@ -212,7 +256,7 @@ export default function WesternPage() {
         {result && result.length > 0 && (
           <div className="card wes-results-card">
             <div className="wes-warning">
-              ⚠️ Verifica a cura del cliente — I quantitativi sono calcolati automaticamente e vanno verificati prima della conferma d’ordine.
+              ⚠️ Verifica a cura del cliente — I quantitativi sono calcolati automaticamente e vanno verificati prima della conferma d'ordine.
             </div>
             <div className="wes-table">
               <div className="wes-t-head">

@@ -19,14 +19,14 @@ function getDT(): string {
 
 export function genMacro(
   items: WResultItem[],
+  invLabel: string,
   phase: Phase,
   wtype: WType,
-  powerKw: number,
-  batteryKwh: number | null,
+  battTotKwh: number | null,
 ): WMacroResult {
   const phLabel = phase === 'mono' ? 'Mono' : 'Tri';
-  const batSuffix = wtype === 'hybrid' && batteryKwh ? ` ${batteryKwh}kWh` : '';
-  const r30 = `Inv ${phLabel} ${powerKw.toFixed(1)}kW ${wtype === 'ongrid' ? 'On-grid' : `Ibrido${batSuffix}`}`;
+  const batSuffix = wtype === 'hybrid' && battTotKwh ? ` ${battTotKwh.toFixed(2)}kWh` : '';
+  const r30 = `Inv ${phLabel} ${invLabel} ${wtype === 'ongrid' ? 'On-grid' : `Ibrido${batSuffix}`}`;
 
   let mac = `<HAScript name="InverterWestern" description="" timeout="60000" pausetime="400" promptall="true" blockinput="true" author="export" creationdate="${getDT()}" supressclearevents="false" usevars="false" ignorepauseforenhancedtn="true" delayifnotenhancedtn="0" ignorepausetimeforenhancedtn="true" continueontimeout="true">
     <screen name="Schermo1" entryscreen="true" exitscreen="true" transient="false">
@@ -69,8 +69,8 @@ export function genMacro(
     </screen>
 </HAScript>`;
 
-  const kwStr = powerKw.toFixed(1).replace('.', 'k');
-  const filename = `Inv_${phLabel}_${kwStr}kW_${wtype === 'ongrid' ? 'OG' : 'HY'}${batteryKwh ? `_${batteryKwh}kWh` : ''}.mac`;
+  const kwhTag = battTotKwh ? `_${battTotKwh.toFixed(2)}kWh` : '';
+  const filename = `${invLabel}_${wtype === 'ongrid' ? 'OG' : 'HY'}${kwhTag}.mac`;
 
   return { xml: mac, filename, previewInfo: `R30+${items.length}art` };
 }

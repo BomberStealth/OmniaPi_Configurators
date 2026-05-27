@@ -28,6 +28,16 @@
   flex-wrap: wrap;
 }
 
+.wes-no-batt {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 6px 10px;
+  background: rgba(255,200,50,0.07);
+  border: 1px solid rgba(255,200,50,0.2);
+  border-radius: 6px;
+}
+
 .wes-label {
   font-size: 13px;
   font-weight: 600;
