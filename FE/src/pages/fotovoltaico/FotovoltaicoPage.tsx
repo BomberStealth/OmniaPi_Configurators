@@ -13,7 +13,7 @@ import MacroPreview from './components/MacroPreview';
 import SettingsModal from './components/SettingsModal';
 import './FotovoltaicoPage.css';
 
-const VERSION = 'v1.1.0';
+const VERSION = 'v1.2.0';
 
 function showToast(msg: string) {
   const existing = document.querySelector('.toast');
@@ -141,8 +141,8 @@ export default function FotovoltaicoPage() {
             onOrient={handleOrient}
             onStruct={handleStruct}
             onControvento={handleControvento}
-            onPanW={setPanW}
-            onPanH={setPanH}
+            onPanW={v => { setPanW(v); clearResult(); }}
+            onPanH={v => { setPanH(v); clearResult(); }}
           />
         </div>
 

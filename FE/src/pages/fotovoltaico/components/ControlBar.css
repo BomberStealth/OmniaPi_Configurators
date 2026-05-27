@@ -81,8 +81,28 @@
 
 .dim-inputs {
   display: flex;
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
   flex-wrap: wrap;
+}
+
+.dim-select {
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--glass-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s;
+  min-width: 170px;
+}
+
+.dim-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
 .dim-label {
@@ -94,7 +114,7 @@
 }
 
 .dim-input {
-  width: 90px;
+  width: 80px;
   padding: 6px 10px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
@@ -105,7 +125,11 @@
   color: var(--text);
 }
 
-.dim-input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-dim); }
+.dim-input:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
 
 .dim-unit {
   font-size: 11px;
