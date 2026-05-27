@@ -9,7 +9,8 @@ interface Props {
 }
 
 export default function ResultsTable({ items, cat }: Props) {
-  const total = items.reduce((s, it) => s + it.qty, 0);
+  const visible = items.filter(it => it.qty > 0);
+  const total = visible.reduce((s, it) => s + it.qty, 0);
 
   return (
     <div className="results-table-wrap">
@@ -25,18 +26,17 @@ export default function ResultsTable({ items, cat }: Props) {
           <span className="col-qty">Qtà</span>
         </div>
 
-        {items.map(it => {
+        {visible.map(it => {
           const c = cat[it.key] ?? { p: '?', c: '?', d: '?' };
-          const skip = it.qty === 0;
           return (
-            <div key={it.key} className={`table-row${skip ? ' skipped' : ''}`}>
+            <div key={it.key} className="table-row">
               <span className="col-brand row-brand">{c.p}</span>
               <span className="col-code row-code">{c.c}</span>
               <div className="col-desc">
                 <div className="row-desc">{c.d}</div>
                 {it.note && <div className="row-note">{it.note}</div>}
               </div>
-              <span className={`col-qty${skip ? ' zero' : ''}`}>{skip ? '—' : it.qty}</span>
+              <span className="col-qty">{it.qty}</span>
             </div>
           );
         })}
@@ -44,7 +44,6 @@ export default function ResultsTable({ items, cat }: Props) {
 
       <div className="table-footer">
         Totale: <strong>{total} pz</strong>
-        <span className="footer-hint">articoli con quantità 0 non inclusi nella macro</span>
       </div>
     </div>
   );

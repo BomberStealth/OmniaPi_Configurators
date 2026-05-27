@@ -45,7 +45,6 @@
 
 .table-row:last-child { border-bottom: none; }
 .table-row:hover { background: var(--glass-hover); }
-.table-row.skipped { opacity: 0.3; }
 
 .col-brand { font-size: 12px; font-weight: 700; color: var(--text-muted); }
 .col-code  { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text); }
@@ -56,7 +55,6 @@
 .row-code  { font-weight: 500; }
 .row-desc  { font-size: 13px; color: var(--text); }
 .row-note  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-.col-qty.zero { color: var(--text-muted); font-size: 13px; }
 
 .table-footer {
   display: flex;
@@ -68,10 +66,3 @@
 }
 
 .table-footer strong { color: var(--accent); font-size: 16px; }
-
-.footer-hint {
-  font-size: 11px;
-  margin-left: auto;
-  color: var(--text-muted);
-  opacity: 0.7;
-}
