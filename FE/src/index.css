@@ -11,8 +11,8 @@
   --accent-dim:     rgba(37, 99, 235, 0.10);
   --accent-glow:    rgba(37, 99, 235, 0.22);
   --text:           #1A1E30;
-  --text-secondary: rgba(26, 30, 48, 0.70);
-  --text-muted:     rgba(26, 30, 48, 0.44);
+  --text-secondary: rgba(26, 30, 48, 0.75);
+  --text-muted:     rgba(26, 30, 48, 0.58);
   --success:        #059669;
   --danger:         #DC2626;
   --danger-dim:     rgba(220, 38, 38, 0.08);

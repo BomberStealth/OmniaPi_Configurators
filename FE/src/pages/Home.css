@@ -38,7 +38,7 @@
   font-size: clamp(28px, 4vw, 44px);
   font-weight: 800;
   line-height: 1.18;
-  background: linear-gradient(125deg, #f0ece4 25%, var(--accent) 100%);
+  background: linear-gradient(125deg, var(--text) 25%, var(--accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -96,7 +96,6 @@
 .home-section-count {
   font-size: 11px;
   color: var(--text-muted);
-  opacity: 0.6;
 }
 
 /* ── Cards grid ── */
@@ -144,7 +143,7 @@
 .tool-card:not(.tc-inactive):hover {
   transform: translateY(-4px);
   border-color: var(--border-hover);
-  box-shadow: 0 20px 56px rgba(0,0,0,0.65);
+  box-shadow: 0 12px 40px rgba(37,99,235,0.18), 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .tool-card:not(.tc-inactive):hover::after { opacity: 0.8; }
@@ -184,9 +183,9 @@
 }
 
 .tc-badge-dev {
-  background: rgba(255,255,255,0.05);
+  background: rgba(0,0,0,0.05);
   color: var(--text-muted);
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(0,0,0,0.10);
 }
 
 /* ── Card body ── */

@@ -20,13 +20,13 @@ const TOOLS: Tool[] = [
     id: 'fotovoltaico', path: '/fotovoltaico', icon: '☀',
     title: 'Preventivatore FTV',
     desc: 'Calcolo materiali struttura fotovoltaica, dimensionamento griglia pannelli e generazione macro AS400.',
-    category: 'Energia', color: '#f0983a', status: 'active',
+    category: 'Energia', color: '#2563EB', status: 'active',
   },
   {
     id: 'western', path: '/western', icon: '🔋',
     title: 'Configuratore Western & Co',
     desc: 'Configurazione inverter fotovoltaici mono e trifase, on-grid e ibridi con accumulo, macro AS400.',
-    category: 'Energia', color: '#f5a623', status: 'active',
+    category: 'Energia', color: '#0891B2', status: 'active',
   },
   {
     id: 'elettrico', path: null, icon: '⚡',
