@@ -34,7 +34,7 @@
 .dim-block:hover { border-color: var(--border-hover); }
 
 .dim-block-total {
-  border-color: rgba(240,152,58,0.25);
+  border-color: rgba(37,99,235,0.25);
   background: var(--accent-dim);
 }
 

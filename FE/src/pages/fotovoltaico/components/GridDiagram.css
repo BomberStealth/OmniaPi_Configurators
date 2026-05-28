@@ -12,7 +12,7 @@
   position: absolute;
   top: 0; left: 25%; right: 25%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(240,152,58,0.25), transparent);
+  background: linear-gradient(90deg, transparent, rgba(37,99,235,0.25), transparent);
   pointer-events: none;
 }
 
@@ -22,7 +22,7 @@
   justify-content: space-between;
   padding: 14px 20px;
   border-bottom: 1px solid var(--border);
-  background: rgba(240,152,58,0.04);
+  background: rgba(37,99,235,0.04);
 }
 
 .grid-diagram-title {
@@ -42,7 +42,7 @@
 .grid-diagram-dims {
   padding: 10px 20px 14px;
   border-top: 1px solid var(--border);
-  background: rgba(0,0,0,0.15);
+  background: rgba(0,0,0,0.06);
 }
 
 .dims-label {
