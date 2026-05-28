@@ -1,4 +1,4 @@
-import type { WCatalog } from './catalog';
+import type { WCatalog, AccessoryEntry } from './catalog';
 
 export interface WResultItem {
   id: string;
@@ -10,11 +10,20 @@ export interface WResultItem {
   note: string;
 }
 
+export type TriMeterType = 'direct' | 'ta';
+export type TaAmps = 150 | 300 | 600;
+
+function accItem(acc: AccessoryEntry, qty: number, note: string): WResultItem {
+  return { id: acc.id, prefix: acc.prefix, code: acc.code, catalogCode: acc.catalogCode, desc: acc.desc, qty, note };
+}
+
 export function calcola(
   inverterId: string,
   battTowers: number | null,
   battModulesPerTower: number | null,
   includeMeter: boolean,
+  triMeterType: TriMeterType | null,
+  taAmps: TaAmps | null,
   catalog: WCatalog,
 ): WResultItem[] {
   const items: WResultItem[] = [];
@@ -55,33 +64,30 @@ export function calcola(
       if (bat.bmsId) {
         const bms = catalog.accessories.find(a => a.id === bat.bmsId);
         if (bms) {
-          items.push({
-            id: bms.id,
-            prefix: bms.prefix,
-            code: bms.code,
-            catalogCode: bms.catalogCode,
-            desc: bms.desc,
-            qty: battTowers,
-            note: `1 BMS per torre`,
-          });
+          items.push(accItem(bms, battTowers, '1 BMS per torre'));
         }
       }
     }
   }
 
-  // CT/Meter (opzionale per stringa, sempre per ibrido ma gestito lato UI)
+  // CT/Meter — non per ibrido (già compreso in confezione)
   if (includeMeter) {
-    const meter = catalog.accessories.find(a => a.id === 'meter-ct');
-    if (meter) {
-      items.push({
-        id: meter.id,
-        prefix: meter.prefix,
-        code: meter.code,
-        catalogCode: meter.catalogCode,
-        desc: meter.desc,
-        qty: 1,
-        note: inv.wtype === 'hybrid' ? 'CT/Meter — compreso in confezione' : 'CT/Meter — misura energia',
-      });
+    if (inv.phase === 'mono') {
+      const m = catalog.accessories.find(a => a.id === 'meter-mono');
+      if (m) items.push(accItem(m, 1, 'Meter monofase'));
+    } else if (inv.phase === 'tri') {
+      if (triMeterType === 'direct') {
+        const m = catalog.accessories.find(a => a.id === 'meter-tri-direct');
+        if (m) items.push(accItem(m, 1, 'Meter trifase — inserzione diretta'));
+      } else if (triMeterType === 'ta') {
+        const m = catalog.accessories.find(a => a.id === 'meter-tri-ta');
+        if (m) items.push(accItem(m, 1, 'Meter trifase — TA esterni'));
+        if (taAmps) {
+          const taId = taAmps === 150 ? 'ta-150a' : taAmps === 300 ? 'ta-300a' : 'ta-600a';
+          const ta = catalog.accessories.find(a => a.id === taId);
+          if (ta) items.push(accItem(ta, 3, `3 TA da ${taAmps}A`));
+        }
+      }
     }
   }
 

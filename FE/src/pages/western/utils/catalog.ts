@@ -93,7 +93,7 @@ export const DEFAULT_CATALOG: WCatalog = {
 
     // ── Monofase Di Stringa — W-HPS PRO (2 MPPT) — pag. 9 ──────────────────
     inv('w-hps-3kp',    'mono','ongrid','W-HPS',  3.0, 2,'W-HPS-3KP',   '019740','INVERTER STRINGA MONO 3kW 2MPPT W-HPS-3KP',    '609521'),
-    inv('w-hps-3.68kp', 'mono','ongrid','W-HPS',  3.68,2,'W-HPS-3.68KP','019741','INVERTER STRINGA MONO 3.68kW 2MPPT W-HPS-3.68KP',''),
+    inv('w-hps-3.68kp', 'mono','ongrid','W-HPS',  3.68,2,'W-HPS-3.68KP','019741','INVERTER STRINGA MONO 3.68kW 2MPPT W-HPS-3.68KP','441815'),
     inv('w-hps-4kp',    'mono','ongrid','W-HPS',  4.0, 2,'W-HPS-4KP',   '019742','INVERTER STRINGA MONO 4kW 2MPPT W-HPS-4KP',    '609522'),
     inv('w-hps-5kp',    'mono','ongrid','W-HPS',  5.0, 2,'W-HPS-5KP',   '019743','INVERTER STRINGA MONO 5kW 2MPPT W-HPS-5KP',    '607660'),
     inv('w-hps-6kp',    'mono','ongrid','W-HPS',  6.0, 2,'W-HPS-6KP',   '019744','INVERTER STRINGA MONO 6kW 2MPPT W-HPS-6KP',    '606287'),
@@ -106,10 +106,10 @@ export const DEFAULT_CATALOG: WCatalog = {
     inv('w-hes-6k',     'mono','hybrid','W-HES',  6.0, 2,'W-HES-6K',    '019094','INVERTER IBRIDO MONO BT 6kW 2MPPT W-HES-6K',     '560264','low', 60),
 
     // ── Monofase Ibrido — W-HHS (alta tensione 80-480V, serie) — pag. 27 ────
-    inv('w-hhs-3k',     'mono','hybrid','W-HHS',  3.0, 2,'W-HHS-3K',    '018121','INVERTER IBRIDO MONO AT 3kW 2MPPT W-HHS-3K',     '','high',480),
-    inv('w-hhs-3.68k',  'mono','hybrid','W-HHS',  3.68,2,'W-HHS-3.68K', '018122','INVERTER IBRIDO MONO AT 3.68kW 2MPPT W-HHS-3.68K','','high',480),
-    inv('w-hhs-5k',     'mono','hybrid','W-HHS',  5.0, 2,'W-HHS-5K',    '018123','INVERTER IBRIDO MONO AT 5kW 2MPPT W-HHS-5K',     '','high',480),
-    inv('w-hhs-6k',     'mono','hybrid','W-HHS',  6.0, 2,'W-HHS-6K',    '018124','INVERTER IBRIDO MONO AT 6kW 2MPPT W-HHS-6K',     '','high',480),
+    inv('w-hhs-3k',     'mono','hybrid','W-HHS',  3.0, 2,'W-HHS-3K',    '018121','INVERTER IBRIDO MONO AT 3kW 2MPPT W-HHS-3K',     '466127','high',480),
+    inv('w-hhs-3.68k',  'mono','hybrid','W-HHS',  3.68,2,'W-HHS-3.68K', '018122','INVERTER IBRIDO MONO AT 3.68kW 2MPPT W-HHS-3.68K','508960','high',480),
+    inv('w-hhs-5k',     'mono','hybrid','W-HHS',  5.0, 2,'W-HHS-5K',    '018123','INVERTER IBRIDO MONO AT 5kW 2MPPT W-HHS-5K',     '489961','high',480),
+    inv('w-hhs-6k',     'mono','hybrid','W-HHS',  6.0, 2,'W-HHS-6K',    '018124','INVERTER IBRIDO MONO AT 6kW 2MPPT W-HHS-6K',     '463249','high',480),
 
     // ── Trifase Di Stringa — W-HPT PRO (2 MPPT, 3-15kW) — pag. 13 ──────────
     inv('w-hpt-3kp',    'tri','ongrid','W-HPT',   3.0, 2,'W-HPT-3KP',   '019796','INVERTER STRINGA TRI 3kW 2MPPT W-HPT-3KP',    ''),
@@ -187,14 +187,59 @@ export const DEFAULT_CATALOG: WCatalog = {
       catalogCode: '',
       desc: 'BMS BATTERIA ALTA TENSIONE FORCE-H3',
     },
-    // CT/Meter: per inverter di stringa (non incluso in confezione)
+    // Meter monofase — W-HPK / W-HPS
     {
-      id: 'meter-ct',
-      label: 'CT/Meter',
+      id: 'meter-mono',
+      label: 'M-WHI-1PH',
       prefix: 'WST',
-      code: '',
-      catalogCode: '',
-      desc: 'CT/METER MISURA ENERGIA WHi',
+      code: '472180',
+      catalogCode: '018340',
+      desc: 'M-WHI-1PH',
+    },
+    // Meter trifase — inserzione diretta (W-HPT ≤ 45kW)
+    {
+      id: 'meter-tri-direct',
+      label: 'M-W-HI-3PH',
+      prefix: 'WST',
+      code: '478972',
+      catalogCode: '018341',
+      desc: 'M-W-HI-3PH',
+    },
+    // Meter trifase — TA esterni (W-HPT qualsiasi)
+    {
+      id: 'meter-tri-ta',
+      label: 'M-W-HI-3PH-TA',
+      prefix: 'WST',
+      code: '500398',
+      catalogCode: '018342',
+      desc: 'M-W-HI-3PH-TA',
+    },
+    // TA 150A
+    {
+      id: 'ta-150a',
+      label: 'ESCT-T24-150/5A',
+      prefix: 'WST',
+      code: '500399',
+      catalogCode: '018328',
+      desc: 'ESCT-T24-150/5A - TA DA 150A',
+    },
+    // TA 300A
+    {
+      id: 'ta-300a',
+      label: 'ESCT-T24-300/5A',
+      prefix: 'WST',
+      code: '500543',
+      catalogCode: '018329',
+      desc: 'ESCT-T24-300/5A - TA DA 300A',
+    },
+    // TA 600A
+    {
+      id: 'ta-600a',
+      label: 'ESCT-T36-600/5A',
+      prefix: 'WST',
+      code: '511363',
+      catalogCode: '018330',
+      desc: 'ESCT-T36-600/5A - TA DA 600A',
     },
   ],
 };

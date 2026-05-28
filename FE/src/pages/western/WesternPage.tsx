@@ -4,14 +4,14 @@ import { getSession } from '../../auth';
 import type { Phase, WType, WCatalog } from './utils/catalog';
 import { loadCatalog, saveCatalog, effectiveModuleRange } from './utils/catalog';
 import { calcola } from './utils/calculator';
-import type { WResultItem } from './utils/calculator';
+import type { WResultItem, TriMeterType, TaAmps } from './utils/calculator';
 import { genMacro } from './utils/macroGenerator';
 import type { WMacroResult } from './utils/macroGenerator';
 import WSettingsModal from './components/WSettingsModal';
 import MacroPreview from '../fotovoltaico/components/MacroPreview';
 import './WesternPage.css';
 
-const VERSION = 'v1.2.0';
+const VERSION = 'v1.3.0';
 
 function fmtKw(kw: number): string {
   const s = kw.toString();
@@ -36,7 +36,6 @@ function downloadFile(content: string, filename: string) {
   URL.revokeObjectURL(url); document.body.removeChild(a);
 }
 
-
 export default function WesternPage() {
   const navigate = useNavigate();
   const session = getSession();
@@ -47,6 +46,8 @@ export default function WesternPage() {
   const [battTowers, setBattTowers]           = useState<number | null>(null);
   const [battModPerTower, setBattModPerTower] = useState<number | null>(null);
   const [userMeter, setUserMeter]             = useState(false);
+  const [meterType, setMeterType]             = useState<TriMeterType | null>(null);
+  const [taSize, setTaSize]                   = useState<TaAmps | null>(null);
   const [result, setResult]                   = useState<WResultItem[] | null>(null);
   const [calcDone, setCalcDone]               = useState(false);
   const [macroData, setMacroData]             = useState<WMacroResult | null>(null);
@@ -55,6 +56,10 @@ export default function WesternPage() {
 
   const clearResult = useCallback(() => {
     setResult(null); setCalcDone(false); setMacroData(null);
+  }, []);
+
+  const resetMeter = useCallback(() => {
+    setUserMeter(false); setMeterType(null); setTaSize(null);
   }, []);
 
   // Derivati dallo stato
@@ -70,39 +75,56 @@ export default function WesternPage() {
     ? effectiveModuleRange(compatBattery, selectedInverter)
     : { min: 0, max: 0 };
 
-  const effectiveMeter = wtype === 'hybrid' ? true : userMeter;
+  // Per W-HPT > 45kW l'inserzione diretta non è supportata
+  const forceTa = phase === 'tri' && wtype === 'ongrid'
+    && selectedInverter != null && selectedInverter.powerKw > 45;
 
   const handlePhase = (p: Phase) => {
     setPhase(p);
     if (selectedInverter && selectedInverter.phase !== p) setInverterId(null);
     setBattTowers(null); setBattModPerTower(null);
+    setMeterType(null); setTaSize(null);
     clearResult();
   };
 
   const handleWtype = (t: WType) => {
     setWtype(t);
     if (selectedInverter && selectedInverter.wtype !== t) setInverterId(null);
-    if (t === 'ongrid') { setBattTowers(null); setBattModPerTower(null); setUserMeter(false); }
+    if (t === 'ongrid') { setBattTowers(null); setBattModPerTower(null); }
+    resetMeter();
     clearResult();
   };
 
   const handleInverter = (id: string) => {
     setInverterId(id || null);
     setBattTowers(null); setBattModPerTower(null);
+    setMeterType(null); setTaSize(null);
     clearResult();
   };
 
-  // Condizione CALCOLA: inverter selezionato + batteria configurata (se ibrido e disponibile)
+  // Condizione CALCOLA
   const battOk = wtype === 'ongrid' || compatBattery === null || (
     battModPerTower !== null &&
     (compatBattery.maxTowers <= 1 || battTowers !== null)
   );
-  const canCalcola = inverterId !== null && battOk;
+  const meterOk = wtype === 'hybrid' || !userMeter || phase === 'mono' || (
+    meterType !== null && (meterType !== 'ta' || taSize !== null)
+  );
+  const canCalcola = inverterId !== null && battOk && meterOk;
 
   const handleCalcola = () => {
     if (!inverterId) return;
     const towers = compatBattery && compatBattery.maxTowers > 1 ? (battTowers ?? 1) : 1;
-    const res = calcola(inverterId, battModPerTower !== null ? towers : null, battModPerTower, effectiveMeter, catalog);
+    const triMeter = phase === 'tri' && wtype === 'ongrid' && userMeter ? meterType : null;
+    const res = calcola(
+      inverterId,
+      battModPerTower !== null ? towers : null,
+      battModPerTower,
+      wtype !== 'hybrid' && userMeter,
+      triMeter,
+      taSize,
+      catalog,
+    );
     setResult(res); setCalcDone(true); setMacroData(null);
   };
 
@@ -221,7 +243,6 @@ export default function WesternPage() {
             <>
               {compatBattery ? (
                 <>
-                  {/* Torri (solo se batteria supporta > 1 torre) */}
                   {compatBattery.maxTowers > 1 && (
                     <div className="wes-row">
                       <span className="wes-label">Torri</span>
@@ -235,7 +256,6 @@ export default function WesternPage() {
                     </div>
                   )}
 
-                  {/* Moduli per torre (o totali per HP51100) */}
                   {(compatBattery.maxTowers <= 1 || battTowers !== null) && modRange.max >= modRange.min && (
                     <div className="wes-row">
                       <span className="wes-label">
@@ -271,21 +291,66 @@ export default function WesternPage() {
 
           {/* CT / Meter */}
           {inverterId && (
-            <div className="wes-row">
-              <span className="wes-label">CT / Meter</span>
-              {wtype === 'hybrid' ? (
-                <label className="wes-meter-label wes-meter-included">
-                  <input type="checkbox" checked={true} readOnly />
-                  CT/Meter già compresi in confezione
-                </label>
-              ) : (
-                <label className="wes-meter-label">
-                  <input type="checkbox" checked={userMeter}
-                    onChange={e => { setUserMeter(e.target.checked); clearResult(); }} />
-                  Includi CT/Meter
-                </label>
+            <>
+              <div className="wes-row">
+                <span className="wes-label">CT / Meter</span>
+                {wtype === 'hybrid' ? (
+                  <label className="wes-meter-label wes-meter-included">
+                    <input type="checkbox" checked={true} readOnly />
+                    CT/Meter già compresi in confezione
+                  </label>
+                ) : (
+                  <label className="wes-meter-label">
+                    <input type="checkbox" checked={userMeter}
+                      onChange={e => {
+                        setUserMeter(e.target.checked);
+                        if (!e.target.checked) { setMeterType(null); setTaSize(null); }
+                        clearResult();
+                      }} />
+                    Includi CT/Meter
+                  </label>
+                )}
+              </div>
+
+              {/* Tipo meter — solo trifase di stringa con meter attivo */}
+              {wtype === 'ongrid' && phase === 'tri' && userMeter && (
+                <div className="wes-row">
+                  <span className="wes-label">Tipo connessione</span>
+                  <div className="wes-btn-group">
+                    {!forceTa && (
+                      <button className={`wes-opt-btn${meterType === 'direct' ? ' active' : ''}`}
+                        onClick={() => { setMeterType('direct'); setTaSize(null); clearResult(); }}>
+                        Inserzione diretta
+                      </button>
+                    )}
+                    <button className={`wes-opt-btn${meterType === 'ta' ? ' active' : ''}`}
+                      onClick={() => { setMeterType('ta'); setTaSize(null); clearResult(); }}>
+                      TA esterni
+                    </button>
+                    {forceTa && (
+                      <span className="wes-no-batt" style={{ fontSize: 11 }}>
+                        ≥ 50 kW — solo TA esterni
+                      </span>
+                    )}
+                  </div>
+                </div>
               )}
-            </div>
+
+              {/* Amperaggio TA */}
+              {wtype === 'ongrid' && phase === 'tri' && userMeter && meterType === 'ta' && (
+                <div className="wes-row">
+                  <span className="wes-label">Amperaggio TA</span>
+                  <div className="wes-btn-group">
+                    {([150, 300, 600] as const).map(amp => (
+                      <button key={amp} className={`wes-opt-btn${taSize === amp ? ' active' : ''}`}
+                        onClick={() => { setTaSize(amp); clearResult(); }}>
+                        {amp} A
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Summary + buttons */}

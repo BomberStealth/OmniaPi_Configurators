@@ -136,7 +136,7 @@ export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
               </div>
             ))}
             <div className="wset-note">
-              ⚠ Force-H3 BMS e CT/Meter: codici articolo non disponibili — inserire manualmente
+              ⚠ Force-H3 BMS e Force-H3 FH10050: codice articolo WHi non disponibile — inserire manualmente
             </div>
           </div>
         </div>
