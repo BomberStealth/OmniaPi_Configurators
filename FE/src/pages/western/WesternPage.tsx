@@ -11,7 +11,7 @@ import WSettingsModal from './components/WSettingsModal';
 import MacroPreview from '../fotovoltaico/components/MacroPreview';
 import './WesternPage.css';
 
-const VERSION = 'v1.3.0';
+const VERSION = 'v1.3.1';
 
 function fmtKw(kw: number): string {
   const s = kw.toString();
@@ -46,6 +46,7 @@ export default function WesternPage() {
   const [battTowers, setBattTowers]           = useState<number | null>(null);
   const [battModPerTower, setBattModPerTower] = useState<number | null>(null);
   const [userMeter, setUserMeter]             = useState(false);
+  const [mpptChoice, setMpptChoice]           = useState<1 | 2 | null>(null);
   const [meterType, setMeterType]             = useState<TriMeterType | null>(null);
   const [taSize, setTaSize]                   = useState<TaAmps | null>(null);
   const [result, setResult]                   = useState<WResultItem[] | null>(null);
@@ -83,7 +84,7 @@ export default function WesternPage() {
     setPhase(p);
     if (selectedInverter && selectedInverter.phase !== p) setInverterId(null);
     setBattTowers(null); setBattModPerTower(null);
-    setMeterType(null); setTaSize(null);
+    setMpptChoice(null); setMeterType(null); setTaSize(null);
     clearResult();
   };
 
@@ -91,7 +92,14 @@ export default function WesternPage() {
     setWtype(t);
     if (selectedInverter && selectedInverter.wtype !== t) setInverterId(null);
     if (t === 'ongrid') { setBattTowers(null); setBattModPerTower(null); }
+    setMpptChoice(null);
     resetMeter();
+    clearResult();
+  };
+
+  const handleMppt = (n: 1 | 2) => {
+    setMpptChoice(n);
+    setInverterId(null);
     clearResult();
   };
 
@@ -141,8 +149,13 @@ export default function WesternPage() {
   };
 
   // Inverter disponibili per la combo selezionata, ordinati per kW
+  // Per mono di stringa, filtra per MPPT scelto
   const availableInverters = catalog.inverters
-    .filter(i => i.phase === phase && i.wtype === wtype)
+    .filter(i => {
+      if (i.phase !== phase || i.wtype !== wtype) return false;
+      if (phase === 'mono' && wtype === 'ongrid' && mpptChoice !== null) return i.mppt === mpptChoice;
+      return true;
+    })
     .sort((a, b) => a.powerKw - b.powerKw || a.label.localeCompare(b.label));
 
   // Summary chip
@@ -214,29 +227,54 @@ export default function WesternPage() {
             </div>
           </div>
 
-          {/* Taglia inverter */}
-          <div className="wes-row">
-            <span className="wes-label">Taglia inverter</span>
-            <select className="wes-select" value={inverterId ?? ''} onChange={e => handleInverter(e.target.value)}>
-              <option value="">Seleziona potenza…</option>
-              {[...new Set(availableInverters.map(i => i.series))].map(series => {
-                const items = availableInverters.filter(i => i.series === series);
-                const first = items[0];
-                const grpLabel = first.battVoltage === 'low'
-                  ? `${series} — bassa tensione`
-                  : first.battVoltage === 'high'
-                  ? `${series} — alta tensione`
-                  : series;
-                return (
-                  <optgroup key={series} label={grpLabel}>
-                    {items.map(inv => (
+          {/* Ingressi MPPT — solo monofase di stringa */}
+          {phase === 'mono' && wtype === 'ongrid' && (
+            <div className="wes-row">
+              <span className="wes-label">Ingressi MPPT</span>
+              <div className="wes-btn-group">
+                <button className={`wes-opt-btn${mpptChoice === 1 ? ' active' : ''}`} onClick={() => handleMppt(1)}>
+                  1 MPPT
+                </button>
+                <button className={`wes-opt-btn${mpptChoice === 2 ? ' active' : ''}`} onClick={() => handleMppt(2)}>
+                  2 MPPT
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Taglia inverter — mostrato solo dopo aver scelto MPPT (per mono stringa) */}
+          {(phase !== 'mono' || wtype !== 'ongrid' || mpptChoice !== null) && (
+            <div className="wes-row">
+              <span className="wes-label">Taglia inverter</span>
+              <select className="wes-select" value={inverterId ?? ''} onChange={e => handleInverter(e.target.value)}>
+                <option value="">Seleziona potenza…</option>
+                {(() => {
+                  const seriesList = [...new Set(availableInverters.map(i => i.series))];
+                  if (seriesList.length === 1) {
+                    return availableInverters.map(inv => (
                       <option key={inv.id} value={inv.id}>{fmtKw(inv.powerKw)}</option>
-                    ))}
-                  </optgroup>
-                );
-              })}
-            </select>
-          </div>
+                    ));
+                  }
+                  return seriesList.map(s => {
+                    const items = availableInverters.filter(i => i.series === s);
+                    const first = items[0];
+                    const grpLabel = first.battVoltage === 'low'
+                      ? `${s} — bassa tensione`
+                      : first.battVoltage === 'high'
+                      ? `${s} — alta tensione`
+                      : s;
+                    return (
+                      <optgroup key={s} label={grpLabel}>
+                        {items.map(inv => (
+                          <option key={inv.id} value={inv.id}>{fmtKw(inv.powerKw)}</option>
+                        ))}
+                      </optgroup>
+                    );
+                  });
+                })()}
+              </select>
+            </div>
+          )}
 
           {/* Accumulo (solo ibrido con inverter selezionato) */}
           {wtype === 'hybrid' && selectedInverter && (
