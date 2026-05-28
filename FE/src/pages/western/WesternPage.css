@@ -76,6 +76,13 @@
   box-shadow: 0 0 0 1px rgba(240,152,58,0.15);
 }
 
+/* Pulsante alternativa (es. W-HHS) — de-enfatizzato finché non selezionato */
+.wes-alt-btn:not(.active) {
+  opacity: 0.6;
+  font-size: 12px;
+  border-style: dashed;
+}
+
 .wes-select {
   min-width: 230px;
   background-color: #1e1c18;

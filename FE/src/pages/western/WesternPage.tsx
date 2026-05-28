@@ -11,7 +11,7 @@ import WSettingsModal from './components/WSettingsModal';
 import MacroPreview from '../fotovoltaico/components/MacroPreview';
 import './WesternPage.css';
 
-const VERSION = 'v1.3.1';
+const VERSION = 'v1.3.2';
 
 function fmtKw(kw: number): string {
   const s = kw.toString();
@@ -47,6 +47,7 @@ export default function WesternPage() {
   const [battModPerTower, setBattModPerTower] = useState<number | null>(null);
   const [userMeter, setUserMeter]             = useState(false);
   const [mpptChoice, setMpptChoice]           = useState<1 | 2 | null>(null);
+  const [useHhs, setUseHhs]                   = useState(false);
   const [meterType, setMeterType]             = useState<TriMeterType | null>(null);
   const [taSize, setTaSize]                   = useState<TaAmps | null>(null);
   const [result, setResult]                   = useState<WResultItem[] | null>(null);
@@ -84,7 +85,7 @@ export default function WesternPage() {
     setPhase(p);
     if (selectedInverter && selectedInverter.phase !== p) setInverterId(null);
     setBattTowers(null); setBattModPerTower(null);
-    setMpptChoice(null); setMeterType(null); setTaSize(null);
+    setMpptChoice(null); setUseHhs(false); setMeterType(null); setTaSize(null);
     clearResult();
   };
 
@@ -92,7 +93,7 @@ export default function WesternPage() {
     setWtype(t);
     if (selectedInverter && selectedInverter.wtype !== t) setInverterId(null);
     if (t === 'ongrid') { setBattTowers(null); setBattModPerTower(null); }
-    setMpptChoice(null);
+    setMpptChoice(null); setUseHhs(false);
     resetMeter();
     clearResult();
   };
@@ -149,11 +150,13 @@ export default function WesternPage() {
   };
 
   // Inverter disponibili per la combo selezionata, ordinati per kW
-  // Per mono di stringa, filtra per MPPT scelto
   const availableInverters = catalog.inverters
     .filter(i => {
       if (i.phase !== phase || i.wtype !== wtype) return false;
+      // Mono di stringa: filtra per MPPT scelto
       if (phase === 'mono' && wtype === 'ongrid' && mpptChoice !== null) return i.mppt === mpptChoice;
+      // Mono ibrido: HES (bassa) di default, HHS (alta) se useHhs
+      if (phase === 'mono' && wtype === 'hybrid') return useHhs ? i.battVoltage === 'high' : i.battVoltage === 'low';
       return true;
     })
     .sort((a, b) => a.powerKw - b.powerKw || a.label.localeCompare(b.label));
@@ -226,6 +229,25 @@ export default function WesternPage() {
               </button>
             </div>
           </div>
+
+          {/* Alternativa HHS — solo monofase ibrido */}
+          {phase === 'mono' && wtype === 'hybrid' && (
+            <div className="wes-row">
+              <span className="wes-label">Batteria</span>
+              <div className="wes-btn-group">
+                <button
+                  className={`wes-opt-btn${!useHhs ? ' active' : ''}`}
+                  onClick={() => { if (useHhs) { setUseHhs(false); setInverterId(null); clearResult(); } }}>
+                  Bassa tens. — W-HES
+                </button>
+                <button
+                  className={`wes-opt-btn wes-alt-btn${useHhs ? ' active' : ''}`}
+                  onClick={() => { if (!useHhs) { setUseHhs(true); setInverterId(null); clearResult(); } }}>
+                  Alternativa: Alta tens. — W-HHS
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Ingressi MPPT — solo monofase di stringa */}
           {phase === 'mono' && wtype === 'ongrid' && (
