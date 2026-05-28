@@ -36,13 +36,6 @@ function downloadFile(content: string, filename: string) {
   URL.revokeObjectURL(url); document.body.removeChild(a);
 }
 
-function invOptionLabel(label: string, kw: number, mppt: number, battVoltage?: string): string {
-  if (battVoltage) {
-    const t = battVoltage === 'low' ? 'bassa tens.' : 'alta tens.';
-    return `${label} — ${fmtKw(kw)} (${t})`;
-  }
-  return `${label} — ${fmtKw(kw)} (${mppt} MPPT)`;
-}
 
 export default function WesternPage() {
   const navigate = useNavigate();
@@ -203,12 +196,23 @@ export default function WesternPage() {
           <div className="wes-row">
             <span className="wes-label">Taglia inverter</span>
             <select className="wes-select" value={inverterId ?? ''} onChange={e => handleInverter(e.target.value)}>
-              <option value="">Seleziona modello…</option>
-              {availableInverters.map(inv => (
-                <option key={inv.id} value={inv.id}>
-                  {invOptionLabel(inv.label, inv.powerKw, inv.mppt, inv.battVoltage)}
-                </option>
-              ))}
+              <option value="">Seleziona potenza…</option>
+              {[...new Set(availableInverters.map(i => i.series))].map(series => {
+                const items = availableInverters.filter(i => i.series === series);
+                const first = items[0];
+                const grpLabel = first.battVoltage === 'low'
+                  ? `${series} — bassa tensione`
+                  : first.battVoltage === 'high'
+                  ? `${series} — alta tensione`
+                  : series;
+                return (
+                  <optgroup key={series} label={grpLabel}>
+                    {items.map(inv => (
+                      <option key={inv.id} value={inv.id}>{fmtKw(inv.powerKw)}</option>
+                    ))}
+                  </optgroup>
+                );
+              })}
             </select>
           </div>
 
