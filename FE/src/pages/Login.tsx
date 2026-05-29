@@ -38,6 +38,7 @@ export default function Login() {
             <div className="login-logo-sub">Configuratori — Accesso riservato</div>
           </div>
         </div>
+        <a href="/" className="login-back-link">← Torna a OmniaPi</a>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="form-group">

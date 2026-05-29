@@ -27,6 +27,21 @@
   --shadow-lit:     0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(37,99,235,0.07), inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
+/* ── Page transitions ── */
+@keyframes appFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes routeFadeIn {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+#root { animation: appFadeIn 0.35s ease both; }
+
+.cfg-page-fade { animation: routeFadeIn 0.22s ease both; }
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body, #root {
@@ -344,6 +359,24 @@ input:focus, textarea:focus, select:focus {
 .login-logo-icon { font-size: 28px; }
 .login-logo-title { font-size: 20px; font-weight: 700; }
 .login-logo-sub   { font-size: 12px; color: var(--text-muted); }
+
+.login-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-bottom: 20px;
+  margin-top: -10px;
+  transition: color 0.15s;
+}
+
+.login-back-link:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
 
 /* ── Home Page ── */
 .home-grid {
