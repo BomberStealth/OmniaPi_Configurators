@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { getSession, logout } from '../auth';
 import './Home.css';
 
 type Status = 'active' | 'dev';
@@ -62,32 +61,10 @@ const TOOLS: Tool[] = [
 
 export default function Home() {
   const navigate = useNavigate();
-  const session = getSession();
   const activeCount = TOOLS.filter(t => t.status === 'active').length;
-
-  const handleLogout = () => { logout(); window.location.reload(); };
 
   return (
     <div className="page home-page">
-      <header className="app-header">
-        <span className="app-header-icon">⚙</span>
-        <div>
-          <div className="app-header-title">OmniaPi Configuratori</div>
-          <div className="app-header-sub">Strumenti di configurazione e preventivazione</div>
-        </div>
-        <div className="app-header-right">
-          {session ? (
-            <div className="hdr-user">
-              <div className="hdr-avatar">{session.name.charAt(0).toUpperCase()}</div>
-              <span className="hdr-name">{session.name}</span>
-              <button className="btn btn-secondary btn-sm" onClick={handleLogout}>Esci</button>
-            </div>
-          ) : (
-            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/login')}>Accedi</button>
-          )}
-        </div>
-      </header>
-
       <div className="container">
         <section className="home-hero">
           <div className="home-hero-eyebrow">OmniaPi · Suite</div>

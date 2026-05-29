@@ -1,0 +1,119 @@
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { getSession, logout } from '../auth';
+import './Navbar.css';
+
+interface NavItem {
+  label: string;
+  to?: string;
+  href?: string;
+  isActive: (path: string) => boolean;
+}
+
+const NAV_ITEMS: NavItem[] = [
+  {
+    label: 'Home',
+    href: '/',
+    isActive: () => false,
+  },
+  {
+    label: 'Configuratori',
+    to: '/',
+    isActive: (p) => p !== '/info',
+  },
+  {
+    label: 'Info',
+    to: '/info',
+    isActive: (p) => p === '/info',
+  },
+];
+
+export default function Navbar() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const session = getSession();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [indicator, setIndicator] = useState({ left: 0, width: 0, opacity: 0 });
+
+  const slide = (el: HTMLElement) => {
+    setIndicator({ left: el.offsetLeft, width: el.offsetWidth, opacity: 1 });
+  };
+
+  const slideToActive = () => {
+    if (!containerRef.current) return;
+    const active = containerRef.current.querySelector('.cfg-nav-link.active') as HTMLElement | null;
+    if (active) slide(active);
+    else setIndicator(prev => ({ ...prev, opacity: 0 }));
+  };
+
+  useEffect(() => {
+    const id = requestAnimationFrame(slideToActive);
+    return () => cancelAnimationFrame(id);
+  }, [location.pathname]);
+
+  const handleLogout = () => { logout(); navigate('/login'); };
+
+  return (
+    <header className="cfg-navbar">
+      <div className="cfg-navbar-inner">
+        <Link to="/" className="cfg-navbar-logo">
+          <span className="cfg-navbar-logo-icon">⚙</span>
+          <span className="cfg-navbar-logo-text">
+            OmniaPi <strong>Configuratori</strong>
+          </span>
+        </Link>
+
+        <div
+          className="cfg-navbar-links"
+          ref={containerRef}
+          onMouseLeave={slideToActive}
+        >
+          <div
+            className="cfg-nav-indicator"
+            style={{ left: indicator.left, width: indicator.width, opacity: indicator.opacity }}
+          />
+          {NAV_ITEMS.map(item => {
+            const isActive = item.isActive(location.pathname);
+            const cls = `cfg-nav-link${isActive ? ' active' : ''}`;
+            if (item.href) {
+              return (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className={cls}
+                  onMouseEnter={e => slide(e.currentTarget)}
+                >
+                  {item.label}
+                </a>
+              );
+            }
+            return (
+              <Link
+                key={item.label}
+                to={item.to!}
+                className={cls}
+                onMouseEnter={e => slide(e.currentTarget)}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="cfg-navbar-right">
+          {session ? (
+            <div className="cfg-navbar-user">
+              <div className="cfg-navbar-avatar">{session.name.charAt(0).toUpperCase()}</div>
+              <span className="cfg-navbar-username">{session.name}</span>
+              <button className="btn btn-secondary btn-sm" onClick={handleLogout}>Esci</button>
+            </div>
+          ) : (
+            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/login')}>
+              Accedi
+            </button>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}

@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getSession } from '../../auth';
 import type { Phase, WType, WCatalog } from './utils/catalog';
 import { loadCatalog, saveCatalog, effectiveModuleRange } from './utils/catalog';
@@ -37,7 +36,6 @@ function downloadFile(content: string, filename: string) {
 }
 
 export default function WesternPage() {
-  const navigate = useNavigate();
   const session = getSession();
 
   const [phase, setPhase]                     = useState<Phase>('mono');
@@ -216,26 +214,24 @@ export default function WesternPage() {
 
   return (
     <div className="wes-page">
-      <div className="app-header">
-        <button className="btn-icon" onClick={() => navigate('/')}>←</button>
-        <span className="app-header-icon">🔋</span>
-        <div>
-          <div className="app-header-title">
-            Configuratore Western &amp; Co
-            <span className="ftv-version">{VERSION}</span>
+      <div className="wes-body">
+        <div className="tool-page-header">
+          <div className="tool-page-header-left">
+            <span className="tool-page-header-icon">🔋</span>
+            <div>
+              <div className="tool-page-header-title">
+                Configuratore Western &amp; Co
+                <span className="ftv-version">{VERSION}</span>
+              </div>
+              <div className="tool-page-header-sub">Inverter fotovoltaici — calcolo materiali + macro AS400</div>
+            </div>
           </div>
-          <div className="app-header-sub">Inverter fotovoltaici — calcolo materiali + macro AS400</div>
-        </div>
-        <div className="app-header-right">
           {session && (
             <button className="btn btn-secondary btn-sm" onClick={() => setShowSettings(true)}>
               ⚙ Codici
             </button>
           )}
         </div>
-      </div>
-
-      <div className="wes-body">
         <div className="card wes-config-card">
 
           {/* Alimentazione */}

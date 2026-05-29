@@ -1,0 +1,137 @@
+.cfg-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: rgba(255, 255, 255, 0.90);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 12px rgba(37, 99, 235, 0.07);
+}
+
+.cfg-navbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 62px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ── Logo ── */
+.cfg-navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.cfg-navbar-logo:hover { text-decoration: none; }
+
+.cfg-navbar-logo-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.cfg-navbar-logo-text {
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.cfg-navbar-logo-text strong {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+/* ── Nav pill container ── */
+.cfg-navbar-links {
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding: 4px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  gap: 2px;
+}
+
+/* Sliding indicator */
+.cfg-nav-indicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.12), 0 2px 10px rgba(0, 0, 0, 0.06);
+  transition:
+    left   0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    width  0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.18s;
+  pointer-events: none;
+}
+
+/* Nav links */
+.cfg-nav-link {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.14s;
+  cursor: pointer;
+}
+
+.cfg-nav-link:hover {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.cfg-nav-link.active {
+  color: var(--accent);
+}
+
+/* ── Right section ── */
+.cfg-navbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.cfg-navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cfg-navbar-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cfg-navbar-username {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}

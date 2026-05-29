@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { Orientation, StructType, GridState } from './utils/calculator';
 import { calcola, getGroups } from './utils/calculator';
 import { loadCatalog } from './utils/catalog';
@@ -39,8 +38,6 @@ function downloadFile(content: string, filename: string) {
 }
 
 export default function FotovoltaicoPage() {
-  const navigate = useNavigate();
-
   const [orient, setOrient] = useState<Orientation>('verticale');
   const [struct, setStruct] = useState<StructType>('teg-mur');
   const [controvento, setControvento] = useState(false);
@@ -110,26 +107,24 @@ export default function FotovoltaicoPage() {
 
   return (
     <div className="ftv-page">
-      <div className="app-header">
-        <button className="btn-icon" onClick={() => navigate('/')}>←</button>
-        <span className="app-header-icon">☀</span>
-        <div>
-          <div className="app-header-title">
-            Preventivatore Struttura FTV
-            <span className="ftv-version">{VERSION}</span>
+      <div className="ftv-body">
+        <div className="tool-page-header">
+          <div className="tool-page-header-left">
+            <span className="tool-page-header-icon">☀</span>
+            <div>
+              <div className="tool-page-header-title">
+                Preventivatore Struttura FTV
+                <span className="ftv-version">{VERSION}</span>
+              </div>
+              <div className="tool-page-header-sub">Calcolo materiali + generazione macro AS400</div>
+            </div>
           </div>
-          <div className="app-header-sub">Calcolo materiali + generazione macro AS400</div>
-        </div>
-        <div className="app-header-right">
           {getSession() && (
             <button className="btn btn-secondary btn-sm" onClick={() => setShowSettings(true)}>
               ⚙ Codici
             </button>
           )}
         </div>
-      </div>
-
-      <div className="ftv-body">
         <div className="card ftv-section">
           <ControlBar
             orient={orient} struct={struct} controvento={controvento}
