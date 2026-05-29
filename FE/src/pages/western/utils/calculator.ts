@@ -18,16 +18,89 @@ function accItem(acc: AccessoryEntry, qty: number, note: string): WResultItem {
 }
 
 export function calcola(
-  inverterId: string,
+  inverterId: string | null,
   battTowers: number | null,
   battModulesPerTower: number | null,
   includeMeter: boolean,
   triMeterType: TriMeterType | null,
   taAmps: TaAmps | null,
   catalog: WCatalog,
+  triHybTotalKw: number | null = null,
+  triHybKwh: number | null = null,
 ): WResultItem[] {
   const items: WResultItem[] = [];
 
+  // ── Trifase Ibrido Multi-Inverter ─────────────────────────────────────────
+  if (triHybTotalKw !== null) {
+    const storageKwh = triHybKwh ?? 0;
+    // 1 tower for 5-35 kWh, 2 towers for 40-70 kWh, 0 if no storage
+    const towers = storageKwh >= 40 ? 2 : storageKwh >= 5 ? 1 : 0;
+    // Each battery tower requires 1 W-HHT-10K; always at least 1 HHT
+    const numHHT = towers === 2 ? 2 : 1;
+    const hptKw = triHybTotalKw - numHHT * 10;
+
+    // W-HHT-10K (1 or 2 units)
+    const hht = catalog.inverters.find(i => i.id === 'w-hht-10k');
+    if (hht) {
+      items.push({
+        id: hht.id, prefix: hht.prefix, code: hht.code,
+        catalogCode: hht.catalogCode, desc: hht.desc,
+        qty: numHHT,
+        note: numHHT > 1 ? `${numHHT}× W-HHT-10K` : 'W-HHT-10K',
+      });
+    }
+
+    // W-HPT complemento di potenza
+    if (hptKw > 0) {
+      const hpt = catalog.inverters.find(i =>
+        i.phase === 'tri' && i.wtype === 'ongrid' && i.powerKw === hptKw
+      );
+      if (hpt) {
+        items.push({
+          id: hpt.id, prefix: hpt.prefix, code: hpt.code,
+          catalogCode: hpt.catalogCode, desc: hpt.desc,
+          qty: 1,
+          note: `${hpt.label} — complemento potenza`,
+        });
+      }
+    }
+
+    // W-HI Manager + accessori (solo multi-inverter)
+    if (triHybTotalKw > 10) {
+      const hiItems: [string, number, string][] = [
+        ['hi-manager',  1, 'Gestore comunicazione multi-inverter'],
+        ['hi-mgr-acc1', 1, ''],
+        ['hi-mgr-acc2', 3, ''],
+      ];
+      for (const [id, qty, note] of hiItems) {
+        const acc = catalog.accessories.find(a => a.id === id);
+        if (acc) items.push(accItem(acc, qty, note));
+      }
+    }
+
+    // Batterie Force-H3
+    if (towers > 0) {
+      const bat = catalog.batteries.find(b => b.battVoltage === 'high');
+      if (bat) {
+        const modPerTower = storageKwh / towers / 5;
+        const totalMods = modPerTower * towers;
+        items.push({
+          id: bat.id, prefix: bat.prefix, code: bat.code,
+          catalogCode: bat.catalogCode, desc: bat.desc,
+          qty: totalMods,
+          note: `${towers > 1 ? `${towers} torri × ` : ''}${modPerTower} mod — ${storageKwh} kWh`,
+        });
+        if (bat.bmsId) {
+          const bms = catalog.accessories.find(a => a.id === bat.bmsId);
+          if (bms) items.push(accItem(bms, towers, '1 BMS per torre'));
+        }
+      }
+    }
+
+    return items;
+  }
+
+  // ── Standard path ─────────────────────────────────────────────────────────
   const inv = catalog.inverters.find(i => i.id === inverterId);
   if (!inv) return items;
 
@@ -60,12 +133,9 @@ export function calcola(
         note: `${battTowers > 1 ? `${battTowers} torri × ` : ''}${battModulesPerTower} mod — ${totKwh} kWh${voltageInfo}`,
       });
 
-      // BMS (1 per torre) se la batteria lo richiede
       if (bat.bmsId) {
         const bms = catalog.accessories.find(a => a.id === bat.bmsId);
-        if (bms) {
-          items.push(accItem(bms, battTowers, '1 BMS per torre'));
-        }
+        if (bms) items.push(accItem(bms, battTowers, '1 BMS per torre'));
       }
     }
   }

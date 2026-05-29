@@ -11,7 +11,7 @@ import WSettingsModal from './components/WSettingsModal';
 import MacroPreview from '../fotovoltaico/components/MacroPreview';
 import './WesternPage.css';
 
-const VERSION = 'v1.3.2';
+const VERSION = 'v1.4.0';
 
 function fmtKw(kw: number): string {
   const s = kw.toString();
@@ -50,6 +50,8 @@ export default function WesternPage() {
   const [useHhs, setUseHhs]                   = useState(false);
   const [meterType, setMeterType]             = useState<TriMeterType | null>(null);
   const [taSize, setTaSize]                   = useState<TaAmps | null>(null);
+  const [triHybTotalKw, setTriHybTotalKw]     = useState<number | null>(null);
+  const [triHybKwh, setTriHybKwh]             = useState<number | null>(null);
   const [result, setResult]                   = useState<WResultItem[] | null>(null);
   const [calcDone, setCalcDone]               = useState(false);
   const [macroData, setMacroData]             = useState<WMacroResult | null>(null);
@@ -64,7 +66,9 @@ export default function WesternPage() {
     setUserMeter(false); setMeterType(null); setTaSize(null);
   }, []);
 
-  // Derivati dallo stato
+  // Derived
+  const isTriHybrid = phase === 'tri' && wtype === 'hybrid';
+
   const selectedInverter = inverterId
     ? (catalog.inverters.find(i => i.id === inverterId) ?? null)
     : null;
@@ -77,7 +81,6 @@ export default function WesternPage() {
     ? effectiveModuleRange(compatBattery, selectedInverter)
     : { min: 0, max: 0 };
 
-  // Per W-HPT > 45kW l'inserzione diretta non è supportata
   const forceTa = phase === 'tri' && wtype === 'ongrid'
     && selectedInverter != null && selectedInverter.powerKw > 45;
 
@@ -86,6 +89,7 @@ export default function WesternPage() {
     if (selectedInverter && selectedInverter.phase !== p) setInverterId(null);
     setBattTowers(null); setBattModPerTower(null);
     setMpptChoice(null); setUseHhs(false); setMeterType(null); setTaSize(null);
+    setTriHybTotalKw(null); setTriHybKwh(null);
     clearResult();
   };
 
@@ -94,14 +98,13 @@ export default function WesternPage() {
     if (selectedInverter && selectedInverter.wtype !== t) setInverterId(null);
     if (t === 'ongrid') { setBattTowers(null); setBattModPerTower(null); }
     setMpptChoice(null); setUseHhs(false);
+    setTriHybTotalKw(null); setTriHybKwh(null);
     resetMeter();
     clearResult();
   };
 
   const handleMppt = (n: 1 | 2) => {
-    setMpptChoice(n);
-    setInverterId(null);
-    clearResult();
+    setMpptChoice(n); setInverterId(null); clearResult();
   };
 
   const handleInverter = (id: string) => {
@@ -111,7 +114,7 @@ export default function WesternPage() {
     clearResult();
   };
 
-  // Condizione CALCOLA
+  // canCalcola
   const battOk = wtype === 'ongrid' || compatBattery === null || (
     battModPerTower !== null &&
     (compatBattery.maxTowers <= 1 || battTowers !== null)
@@ -119,9 +122,16 @@ export default function WesternPage() {
   const meterOk = wtype === 'hybrid' || !userMeter || phase === 'mono' || (
     meterType !== null && (meterType !== 'ta' || taSize !== null)
   );
-  const canCalcola = inverterId !== null && battOk && meterOk;
+  const canCalcola = isTriHybrid
+    ? triHybTotalKw !== null
+    : (inverterId !== null && battOk && meterOk);
 
   const handleCalcola = () => {
+    if (isTriHybrid) {
+      const res = calcola(null, null, null, false, null, null, catalog, triHybTotalKw, triHybKwh ?? 0);
+      setResult(res); setCalcDone(true); setMacroData(null);
+      return;
+    }
     if (!inverterId) return;
     const towers = compatBattery && compatBattery.maxTowers > 1 ? (battTowers ?? 1) : 1;
     const triMeter = phase === 'tri' && wtype === 'ongrid' && userMeter ? meterType : null;
@@ -138,30 +148,43 @@ export default function WesternPage() {
   };
 
   const handleGenMacro = () => {
-    if (!result || !selectedInverter) return;
-    const towers = compatBattery && battTowers ? battTowers : 1;
-    const totKwh = compatBattery && battModPerTower
-      ? towers * battModPerTower * compatBattery.moduleKwh
-      : null;
-    const macro = genMacro(result, selectedInverter.label, phase, wtype, totKwh);
+    if (!result) return;
+    let invLabel: string;
+    let totKwh: number | null = null;
+
+    if (isTriHybrid && triHybTotalKw !== null) {
+      const kwhVal = triHybKwh ?? 0;
+      const towers = kwhVal >= 40 ? 2 : kwhVal >= 5 ? 1 : 0;
+      const numHHT = towers === 2 ? 2 : 1;
+      const hptKw = triHybTotalKw - numHHT * 10;
+      invLabel = `W-HHT-10K_x${numHHT}${hptKw > 0 ? `_W-HPT-${hptKw}K` : ''}`;
+      totKwh = kwhVal > 0 ? kwhVal : null;
+    } else {
+      if (!selectedInverter) return;
+      invLabel = selectedInverter.label;
+      const towers = compatBattery && battTowers ? battTowers : 1;
+      totKwh = compatBattery && battModPerTower
+        ? towers * battModPerTower * compatBattery.moduleKwh
+        : null;
+    }
+
+    const macro = genMacro(result, invLabel, phase, wtype, totKwh);
     setMacroData(macro);
     downloadFile(macro.xml, macro.filename);
     showToast('✅ ' + macro.filename);
   };
 
-  // Inverter disponibili per la combo selezionata, ordinati per kW
+  // Inverter disponibili (non usato per tri hybrid)
   const availableInverters = catalog.inverters
     .filter(i => {
       if (i.phase !== phase || i.wtype !== wtype) return false;
-      // Mono di stringa: filtra per MPPT scelto
       if (phase === 'mono' && wtype === 'ongrid' && mpptChoice !== null) return i.mppt === mpptChoice;
-      // Mono ibrido: HES (bassa) di default, HHS (alta) se useHhs
       if (phase === 'mono' && wtype === 'hybrid') return useHhs ? i.battVoltage === 'high' : i.battVoltage === 'low';
       return true;
     })
     .sort((a, b) => a.powerKw - b.powerKw || a.label.localeCompare(b.label));
 
-  // Summary chip
+  // Battery summary chip
   const batSummary = (() => {
     if (!compatBattery || !battModPerTower) return null;
     const towers = compatBattery.maxTowers > 1 ? (battTowers ?? 1) : 1;
@@ -173,12 +196,23 @@ export default function WesternPage() {
     return `${battModPerTower}× ${compatBattery.label} — ${totKwh} kWh`;
   })();
 
-  const summary = [
-    phase === 'mono' ? 'Monofase' : 'Trifase',
-    wtype === 'ongrid' ? 'Di Stringa' : 'Ibrido',
-    selectedInverter?.label ?? null,
-    batSummary,
-  ].filter(Boolean).join(' · ');
+  const summary = (() => {
+    if (isTriHybrid) {
+      if (!triHybTotalKw) return '';
+      const parts: string[] = ['Trifase Ibrido', `${triHybTotalKw} kW`];
+      if (triHybKwh) parts.push(`${triHybKwh} kWh`);
+      return parts.join(' · ');
+    }
+    return [
+      phase === 'mono' ? 'Monofase' : 'Trifase',
+      wtype === 'ongrid' ? 'Di Stringa' : 'Ibrido',
+      selectedInverter?.label ?? null,
+      batSummary,
+    ].filter(Boolean).join(' · ');
+  })();
+
+  const showMeterSection = inverterId !== null || (isTriHybrid && triHybTotalKw !== null);
+  const showNoBatWarning = calcDone && isTriHybrid && (triHybTotalKw ?? 0) > 10 && !triHybKwh;
 
   return (
     <div className="wes-page">
@@ -230,7 +264,50 @@ export default function WesternPage() {
             </div>
           </div>
 
-          {/* Alternativa HHS — solo monofase ibrido */}
+          {/* ── Trifase Ibrido: potenza + accumulo ── */}
+          {isTriHybrid && (
+            <>
+              <div className="wes-row">
+                <span className="wes-label">Potenza totale</span>
+                <div className="wes-btn-group">
+                  {[10, 20, 30, 40, 50].map(kw => (
+                    <button key={kw}
+                      className={`wes-opt-btn${triHybTotalKw === kw ? ' active' : ''}`}
+                      onClick={() => { setTriHybTotalKw(kw); setTriHybKwh(null); clearResult(); }}>
+                      {kw} kW
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {triHybTotalKw !== null && triHybTotalKw > 10 && (
+                <div className="wes-himanager-banner">
+                  ⚡ Impianto MULTI INVERTER CON GESTIONE HI-MANAGER
+                </div>
+              )}
+
+              {triHybTotalKw !== null && (
+                <div className="wes-row">
+                  <span className="wes-label">Accumulo</span>
+                  <select className="wes-select" value={triHybKwh ?? ''}
+                    onChange={e => { setTriHybKwh(e.target.value ? Number(e.target.value) : null); clearResult(); }}>
+                    {triHybTotalKw > 10
+                      ? <option value="">Nessun accumulo</option>
+                      : <option value="">Seleziona…</option>
+                    }
+                    {[5, 10, 15, 20, 25, 30, 35].map(kwh => (
+                      <option key={kwh} value={kwh}>{kwh} kWh (1 torre × {kwh / 5} mod)</option>
+                    ))}
+                    {triHybTotalKw > 10 && [40, 50, 60, 70].map(kwh => (
+                      <option key={kwh} value={kwh}>{kwh} kWh (2 torri × {kwh / 2 / 5} mod)</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ── Alternativa HHS — solo monofase ibrido ── */}
           {phase === 'mono' && wtype === 'hybrid' && (
             <div className="wes-row">
               <span className="wes-label">Batteria</span>
@@ -249,7 +326,7 @@ export default function WesternPage() {
             </div>
           )}
 
-          {/* Ingressi MPPT — solo monofase di stringa */}
+          {/* ── Ingressi MPPT — solo monofase di stringa ── */}
           {phase === 'mono' && wtype === 'ongrid' && (
             <div className="wes-row">
               <span className="wes-label">Ingressi MPPT</span>
@@ -264,8 +341,8 @@ export default function WesternPage() {
             </div>
           )}
 
-          {/* Taglia inverter — mostrato solo dopo aver scelto MPPT (per mono stringa) */}
-          {(phase !== 'mono' || wtype !== 'ongrid' || mpptChoice !== null) && (
+          {/* ── Taglia inverter (tutti tranne trifase ibrido) ── */}
+          {!isTriHybrid && (phase !== 'mono' || wtype !== 'ongrid' || mpptChoice !== null) && (
             <div className="wes-row">
               <span className="wes-label">Taglia inverter</span>
               <select className="wes-select" value={inverterId ?? ''} onChange={e => handleInverter(e.target.value)}>
@@ -278,8 +355,8 @@ export default function WesternPage() {
                     ));
                   }
                   return seriesList.map(s => {
-                    const items = availableInverters.filter(i => i.series === s);
-                    const first = items[0];
+                    const its = availableInverters.filter(i => i.series === s);
+                    const first = its[0];
                     const grpLabel = first.battVoltage === 'low'
                       ? `${s} — bassa tensione`
                       : first.battVoltage === 'high'
@@ -287,7 +364,7 @@ export default function WesternPage() {
                       : s;
                     return (
                       <optgroup key={s} label={grpLabel}>
-                        {items.map(inv => (
+                        {its.map(inv => (
                           <option key={inv.id} value={inv.id}>{fmtKw(inv.powerKw)}</option>
                         ))}
                       </optgroup>
@@ -298,8 +375,8 @@ export default function WesternPage() {
             </div>
           )}
 
-          {/* Accumulo (solo ibrido con inverter selezionato) */}
-          {wtype === 'hybrid' && selectedInverter && (
+          {/* ── Accumulo (ibrido non-tri, con inverter selezionato) ── */}
+          {!isTriHybrid && wtype === 'hybrid' && selectedInverter && (
             <>
               {compatBattery ? (
                 <>
@@ -315,7 +392,6 @@ export default function WesternPage() {
                       </select>
                     </div>
                   )}
-
                   {(compatBattery.maxTowers <= 1 || battTowers !== null) && modRange.max >= modRange.min && (
                     <div className="wes-row">
                       <span className="wes-label">
@@ -325,7 +401,7 @@ export default function WesternPage() {
                         onChange={e => { setBattModPerTower(e.target.value ? Number(e.target.value) : null); clearResult(); }}>
                         <option value="">N. moduli…</option>
                         {Array.from({ length: modRange.max - modRange.min + 1 }, (_, i) => modRange.min + i).map(n => {
-                          const tow = (compatBattery.maxTowers > 1 ? (battTowers ?? 1) : 1);
+                          const tow = compatBattery.maxTowers > 1 ? (battTowers ?? 1) : 1;
                           const kwh = (tow * n * compatBattery.moduleKwh).toFixed(2);
                           const vSuf = compatBattery.battVoltage === 'high'
                             ? ` — ${(n * compatBattery.nominalV).toFixed(0)}V`
@@ -350,7 +426,7 @@ export default function WesternPage() {
           )}
 
           {/* CT / Meter */}
-          {inverterId && (
+          {showMeterSection && (
             <>
               <div className="wes-row">
                 <span className="wes-label">CT / Meter</span>
@@ -372,7 +448,6 @@ export default function WesternPage() {
                 )}
               </div>
 
-              {/* Tipo meter — solo trifase di stringa con meter attivo */}
               {wtype === 'ongrid' && phase === 'tri' && userMeter && (
                 <div className="wes-row">
                   <span className="wes-label">Tipo connessione</span>
@@ -396,7 +471,6 @@ export default function WesternPage() {
                 </div>
               )}
 
-              {/* Amperaggio TA */}
               {wtype === 'ongrid' && phase === 'tri' && userMeter && meterType === 'ta' && (
                 <div className="wes-row">
                   <span className="wes-label">Amperaggio TA</span>
@@ -413,7 +487,6 @@ export default function WesternPage() {
             </>
           )}
 
-          {/* Summary + buttons */}
           {summary && <div className="wes-summary">{summary}</div>}
 
           <div className="wes-calc-row">
@@ -435,6 +508,11 @@ export default function WesternPage() {
         {/* Results */}
         {result && result.length > 0 && (
           <div className="card wes-results-card">
+            {showNoBatWarning && (
+              <div className="wes-warning wes-warning-info">
+                ⚡ Inverter predisposto fino a 35 kW di accumulo — nessuna batteria inclusa
+              </div>
+            )}
             <div className="wes-warning">
               ⚠️ Verifica a cura del cliente — I quantitativi sono calcolati automaticamente e vanno verificati prima della conferma d'ordine.
             </div>
@@ -446,8 +524,8 @@ export default function WesternPage() {
                 <span className="wt-desc">Descrizione</span>
                 <span className="wt-qty">Qtà</span>
               </div>
-              {result.map(it => (
-                <div key={it.id} className="wes-t-row">
+              {result.map((it, idx) => (
+                <div key={`${it.id}-${idx}`} className="wes-t-row">
                   <span className="wt-prec wt-v-prec">{it.prefix || 'WST'}</span>
                   <span className="wt-codint wt-v-codint">{it.code || '—'}</span>
                   <span className="wt-art wt-v-art">{it.catalogCode || '—'}</span>

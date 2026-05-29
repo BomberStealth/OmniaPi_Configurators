@@ -241,6 +241,33 @@ export const DEFAULT_CATALOG: WCatalog = {
       catalogCode: '018330',
       desc: 'ESCT-T36-600/5A - TA DA 600A',
     },
+    // W-HI Manager — comunicazione multi-inverter
+    {
+      id: 'hi-manager',
+      label: 'W-HI Manager',
+      prefix: 'WST',
+      code: '514214',
+      catalogCode: '018761',
+      desc: 'W-HI MANAGER',
+    },
+    // Accessorio HI-Manager 019310 (1 per sistema) — cod. int. da verificare
+    {
+      id: 'hi-mgr-acc1',
+      label: '019310',
+      prefix: 'WST',
+      code: '',
+      catalogCode: '019310',
+      desc: '019310',
+    },
+    // Accessorio HI-Manager 019503 (3 per sistema) — cod. int. da verificare
+    {
+      id: 'hi-mgr-acc2',
+      label: '019503',
+      prefix: 'WST',
+      code: '',
+      catalogCode: '019503',
+      desc: '019503',
+    },
   ],
 };
 

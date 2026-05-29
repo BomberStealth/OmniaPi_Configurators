@@ -247,3 +247,23 @@
   cursor: default;
   opacity: 0.6;
 }
+
+/* HI-Manager banner */
+.wes-himanager-banner {
+  padding: 10px 16px;
+  background: rgba(37, 99, 235, 0.07);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  border-radius: var(--radius-xs);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+/* No-battery info warning variant */
+.wes-warning-info {
+  background: rgba(37, 99, 235, 0.07);
+  border-color: rgba(37, 99, 235, 0.25);
+  color: var(--accent);
+  font-weight: 600;
+}
