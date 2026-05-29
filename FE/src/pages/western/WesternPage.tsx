@@ -433,7 +433,7 @@ export default function WesternPage() {
                 {wtype === 'hybrid' ? (
                   <label className="wes-meter-label wes-meter-included">
                     <input type="checkbox" checked={true} readOnly />
-                    CT/Meter già compresi in confezione
+                    {!(isTriHybrid && (triHybTotalKw ?? 0) > 10) && 'CT/Meter già compresi in confezione'}
                   </label>
                 ) : (
                   <label className="wes-meter-label">
