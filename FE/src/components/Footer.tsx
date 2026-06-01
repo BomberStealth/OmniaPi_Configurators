@@ -26,15 +26,15 @@ export default function Footer() {
 
       <div className="cfg-footer-legal">
         <p>
-          I marchi, i nomi commerciali e i codici prodotto di <strong>Western Energy</strong> e degli altri produttori
-          citati in questo strumento sono di proprietà esclusiva dei rispettivi titolari. OmniaPi non è affiliata,
+          I marchi, i nomi commerciali e i codici prodotto di <strong>Western Energy</strong>, <strong>EDIF</strong> e
+          degli altri produttori citati sono di proprietà esclusiva dei rispettivi titolari. OmniaPi non è affiliata,
           sponsorizzata né approvata da alcuna delle aziende citate.
         </p>
         <p>
-          I codici prodotto e i listini sono utilizzati esclusivamente per finalità di preventivazione interna.
-          I calcoli e le liste materiali sono da intendersi come stime indicative e non sostituiscono la
-          documentazione tecnica ufficiale dei produttori. OmniaPi declina ogni responsabilità per eventuali
-          imprecisioni nei dati di catalogo.
+          I codici prodotto EDIF sono utilizzati esclusivamente per la generazione di ordini interni tramite il sistema
+          AS400 e non vengono divulgati a terzi. Questo strumento è ad accesso riservato e destinato esclusivamente
+          all'uso interno del personale autorizzato. I calcoli e le liste materiali sono stime indicative e non
+          sostituiscono la documentazione tecnica ufficiale dei produttori.
         </p>
       </div>
     </footer>
