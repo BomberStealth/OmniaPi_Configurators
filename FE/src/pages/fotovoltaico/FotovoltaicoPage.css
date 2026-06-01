@@ -6,7 +6,7 @@
 
 .ftv-body {
   flex: 1;
-  max-width: 960px;
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
   padding: 24px 20px 40px;
@@ -17,11 +17,6 @@
 
 .ftv-section {
   /* inherits .card styles from index.css */
-}
-
-.ftv-grid-card {
-  align-self: flex-start;
-  width: fit-content;
 }
 
 .ftv-version {
@@ -66,9 +61,9 @@
 
 .avanzo-bar strong { color: var(--accent); }
 
-/* ── Falde ── */
+/* ── Impianto section ── */
 
-.falda-section {
+.impianto-section {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -80,7 +75,7 @@
   position: relative;
 }
 
-.falda-section::before {
+.impianto-section::before {
   content: '';
   position: absolute;
   top: 0; left: 25%; right: 25%;
@@ -89,7 +84,7 @@
   pointer-events: none;
 }
 
-.falda-header {
+.impianto-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -97,19 +92,19 @@
   border-bottom: 1px solid var(--border);
 }
 
-.falda-header-left {
+.impianto-header-left {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.falda-number {
+.impianto-number {
   font-size: 16px;
   font-weight: 700;
   color: var(--text);
 }
 
-.falda-done-badge {
+.impianto-done-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -122,7 +117,7 @@
   font-weight: 700;
 }
 
-.falda-remove-btn {
+.impianto-remove-btn {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -138,12 +133,111 @@
   transition: all 0.15s;
 }
 
-.falda-remove-btn:hover {
+.impianto-remove-btn:hover {
   background: var(--danger);
   color: #fff;
 }
 
-.falda-add-btn {
+/* ── Grids row (falde affiancate) ── */
+
+.impianto-grids-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+/* Ogni card di falda: dimensione naturale */
+.falda-grid-card {
+  align-self: flex-start;
+  width: fit-content;
+}
+
+/* Mini header sopra ogni griglia (solo se più falde) */
+.falda-grid-mini-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  gap: 16px;
+}
+
+.falda-grid-remove-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--danger-border);
+  background: var(--danger-dim);
+  color: var(--danger);
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.falda-grid-remove-btn:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+/* Pulsante aggiungi falda — si allunga per matchare l'altezza delle griglie */
+.falda-grid-add-btn {
+  align-self: stretch;
+  min-height: 200px;
+  min-width: 120px;
+  border: 2px dashed var(--border-hover);
+  border-radius: var(--radius);
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s;
+  font-family: 'Space Grotesk', sans-serif;
+  padding: 20px;
+}
+
+.falda-grid-add-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.falda-grid-add-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 300;
+}
+
+.falda-grid-add-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ── Aggiungi impianto (bottom, full width) ── */
+
+.impianto-add-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -161,13 +255,13 @@
   width: 100%;
 }
 
-.falda-add-btn:hover {
+.impianto-add-btn:hover {
   border-color: var(--accent);
   background: var(--accent-dim);
   color: var(--accent);
 }
 
-.falda-add-icon {
+.impianto-add-icon {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -180,14 +274,16 @@
   font-weight: 400;
 }
 
-.falda-macro-bar {
+/* ── Macro bar ── */
+
+.ftv-macro-bar {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
 }
 
-.falda-macro-count {
+.ftv-macro-count {
   font-size: 12px;
   color: var(--text-muted);
   font-weight: 500;

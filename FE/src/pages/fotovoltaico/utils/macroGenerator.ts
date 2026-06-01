@@ -9,7 +9,7 @@ export interface MacroResult {
 }
 
 export interface FaldaMacroInput {
-  faldaNum: number;
+  label: string; // '' = no prefix; 'Falda 1', 'Impianto 1 Falda 2', etc.
   items: ResultItem[];
   orient: Orientation;
   struct: StructType;
@@ -69,15 +69,12 @@ function itemBlock(c: { p?: string; c: string }, qty: number): string {
 }
 
 export function genMacroMulti(falde: FaldaMacroInput[], cat: Catalog): MacroResult {
-  const multiMode = falde.length > 1;
-
   const nameParts = falde.map(f => {
     const o = getOrientCode(f.orient);
     const s = getStructCode(f.struct);
     const desc = f.groups.map(g => g.count).join('+') || '0';
-    return `F${f.faldaNum}_${o}_${s}_${desc}`;
+    return `${o}_${s}_${desc}`;
   });
-
   const filename = `Str_${nameParts.join('-')}.mac`;
 
   let mac = `<HAScript name="StrutturaFTV" description="" timeout="60000" pausetime="400" promptall="true" blockinput="true" author="export" creationdate="${getDT()}" supressclearevents="false" usevars="false" ignorepauseforenhancedtn="true" delayifnotenhancedtn="0" ignorepausetimeforenhancedtn="true" continueontimeout="true">
@@ -87,20 +84,17 @@ export function genMacroMulti(falde: FaldaMacroInput[], cat: Catalog): MacroResu
 
   let totalCnt = 0;
 
-  for (const falda of falde) {
-    const o = getOrientCode(falda.orient);
-    const s = getStructCode(falda.struct);
-    const desc = falda.groups.map(g => g.count).join('+') || '0';
-    const r30desc = multiMode
-      ? `Falda ${falda.faldaNum} - Str ${o} ${s} ${desc}`
-      : `Str ${o} ${s} ${desc}`;
+  for (const f of falde) {
+    const o = getOrientCode(f.orient);
+    const s = getStructCode(f.struct);
+    const desc = f.groups.map(g => g.count).join('+') || '0';
+    const structDesc = `Str ${o} ${s} ${desc}`;
+    const r30desc = f.label ? `${f.label} - ${structDesc}` : structDesc;
 
     mac += riga30Block(r30desc);
-
-    for (const it of falda.items) {
+    for (const it of f.items) {
       if (it.qty <= 0) continue;
-      const c = cat[it.key];
-      mac += itemBlock(c, it.qty);
+      mac += itemBlock(cat[it.key], it.qty);
       totalCnt++;
     }
   }
@@ -111,8 +105,8 @@ export function genMacroMulti(falde: FaldaMacroInput[], cat: Catalog): MacroResu
     </screen>
 </HAScript>`;
 
-  const previewInfo = multiMode
-    ? `${falde.length} falde · ${totalCnt} art`
+  const previewInfo = falde.length > 1
+    ? `${falde.length} sezioni · ${totalCnt} art`
     : `R30+${totalCnt}art`;
 
   return { xml: mac, filename, articleCount: totalCnt, previewInfo };
@@ -126,5 +120,5 @@ export function genMacro(
   struct: StructType,
   groups: Group[],
 ): MacroResult {
-  return genMacroMulti([{ faldaNum: 1, items, orient, struct, groups }], cat);
+  return genMacroMulti([{ label: '', items, orient, struct, groups }], cat);
 }
