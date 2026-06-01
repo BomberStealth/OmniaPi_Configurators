@@ -10,9 +10,10 @@ interface Props {
   orient: Orientation;
   panW: number;
   panH: number;
+  title?: string;
 }
 
-export default function GridDiagram({ gridState, gridRows, gridCols, orient, panW, panH }: Props) {
+export default function GridDiagram({ gridState, gridRows, gridCols, orient, panW, panH, title }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   const cellMmW = orient === 'verticale' ? panW : panH;
@@ -113,10 +114,10 @@ export default function GridDiagram({ gridState, gridRows, gridCols, orient, pan
   return (
     <div className="grid-diagram">
       <div className="grid-diagram-header">
-        <span className="grid-diagram-title">Schema impianto</span>
-        <button className="btn btn-secondary btn-sm" onClick={downloadPng}>↓ Scarica PNG</button>
+        <span className="grid-diagram-title">{title ?? 'Schema impianto'}</span>
+        <span className="grid-diagram-hint">↓ clicca per scaricare PNG</span>
       </div>
-      <div className="grid-diagram-scroll">
+      <div className="grid-diagram-scroll" onClick={downloadPng} title="Clicca per scaricare PNG">
         <svg ref={svgRef} width={svgW} height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} xmlns="http://www.w3.org/2000/svg">
           <rect width={svgW} height={svgH} fill={BG} rx={10} />
 

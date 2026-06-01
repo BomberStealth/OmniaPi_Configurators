@@ -61,6 +61,65 @@
 
 .avanzo-bar strong { color: var(--accent); }
 
+.falda-result-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── BOM collapsibile ── */
+
+.bom-collapsible {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.bom-collapsible-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 20px;
+  background: rgba(37,99,235,0.04);
+  border: none;
+  cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.bom-collapsible-header:hover {
+  background: rgba(37,99,235,0.08);
+}
+
+.bom-collapsible-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+}
+
+.bom-collapsible-meta {
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+  background: var(--accent-dim);
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.bom-collapsible-chevron {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+.bom-collapsible-body {
+  padding: 0 20px 16px;
+  border-top: 1px solid var(--border);
+}
+
 /* ── Impianto section ── */
 
 .impianto-section {

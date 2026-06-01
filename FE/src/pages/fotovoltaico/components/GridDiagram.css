@@ -33,9 +33,22 @@
   letter-spacing: 0.08em;
 }
 
+.grid-diagram-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.6;
+  font-style: italic;
+}
+
 .grid-diagram-scroll {
   padding: 16px 20px;
   overflow-x: auto;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.grid-diagram-scroll:hover {
+  background: rgba(37,99,235,0.03);
 }
 
 /* Net dimensions breakdown */

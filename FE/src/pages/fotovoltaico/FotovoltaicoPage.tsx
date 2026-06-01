@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { Orientation, StructType, GridState } from './utils/calculator';
+import type { Orientation, StructType, GridState, ResultItem } from './utils/calculator';
 import { calcola, getGroups } from './utils/calculator';
 import { loadCatalog } from './utils/catalog';
 import type { Catalog } from './utils/catalog';
@@ -19,7 +19,6 @@ const VERSION = 'v1.7.0';
 let _idCounter = 0;
 function nextId() { return String(++_idCounter); }
 
-// Una singola falda = una griglia indipendente dentro un impianto
 interface FaldaGrid {
   id: string;
   gridRows: number;
@@ -28,7 +27,6 @@ interface FaldaGrid {
   result: ReturnType<typeof calcola>;
 }
 
-// Un impianto = sezione con una ControlBar condivisa + N falde affiancate
 interface ImpiantoConfig {
   id: string;
   orient: Orientation;
@@ -57,12 +55,32 @@ function makeImpianto(): ImpiantoConfig {
   };
 }
 
-// Label per la macro AS400
 function buildMacroLabel(totalImpianti: number, faldeCnt: number, iNum: number, fNum: number): string {
   if (totalImpianti === 1 && faldeCnt === 1) return '';
   if (totalImpianti === 1) return `Falda ${fNum}`;
   if (faldeCnt === 1) return `Impianto ${iNum}`;
   return `Impianto ${iNum} Falda ${fNum}`;
+}
+
+// BOM collapsibile — chiuso di default per risparmiare spazio
+function CollapsibleBOM({ title, items, cat }: { title?: string; items: ResultItem[]; cat: Catalog }) {
+  const [open, setOpen] = useState(false);
+  const count = items.filter(it => it.qty > 0).length;
+  const label = title || 'Lista materiale';
+  return (
+    <div className="bom-collapsible card ftv-section">
+      <button className="bom-collapsible-header" onClick={() => setOpen(o => !o)}>
+        <span className="bom-collapsible-title">{label}</span>
+        <span className="bom-collapsible-meta">{count} articoli</span>
+        <span className="bom-collapsible-chevron">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="bom-collapsible-body">
+          <ResultsTable items={items} cat={cat} />
+        </div>
+      )}
+    </div>
+  );
 }
 
 function showToast(msg: string) {
@@ -93,7 +111,6 @@ export default function FotovoltaicoPage() {
   const [macroData, setMacroData] = useState<MacroResult | null>(null);
   const [showSettings, setShowSettings] = useState(false);
 
-  // ── Aggiorna impianto (dati condivisi)
   const updateImpianto = useCallback((impId: string, patch: Partial<Omit<ImpiantoConfig, 'falde'>>) => {
     setImpianti(prev => prev.map(imp =>
       imp.id === impId
@@ -103,7 +120,6 @@ export default function FotovoltaicoPage() {
     setMacroData(null);
   }, []);
 
-  // ── Aggiorna falda grid dentro un impianto
   const updateFaldaGrid = useCallback((impId: string, faldaId: string, patch: Partial<FaldaGrid>) => {
     setImpianti(prev => prev.map(imp => {
       if (imp.id !== impId) return imp;
@@ -116,34 +132,22 @@ export default function FotovoltaicoPage() {
     setMacroData(null);
   }, []);
 
-  // ── Aggiungi/rimuovi impianto
-  const handleAddImpianto = () => {
-    setImpianti(prev => [...prev, makeImpianto()]);
-    setMacroData(null);
-  };
-  const handleRemoveImpianto = (impId: string) => {
-    setImpianti(prev => prev.filter(imp => imp.id !== impId));
-    setMacroData(null);
-  };
+  const handleAddImpianto = () => { setImpianti(prev => [...prev, makeImpianto()]); setMacroData(null); };
+  const handleRemoveImpianto = (impId: string) => { setImpianti(prev => prev.filter(imp => imp.id !== impId)); setMacroData(null); };
 
-  // ── Aggiungi/rimuovi falda dentro un impianto
   const handleAddFalda = (impId: string) => {
     setImpianti(prev => prev.map(imp =>
-      imp.id === impId
-        ? { ...imp, falde: [...imp.falde, makeFaldaGrid()], calcDone: false }
-        : imp
+      imp.id === impId ? { ...imp, falde: [...imp.falde, makeFaldaGrid()], calcDone: false } : imp
     ));
     setMacroData(null);
   };
   const handleRemoveFalda = (impId: string, faldaId: string) => {
-    setImpianti(prev => prev.map(imp => {
-      if (imp.id !== impId) return imp;
-      return { ...imp, falde: imp.falde.filter(f => f.id !== faldaId), calcDone: false };
-    }));
+    setImpianti(prev => prev.map(imp =>
+      imp.id !== impId ? imp : { ...imp, falde: imp.falde.filter(f => f.id !== faldaId), calcDone: false }
+    ));
     setMacroData(null);
   };
 
-  // ── Calcola tutte le falde di un impianto
   const handleCalcola = (impId: string) => {
     setImpianti(prev => prev.map(imp => {
       if (imp.id !== impId) return imp;
@@ -159,11 +163,9 @@ export default function FotovoltaicoPage() {
     setMacroData(null);
   };
 
-  // ── Genera macro combinata
   const handleGenMacro = () => {
     const calcolati = impianti.filter(imp => imp.calcDone);
     if (calcolati.length === 0) return;
-
     const totalImpianti = calcolati.length;
     const inputs = calcolati.flatMap((imp, iIdx) =>
       imp.falde.map((f, fIdx) => ({
@@ -174,14 +176,11 @@ export default function FotovoltaicoPage() {
         groups: getGroups(f.gridState, f.gridRows, f.gridCols),
       }))
     );
-
     const macro = genMacroMulti(inputs, catalog);
     setMacroData(macro);
     downloadFile(macro.xml, macro.filename);
     showToast('✅ ' + macro.filename);
   };
-
-  const calcolatiCount = impianti.filter(imp => imp.calcDone).length;
 
   return (
     <div className="ftv-page">
@@ -206,7 +205,6 @@ export default function FotovoltaicoPage() {
 
         {impianti.map((imp, impIdx) => (
           <div key={imp.id} className="impianto-section">
-            {/* Header impianto */}
             <div className="impianto-header">
               <div className="impianto-header-left">
                 <span className="impianto-number">
@@ -215,22 +213,14 @@ export default function FotovoltaicoPage() {
                 {imp.calcDone && <span className="impianto-done-badge">✓</span>}
               </div>
               {impianti.length > 1 && (
-                <button
-                  className="impianto-remove-btn"
-                  onClick={() => handleRemoveImpianto(imp.id)}
-                  title="Rimuovi impianto"
-                >×</button>
+                <button className="impianto-remove-btn" onClick={() => handleRemoveImpianto(imp.id)} title="Rimuovi impianto">×</button>
               )}
             </div>
 
-            {/* ControlBar condivisa */}
             <div className="card ftv-section">
               <ControlBar
-                orient={imp.orient}
-                struct={imp.struct}
-                controvento={imp.controvento}
-                panW={imp.panW}
-                panH={imp.panH}
+                orient={imp.orient} struct={imp.struct} controvento={imp.controvento}
+                panW={imp.panW} panH={imp.panH}
                 onOrient={o => updateImpianto(imp.id, { orient: o })}
                 onStruct={s => updateImpianto(imp.id, { struct: s })}
                 onControvento={v => updateImpianto(imp.id, { controvento: v })}
@@ -239,25 +229,18 @@ export default function FotovoltaicoPage() {
               />
             </div>
 
-            {/* Falde affiancate + pulsante aggiungi */}
             <div className="impianto-grids-row">
               {imp.falde.map((falda, faldaIdx) => (
                 <div key={falda.id} className="card falda-grid-card">
                   {imp.falde.length > 1 && (
                     <div className="falda-grid-mini-header">
                       <span>Falda {faldaIdx + 1}</span>
-                      <button
-                        className="falda-grid-remove-btn"
-                        onClick={() => handleRemoveFalda(imp.id, falda.id)}
-                        title="Rimuovi falda"
-                      >×</button>
+                      <button className="falda-grid-remove-btn" onClick={() => handleRemoveFalda(imp.id, falda.id)} title="Rimuovi falda">×</button>
                     </div>
                   )}
                   <PanelGrid
                     orient={imp.orient}
-                    gridRows={falda.gridRows}
-                    gridCols={falda.gridCols}
-                    gridState={falda.gridState}
+                    gridRows={falda.gridRows} gridCols={falda.gridCols} gridState={falda.gridState}
                     onToggleCell={(r, c) => {
                       const key = `${r},${c}`;
                       const next = { ...falda.gridState };
@@ -275,19 +258,13 @@ export default function FotovoltaicoPage() {
                   />
                 </div>
               ))}
-
-              {/* Pulsante aggiungi falda — stessa altezza delle griglie */}
-              <button
-                className="falda-grid-add-btn"
-                onClick={() => handleAddFalda(imp.id)}
-                title="Aggiungi falda"
-              >
+              <button className="falda-grid-add-btn" onClick={() => handleAddFalda(imp.id)} title="Aggiungi falda">
                 <span className="falda-grid-add-icon">+</span>
                 <span className="falda-grid-add-label">Aggiungi<br />Falda</span>
               </button>
             </div>
 
-            {/* Calcola */}
+            {/* Calcola + Genera Macro nella stessa riga */}
             <div className="ftv-btn-row">
               <button
                 className={`btn btn-primary ftv-calc-btn${imp.calcDone ? ' done' : ''}`}
@@ -295,58 +272,43 @@ export default function FotovoltaicoPage() {
               >
                 {imp.calcDone ? '✓ COMPLETATO' : '⚡ CALCOLA MATERIALI'}
               </button>
+              {imp.calcDone && (
+                <button className="btn btn-blue" onClick={handleGenMacro}>
+                  📄 GENERA MACRO
+                </button>
+              )}
             </div>
 
-            {/* Risultati per ogni falda */}
+            {/* Risultati per ogni falda — BOM collapsibile + schema */}
             {imp.calcDone && imp.falde.map((falda, faldaIdx) => falda.result && (
-              <div key={falda.id}>
+              <div key={falda.id} className="falda-result-block">
                 {falda.result.avanzoText && (
                   <div className="avanzo-bar" dangerouslySetInnerHTML={{ __html: falda.result.avanzoText }} />
                 )}
-                <div className="card ftv-section">
-                  <ResultsTable
-                    items={falda.result.items}
-                    cat={catalog}
-                    title={imp.falde.length > 1 ? `Lista materiale Falda ${faldaIdx + 1}` : undefined}
-                  />
-                </div>
+                <CollapsibleBOM
+                  items={falda.result.items}
+                  cat={catalog}
+                  title={imp.falde.length > 1 ? `Lista materiale Falda ${faldaIdx + 1}` : 'Lista materiale'}
+                />
                 <GridDiagram
-                  gridState={falda.gridState}
-                  gridRows={falda.gridRows}
-                  gridCols={falda.gridCols}
-                  orient={imp.orient}
-                  panW={imp.panW}
-                  panH={imp.panH}
+                  gridState={falda.gridState} gridRows={falda.gridRows} gridCols={falda.gridCols}
+                  orient={imp.orient} panW={imp.panW} panH={imp.panH}
+                  title={imp.falde.length > 1 ? `Schema Falda ${faldaIdx + 1}` : 'Schema impianto'}
                 />
               </div>
             ))}
           </div>
         ))}
 
-        {/* Aggiungi impianto */}
         <button className="impianto-add-btn" onClick={handleAddImpianto}>
           <span className="impianto-add-icon">+</span>
           <span>Aggiungi Impianto</span>
         </button>
 
-        {/* Genera macro globale */}
-        {calcolatiCount > 0 && (
-          <div className="ftv-macro-bar">
-            <button className="btn btn-blue" onClick={handleGenMacro}>
-              📄 GENERA MACRO
-            </button>
-            {calcolatiCount > 1 && (
-              <span className="ftv-macro-count">{calcolatiCount} impianti calcolati</span>
-            )}
-          </div>
-        )}
-
         {macroData && (
           <div className="ftv-section">
             <MacroPreview
-              xml={macroData.xml}
-              filename={macroData.filename}
-              previewInfo={macroData.previewInfo}
+              xml={macroData.xml} filename={macroData.filename} previewInfo={macroData.previewInfo}
               onDownload={() => { downloadFile(macroData.xml, macroData.filename); showToast('✅ ' + macroData.filename); }}
             />
           </div>
