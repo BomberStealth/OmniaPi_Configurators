@@ -28,12 +28,20 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
+// Breadcrumb per le pagine di configuratore specifico
+const TOOL_CRUMBS: Record<string, string> = {
+  '/fotovoltaico': 'Struttura FTV',
+  '/western': 'Western Energy',
+};
+
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const session = getSession();
   const containerRef = useRef<HTMLDivElement>(null);
   const [indicator, setIndicator] = useState({ left: 0, width: 0, opacity: 0 });
+
+  const toolCrumb = TOOL_CRUMBS[location.pathname] ?? null;
 
   const slide = (el: HTMLElement) => {
     setIndicator({ left: el.offsetLeft, width: el.offsetWidth, opacity: 1 });
@@ -52,6 +60,19 @@ export default function Navbar() {
   }, [location.pathname]);
 
   const handleLogout = () => { logout(); navigate('/login'); };
+
+  const renderLabel = (item: NavItem) => {
+    if (item.label === 'Configuratori' && toolCrumb) {
+      return (
+        <>
+          Configuratori
+          <span className="cfg-nav-crumb-sep"> › </span>
+          <span className="cfg-nav-crumb-page">{toolCrumb}</span>
+        </>
+      );
+    }
+    return item.label;
+  };
 
   return (
     <header className="cfg-navbar">
@@ -83,7 +104,7 @@ export default function Navbar() {
                   className={cls}
                   onMouseEnter={e => slide(e.currentTarget)}
                 >
-                  {item.label}
+                  {renderLabel(item)}
                 </a>
               );
             }
@@ -94,7 +115,7 @@ export default function Navbar() {
                 className={cls}
                 onMouseEnter={e => slide(e.currentTarget)}
               >
-                {item.label}
+                {renderLabel(item)}
               </Link>
             );
           })}

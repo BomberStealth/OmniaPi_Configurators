@@ -135,3 +135,26 @@
   color: var(--text-secondary);
   font-weight: 500;
 }
+
+/* ── Breadcrumb dentro il pill Configuratori ── */
+.cfg-nav-crumb-sep {
+  color: var(--text-muted);
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+.cfg-nav-crumb-page {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Quando il pill è attivo (sfondo bianco), sovrascrivi i colori */
+.cfg-nav-link.active .cfg-nav-crumb-sep {
+  color: inherit;
+  opacity: 0.45;
+}
+
+.cfg-nav-link.active .cfg-nav-crumb-page {
+  color: inherit;
+  font-weight: 700;
+}

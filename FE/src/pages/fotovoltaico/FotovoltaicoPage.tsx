@@ -148,7 +148,34 @@ export default function FotovoltaicoPage() {
     setMacroData(null);
   };
 
+  // Resize falda grid — usa functional update per evitare stale closure durante il drag
+  const handleResizeFalda = useCallback((impId: string, faldaId: string, rows: number, cols: number) => {
+    setImpianti(prev => prev.map(imp => {
+      if (imp.id !== impId) return imp;
+      return {
+        ...imp,
+        calcDone: false,
+        falde: imp.falde.map(f => {
+          if (f.id !== faldaId) return f;
+          const next: GridState = {};
+          for (const k in f.gridState) {
+            const [r, c] = k.split(',').map(Number);
+            if (r < rows && c < cols) next[k] = true;
+          }
+          return { ...f, gridRows: rows, gridCols: cols, gridState: next, result: null };
+        }),
+      };
+    }));
+    setMacroData(null);
+  }, []);
+
   const handleCalcola = (impId: string) => {
+    const imp = impianti.find(i => i.id === impId);
+    if (!imp) return;
+    if (!imp.falde.some(f => Object.keys(f.gridState).length > 0)) {
+      showToast('⚠️ Seleziona almeno un pannello prima di calcolare');
+      return;
+    }
     setImpianti(prev => prev.map(imp => {
       if (imp.id !== impId) return imp;
       return {
@@ -247,14 +274,7 @@ export default function FotovoltaicoPage() {
                       if (next[key]) delete next[key]; else next[key] = true;
                       updateFaldaGrid(imp.id, falda.id, { gridState: next });
                     }}
-                    onResize={(rows, cols) => {
-                      const next: GridState = {};
-                      for (const k in falda.gridState) {
-                        const [r, c] = k.split(',').map(Number);
-                        if (r < rows && c < cols) next[k] = true;
-                      }
-                      updateFaldaGrid(imp.id, falda.id, { gridRows: rows, gridCols: cols, gridState: next });
-                    }}
+                    onResize={(rows, cols) => handleResizeFalda(imp.id, falda.id, rows, cols)}
                   />
                 </div>
               ))}

@@ -2,8 +2,8 @@ import type { Orientation, StructType } from '../utils/calculator';
 import './ControlBar.css';
 
 const STRUCT_INFO: Record<StructType, string> = {
-  'teg-mur':  '🧱 Tegola Muratura — Prof: 2600mm — Chimico + Bituminoso',
-  'teg-leg':  '🪵 Tegola Legno — Prof: 2600mm — Solo Bituminoso',
+  'teg-mur':  '🧱 Tegole su soletta cemento — Prof: 2600mm — Chimico + Bituminoso',
+  'teg-leg':  '🪵 Tegole su travi in legno — Prof: 2600mm — Solo Bituminoso',
   'flat038':  '🏢 Flat 0,38 — Viti: 4/prof (×50) — Nastro: 15cm/prof — Bitum: 1/20 prof',
   'flat260':  '🏢 Flat 2,60 — Viti: 4/prof (×50) — Nastro: 15cm/prof — Bitum: 1/20 prof',
   'zav0':     '🪨 Zavorre 0° — 2x ZTP1311/zavorra — Morsetti centrali + terminali su lato lungo — Terminali su lato corto',
@@ -73,8 +73,8 @@ export default function ControlBar({ orient, struct, controvento, panW, panH, on
               className={`struct-btn${struct === s ? ' active' : ''}`}
               onClick={() => onStruct(s)}
             >
-              {s === 'teg-mur' ? 'Teg-Mur' :
-               s === 'teg-leg' ? 'Teg-Leg' :
+              {s === 'teg-mur' ? 'Teg. Cemento' :
+               s === 'teg-leg' ? 'Teg. Legno' :
                s === 'flat038' ? 'Flat 0,38' :
                s === 'flat260' ? 'Flat 2,60' : 'Zavorre 0°'}
             </button>
