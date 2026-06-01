@@ -20,8 +20,22 @@ export default function Footer() {
         </nav>
 
         <div className="cfg-footer-copy">
-          © {new Date().getFullYear()} OmniaPi
+          © {new Date().getFullYear()} OmniaPi — Tutti i diritti riservati
         </div>
+      </div>
+
+      <div className="cfg-footer-legal">
+        <p>
+          I marchi, i nomi commerciali e i codici prodotto di <strong>Western Energy</strong> e degli altri produttori
+          citati in questo strumento sono di proprietà esclusiva dei rispettivi titolari. OmniaPi non è affiliata,
+          sponsorizzata né approvata da alcuna delle aziende citate.
+        </p>
+        <p>
+          I codici prodotto e i listini sono utilizzati esclusivamente per finalità di preventivazione interna.
+          I calcoli e le liste materiali sono da intendersi come stime indicative e non sostituiscono la
+          documentazione tecnica ufficiale dei produttori. OmniaPi declina ogni responsabilità per eventuali
+          imprecisioni nei dati di catalogo.
+        </p>
       </div>
     </footer>
   );
