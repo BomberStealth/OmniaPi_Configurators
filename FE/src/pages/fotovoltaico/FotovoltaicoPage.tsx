@@ -3,7 +3,8 @@ import type { Orientation, StructType, GridState } from './utils/calculator';
 import { calcola, getGroups } from './utils/calculator';
 import { loadCatalog } from './utils/catalog';
 import type { Catalog } from './utils/catalog';
-import { genMacro } from './utils/macroGenerator';
+import { genMacroMulti } from './utils/macroGenerator';
+import type { MacroResult } from './utils/macroGenerator';
 import PanelGrid from './components/PanelGrid';
 import ControlBar from './components/ControlBar';
 import ResultsTable from './components/ResultsTable';
@@ -13,7 +14,40 @@ import SettingsModal from './components/SettingsModal';
 import { getSession } from '../../auth';
 import './FotovoltaicoPage.css';
 
-const VERSION = 'v1.5.0';
+const VERSION = 'v1.6.0';
+
+let _idCounter = 0;
+function nextId() { return String(++_idCounter); }
+
+interface FaldaConfig {
+  id: string;
+  orient: Orientation;
+  struct: StructType;
+  controvento: boolean;
+  gridRows: number;
+  gridCols: number;
+  gridState: GridState;
+  panW: number;
+  panH: number;
+  result: ReturnType<typeof calcola>;
+  calcDone: boolean;
+}
+
+function makeFalda(): FaldaConfig {
+  return {
+    id: nextId(),
+    orient: 'verticale',
+    struct: 'teg-mur',
+    controvento: false,
+    gridRows: 3,
+    gridCols: 6,
+    gridState: {},
+    panW: 1134,
+    panH: 1762,
+    result: null,
+    calcDone: false,
+  };
+}
 
 function showToast(msg: string) {
   const existing = document.querySelector('.toast');
@@ -38,72 +72,51 @@ function downloadFile(content: string, filename: string) {
 }
 
 export default function FotovoltaicoPage() {
-  const [orient, setOrient] = useState<Orientation>('verticale');
-  const [struct, setStruct] = useState<StructType>('teg-mur');
-  const [controvento, setControvento] = useState(false);
-  const [gridRows, setGridRows] = useState(3);
-  const [gridCols, setGridCols] = useState(6);
-  const [gridState, setGridState] = useState<GridState>({});
-  const [panW, setPanW] = useState(1134);
-  const [panH, setPanH] = useState(1762);
+  const [falde, setFalde] = useState<FaldaConfig[]>(() => [makeFalda()]);
   const [catalog, setCatalog] = useState<Catalog>(loadCatalog);
-
-  const [result, setResult] = useState<ReturnType<typeof calcola>>(null);
-  const [calcDone, setCalcDone] = useState(false);
-  const [macroData, setMacroData] = useState<ReturnType<typeof genMacro> | null>(null);
+  const [macroData, setMacroData] = useState<MacroResult | null>(null);
   const [showSettings, setShowSettings] = useState(false);
 
-  const clearResult = useCallback(() => {
-    setResult(null);
-    setCalcDone(false);
-    setMacroData(null);
+  const updateFalda = useCallback((id: string, patch: Partial<FaldaConfig>) => {
+    setFalde(prev => prev.map(f => f.id === id ? { ...f, ...patch } : f));
   }, []);
 
-  const handleOrient = (o: Orientation) => { setOrient(o); clearResult(); };
-  const handleStruct = (s: StructType) => { setStruct(s); clearResult(); };
-  const handleControvento = (v: boolean) => { setControvento(v); clearResult(); };
-
-  const handleToggleCell = (r: number, c: number) => {
-    setGridState(prev => {
-      const key = `${r},${c}`;
-      const next = { ...prev };
-      if (next[key]) delete next[key];
-      else next[key] = true;
-      return next;
-    });
-    clearResult();
+  const handleAddFalda = () => {
+    setFalde(prev => [...prev, makeFalda()]);
+    setMacroData(null);
   };
 
-  const handleResize = (rows: number, cols: number) => {
-    setGridRows(rows);
-    setGridCols(cols);
-    setGridState(prev => {
-      const next: GridState = {};
-      for (const k in prev) {
-        const [r, c] = k.split(',').map(Number);
-        if (r < rows && c < cols) next[k] = true;
-      }
-      return next;
-    });
-    clearResult();
+  const handleRemoveFalda = (id: string) => {
+    setFalde(prev => prev.filter(f => f.id !== id));
+    setMacroData(null);
   };
 
-  const handleCalcola = () => {
-    const res = calcola(gridState, gridRows, gridCols, orient, struct, panW, panH, controvento);
-    setResult(res);
-    setCalcDone(true);
+  const handleCalcola = (id: string) => {
+    setFalde(prev => prev.map(f => {
+      if (f.id !== id) return f;
+      const res = calcola(f.gridState, f.gridRows, f.gridCols, f.orient, f.struct, f.panW, f.panH, f.controvento);
+      return { ...f, result: res, calcDone: true };
+    }));
     setMacroData(null);
   };
 
   const handleGenMacro = () => {
-    if (!result) return;
-    const macro = genMacro(result.items, catalog, orient, struct, getGroups(gridState, gridRows, gridCols));
+    const calcolate = falde.filter(f => f.calcDone && f.result);
+    if (calcolate.length === 0) return;
+    const inputs = calcolate.map((f, idx) => ({
+      faldaNum: idx + 1,
+      items: f.result!.items,
+      orient: f.orient,
+      struct: f.struct,
+      groups: getGroups(f.gridState, f.gridRows, f.gridCols),
+    }));
+    const macro = genMacroMulti(inputs, catalog);
     setMacroData(macro);
     downloadFile(macro.xml, macro.filename);
     showToast('✅ ' + macro.filename);
   };
 
-  const avanzoText = result?.avanzoText ?? null;
+  const calcolateCount = falde.filter(f => f.calcDone && f.result).length;
 
   return (
     <div className="ftv-page">
@@ -116,7 +129,7 @@ export default function FotovoltaicoPage() {
                 Preventivatore Struttura FTV
                 <span className="ftv-version">{VERSION}</span>
               </div>
-              <div className="tool-page-header-sub">Calcolo materiali + generazione macro AS400</div>
+              <div className="tool-page-header-sub">Calcolo materiali per falda + generazione macro AS400</div>
             </div>
           </div>
           {getSession() && (
@@ -125,58 +138,121 @@ export default function FotovoltaicoPage() {
             </button>
           )}
         </div>
-        <div className="card ftv-section">
-          <ControlBar
-            orient={orient} struct={struct} controvento={controvento}
-            panW={panW} panH={panH}
-            onOrient={handleOrient} onStruct={handleStruct} onControvento={handleControvento}
-            onPanW={v => { setPanW(v); clearResult(); }}
-            onPanH={v => { setPanH(v); clearResult(); }}
-          />
-        </div>
 
-        <div className="card ftv-section ftv-grid-card">
-          <PanelGrid
-            orient={orient} gridRows={gridRows} gridCols={gridCols}
-            gridState={gridState} onToggleCell={handleToggleCell} onResize={handleResize}
-          />
-        </div>
+        {falde.map((falda, faldaIdx) => (
+          <div key={falda.id} className="falda-section">
+            <div className="falda-header">
+              <div className="falda-header-left">
+                <span className="falda-number">Falda {faldaIdx + 1}</span>
+                {falda.calcDone && <span className="falda-done-badge">✓</span>}
+              </div>
+              {falde.length > 1 && (
+                <button
+                  className="falda-remove-btn"
+                  onClick={() => handleRemoveFalda(falda.id)}
+                  title="Rimuovi falda"
+                >
+                  ×
+                </button>
+              )}
+            </div>
 
-        <div className="ftv-btn-row">
-          <button
-            className={`btn btn-primary ftv-calc-btn${calcDone ? ' done' : ''}`}
-            onClick={handleCalcola}
-          >
-            {calcDone ? '✓ COMPLETATO' : '⚡ CALCOLA MATERIALI'}
-          </button>
-          {calcDone && (
+            <div className="card ftv-section">
+              <ControlBar
+                orient={falda.orient}
+                struct={falda.struct}
+                controvento={falda.controvento}
+                panW={falda.panW}
+                panH={falda.panH}
+                onOrient={o => updateFalda(falda.id, { orient: o, result: null, calcDone: false })}
+                onStruct={s => updateFalda(falda.id, { struct: s, result: null, calcDone: false })}
+                onControvento={v => updateFalda(falda.id, { controvento: v, result: null, calcDone: false })}
+                onPanW={v => updateFalda(falda.id, { panW: v, result: null, calcDone: false })}
+                onPanH={v => updateFalda(falda.id, { panH: v, result: null, calcDone: false })}
+              />
+            </div>
+
+            <div className="card ftv-section ftv-grid-card">
+              <PanelGrid
+                orient={falda.orient}
+                gridRows={falda.gridRows}
+                gridCols={falda.gridCols}
+                gridState={falda.gridState}
+                onToggleCell={(r, c) => {
+                  const key = `${r},${c}`;
+                  const next = { ...falda.gridState };
+                  if (next[key]) delete next[key]; else next[key] = true;
+                  updateFalda(falda.id, { gridState: next, result: null, calcDone: false });
+                }}
+                onResize={(rows, cols) => {
+                  const next: GridState = {};
+                  for (const k in falda.gridState) {
+                    const [r, c] = k.split(',').map(Number);
+                    if (r < rows && c < cols) next[k] = true;
+                  }
+                  updateFalda(falda.id, { gridRows: rows, gridCols: cols, gridState: next, result: null, calcDone: false });
+                }}
+              />
+            </div>
+
+            <div className="ftv-btn-row">
+              <button
+                className={`btn btn-primary ftv-calc-btn${falda.calcDone ? ' done' : ''}`}
+                onClick={() => handleCalcola(falda.id)}
+              >
+                {falda.calcDone ? '✓ COMPLETATO' : '⚡ CALCOLA MATERIALI'}
+              </button>
+            </div>
+
+            {falda.result?.avanzoText && (
+              <div className="avanzo-bar" dangerouslySetInnerHTML={{ __html: falda.result.avanzoText }} />
+            )}
+
+            {falda.result && (
+              <div className="card ftv-section">
+                <ResultsTable
+                  items={falda.result.items}
+                  cat={catalog}
+                  title={falde.length > 1 ? `Lista materiale Falda ${faldaIdx + 1}` : undefined}
+                />
+              </div>
+            )}
+
+            {falda.result && (
+              <GridDiagram
+                gridState={falda.gridState}
+                gridRows={falda.gridRows}
+                gridCols={falda.gridCols}
+                orient={falda.orient}
+                panW={falda.panW}
+                panH={falda.panH}
+              />
+            )}
+          </div>
+        ))}
+
+        <button className="falda-add-btn" onClick={handleAddFalda}>
+          <span className="falda-add-icon">+</span>
+          <span>Aggiungi Falda</span>
+        </button>
+
+        {calcolateCount > 0 && (
+          <div className="falda-macro-bar">
             <button className="btn btn-blue" onClick={handleGenMacro}>
               📄 GENERA MACRO
             </button>
-          )}
-        </div>
-
-        {avanzoText && (
-          <div className="avanzo-bar" dangerouslySetInnerHTML={{ __html: avanzoText }} />
-        )}
-
-        {result && (
-          <div className="card ftv-section">
-            <ResultsTable items={result.items} cat={catalog} />
+            {calcolateCount > 1 && (
+              <span className="falda-macro-count">{calcolateCount} falde calcolate</span>
+            )}
           </div>
-        )}
-
-        {result && (
-          <GridDiagram
-            gridState={gridState} gridRows={gridRows} gridCols={gridCols}
-            orient={orient} panW={panW} panH={panH}
-          />
         )}
 
         {macroData && (
           <div className="ftv-section">
             <MacroPreview
-              xml={macroData.xml} filename={macroData.filename} previewInfo={macroData.previewInfo}
+              xml={macroData.xml}
+              filename={macroData.filename}
+              previewInfo={macroData.previewInfo}
               onDownload={() => { downloadFile(macroData.xml, macroData.filename); showToast('✅ ' + macroData.filename); }}
             />
           </div>
@@ -186,7 +262,7 @@ export default function FotovoltaicoPage() {
       {showSettings && (
         <SettingsModal
           catalog={catalog}
-          onSave={cat => { setCatalog(cat); clearResult(); }}
+          onSave={cat => { setCatalog(cat); setMacroData(null); }}
           onClose={() => setShowSettings(false)}
         />
       )}

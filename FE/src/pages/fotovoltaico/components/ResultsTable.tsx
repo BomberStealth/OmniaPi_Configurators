@@ -6,14 +6,16 @@ import './ResultsTable.css';
 interface Props {
   items: ResultItem[];
   cat: Catalog;
+  title?: string;
 }
 
-export default function ResultsTable({ items, cat }: Props) {
+export default function ResultsTable({ items, cat, title }: Props) {
   const visible = items.filter(it => it.qty > 0);
   const total = visible.reduce((s, it) => s + it.qty, 0);
 
   return (
     <div className="results-table-wrap">
+      {title && <div className="results-table-title">{title}</div>}
       <div className="warning-banner">
         ⚠️ Verifica a cura del cliente — I quantitativi sono calcolati automaticamente e vanno verificati prima della conferma d'ordine.
       </div>
