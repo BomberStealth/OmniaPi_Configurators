@@ -1,26 +1,25 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-
-// Timestamp univoco per ogni build — usato per rilevare versione deployata
-const BUILD_TS = Date.now().toString();
-
-const versionJsonPlugin = () => ({
-  name: 'version-json',
-  generateBundle() {
-    (this as any).emitFile({
-      type: 'asset',
-      fileName: 'version.json',
-      source: JSON.stringify({ v: BUILD_TS }),
-    });
-  },
-});
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   base: '/configuratori/',
-  plugins: [react(), versionJsonPlugin()],
-  define: {
-    __BUILD_TS__: JSON.stringify(BUILD_TS),
-  },
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      base: '/configuratori/',
+      scope: '/configuratori/',
+      manifest: false,
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        cleanupOutdatedCaches: true,
+        navigateFallback: '/configuratori/index.html',
+        navigateFallbackAllowlist: [/^\/configuratori\//],
+        navigateFallbackDenylist: [/^\/api\//],
+      },
+    }),
+  ],
   build: {
     outDir: 'dist',
     sourcemap: false,
