@@ -14,7 +14,7 @@ import SettingsModal from './components/SettingsModal';
 import { getSession } from '../../auth';
 import './FotovoltaicoPage.css';
 
-const VERSION = 'v1.7.0';
+const VERSION = 'v1.8.0';
 
 let _idCounter = 0;
 function nextId() { return String(++_idCounter); }

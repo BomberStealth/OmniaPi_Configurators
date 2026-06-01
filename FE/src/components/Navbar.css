@@ -136,25 +136,35 @@
   font-weight: 500;
 }
 
-/* ── Breadcrumb dentro il pill Configuratori ── */
-.cfg-nav-crumb-sep {
+/* ── Breadcrumb a due righe dentro il pill Configuratori ── */
+.cfg-nav-crumb-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  line-height: 1;
+}
+
+.cfg-nav-crumb-parent {
+  font-size: 10px;
+  font-weight: 500;
   color: var(--text-muted);
-  font-weight: 400;
-  opacity: 0.6;
+  opacity: 0.75;
+  letter-spacing: 0.01em;
 }
 
-.cfg-nav-crumb-page {
+.cfg-nav-crumb-child {
+  font-size: 12.5px;
+  font-weight: 700;
   color: var(--accent);
-  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
-/* Quando il pill è attivo (sfondo bianco), sovrascrivi i colori */
-.cfg-nav-link.active .cfg-nav-crumb-sep {
-  color: inherit;
-  opacity: 0.45;
+.cfg-nav-link.active .cfg-nav-crumb-parent {
+  opacity: 0.55;
+  color: var(--text-muted);
 }
 
-.cfg-nav-link.active .cfg-nav-crumb-page {
-  color: inherit;
-  font-weight: 700;
+.cfg-nav-link.active .cfg-nav-crumb-child {
+  color: var(--accent);
 }

@@ -64,11 +64,10 @@ export default function Navbar() {
   const renderLabel = (item: NavItem) => {
     if (item.label === 'Configuratori' && toolCrumb) {
       return (
-        <>
-          Configuratori
-          <span className="cfg-nav-crumb-sep"> › </span>
-          <span className="cfg-nav-crumb-page">{toolCrumb}</span>
-        </>
+        <span className="cfg-nav-crumb-stack">
+          <span className="cfg-nav-crumb-parent">Configuratori</span>
+          <span className="cfg-nav-crumb-child">{toolCrumb}</span>
+        </span>
       );
     }
     return item.label;
