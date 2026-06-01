@@ -23,7 +23,6 @@ export function genMacro(
   phase: Phase,
   wtype: WType,
   battTotKwh: number | null,
-  useCatalogCodes = false,
 ): WMacroResult {
   const phLabel = phase === 'mono' ? 'Mono' : 'Tri';
   const batSuffix = wtype === 'hybrid' && battTotKwh ? ` ${battTotKwh.toFixed(2)}kWh` : '';
@@ -44,14 +43,11 @@ export function genMacro(
 
   items.forEach(it => {
     if (it.qty <= 0) return;
-    const code = useCatalogCodes ? it.catalogCode : it.code;
-    if (!code) return; // salta articoli senza codice
-    const prefix = useCatalogCodes ? '' : it.prefix;
     mac += `
             <mouseclick row="19" col="19" />
-            <input value="${xmlEsc(prefix)}" row="0" col="0" movecursor="true" xlatehostkeys="true" encrypted="false" />
+            <input value="${xmlEsc(it.prefix)}" row="0" col="0" movecursor="true" xlatehostkeys="true" encrypted="false" />
             <input value="[tab]" row="0" col="0" movecursor="true" xlatehostkeys="true" encrypted="false" />
-            <input value="${xmlEsc(code)}" row="0" col="0" movecursor="true" xlatehostkeys="true" encrypted="false" />
+            <input value="${xmlEsc(it.code)}" row="0" col="0" movecursor="true" xlatehostkeys="true" encrypted="false" />
             <input value="[tab]" row="0" col="0" movecursor="true" xlatehostkeys="true" encrypted="false" />
             <input value="${xmlEsc(String(it.qty))}" row="0" col="0" movecursor="true" xlatehostkeys="true" encrypted="false" />
             <input value="[enter]" row="0" col="0" movecursor="true" xlatehostkeys="true" encrypted="false" />
@@ -74,8 +70,7 @@ export function genMacro(
 </HAScript>`;
 
   const kwhTag = battTotKwh ? `_${battTotKwh.toFixed(2)}kWh` : '';
-  const suffix = useCatalogCodes ? '_WHi' : '';
-  const filename = `${invLabel}_${wtype === 'ongrid' ? 'OG' : 'HY'}${kwhTag}${suffix}.mac`;
+  const filename = `${invLabel}_${wtype === 'ongrid' ? 'OG' : 'HY'}${kwhTag}.mac`;
 
   return { xml: mac, filename, previewInfo: `R30+${items.length}art` };
 }
