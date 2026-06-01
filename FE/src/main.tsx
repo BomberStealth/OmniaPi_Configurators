@@ -10,7 +10,7 @@ const updateSW = registerSW({
     updateSW(true);
   },
   onOfflineReady() {},
-  onRegisteredSW(_swUrl, registration) {
+  onRegisteredSW(_swUrl: string, registration: ServiceWorkerRegistration | undefined) {
     if (registration) {
       setInterval(() => registration.update(), 30 * 1000);
     }
