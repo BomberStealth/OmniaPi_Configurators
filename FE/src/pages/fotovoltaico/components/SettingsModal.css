@@ -44,7 +44,7 @@
 
 .th-art  { min-width: 130px; }
 .th-prec { width: 72px; }
-.th-code { width: 100px; }
+.th-code { width: 140px; }
 .th-desc { min-width: 200px; }
 
 .settings-input {
@@ -75,7 +75,8 @@
 .input-code {
   font-family: 'JetBrains Mono', monospace;
   font-weight: 500;
-  width: 88px;
+  width: 128px;
+  text-transform: uppercase;
 }
 
 .input-desc { width: 100%; }

@@ -12,7 +12,7 @@ interface Props {
 export default function SettingsModal({ catalog, onSave, onClose }: Props) {
   const [draft, setDraft] = useState<Catalog>({ ...catalog });
 
-  const update = (key: CatalogKey, field: 'p' | 'c' | 'd', value: string) => {
+  const update = (key: CatalogKey, field: 'p' | 'cc' | 'd', value: string) => {
     setDraft(prev => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
   };
 
@@ -38,7 +38,7 @@ export default function SettingsModal({ catalog, onSave, onClose }: Props) {
         </div>
 
         <div className="modal-body">
-          <div className="settings-info">Modifica i codici interni. Le modifiche vengono salvate nel browser.</div>
+          <div className="settings-info">Codici prodotto Contact per la generazione macro AS400. Le modifiche vengono salvate nel browser.</div>
 
           <div className="settings-table-wrap">
             <table className="settings-table">
@@ -46,7 +46,7 @@ export default function SettingsModal({ catalog, onSave, onClose }: Props) {
                 <tr>
                   <th className="th-art">Articolo</th>
                   <th className="th-prec">Prec.</th>
-                  <th className="th-code">Codice</th>
+                  <th className="th-code">Cod. Contact</th>
                   <th className="th-desc">Descrizione</th>
                 </tr>
               </thead>
@@ -65,9 +65,9 @@ export default function SettingsModal({ catalog, onSave, onClose }: Props) {
                     <td>
                       <input
                         className="settings-input input-code"
-                        value={draft[key].c}
-                        maxLength={6}
-                        onChange={e => update(key, 'c', e.target.value)}
+                        value={draft[key].cc ?? ''}
+                        maxLength={20}
+                        onChange={e => update(key, 'cc', e.target.value.toUpperCase())}
                       />
                     </td>
                     <td>
