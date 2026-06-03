@@ -172,6 +172,31 @@ export default function WesternPage() {
     showToast('✅ ' + macro.filename);
   };
 
+  const handleGenMacroWestern = () => {
+    if (!result) return;
+    let invLabel: string;
+    let totKwh: number | null = null;
+    if (isTriHybrid && triHybTotalKw !== null) {
+      const kwhVal = triHybKwh ?? 0;
+      const towers = kwhVal >= 40 ? 2 : kwhVal >= 5 ? 1 : 0;
+      const numHHT = towers === 2 ? 2 : 1;
+      const hptKw = triHybTotalKw - numHHT * 10;
+      invLabel = `W-HHT-10K_x${numHHT}${hptKw > 0 ? `_W-HPT-${hptKw}K` : ''}`;
+      totKwh = kwhVal > 0 ? kwhVal : null;
+    } else {
+      if (!selectedInverter) return;
+      invLabel = selectedInverter.label;
+      const towers = compatBattery && battTowers ? battTowers : 1;
+      totKwh = compatBattery && battModPerTower
+        ? towers * battModPerTower * compatBattery.moduleKwh
+        : null;
+    }
+    const macro = genMacro(result, invLabel, phase, wtype, totKwh, true);
+    setMacroData(macro);
+    downloadFile(macro.xml, macro.filename);
+    showToast('✅ ' + macro.filename);
+  };
+
   // Inverter disponibili (non usato per tri hybrid)
   const availableInverters = catalog.inverters
     .filter(i => {
@@ -496,6 +521,11 @@ export default function WesternPage() {
             {calcDone && (
               <button className="btn btn-blue" onClick={handleGenMacro}>
                 📄 GENERA MACRO
+              </button>
+            )}
+            {calcDone && (
+              <button className="btn btn-secondary" onClick={handleGenMacroWestern}>
+                📄 MACRO WESTERN
               </button>
             )}
           </div>
