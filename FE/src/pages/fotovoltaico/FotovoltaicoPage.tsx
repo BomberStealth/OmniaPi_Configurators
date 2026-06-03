@@ -14,7 +14,7 @@ import SettingsModal from './components/SettingsModal';
 import { getSession } from '../../auth';
 import './FotovoltaicoPage.css';
 
-const VERSION = 'v1.9.0';
+const VERSION = 'v2.0.0';
 
 let _idCounter = 0;
 function nextId() { return String(++_idCounter); }
@@ -190,11 +190,9 @@ export default function FotovoltaicoPage() {
     setMacroData(null);
   };
 
-  const handleGenMacro = () => {
-    const calcolati = impianti.filter(imp => imp.calcDone);
-    if (calcolati.length === 0) return;
+  const buildMacroInputs = (calcolati: ImpiantoConfig[]) => {
     const totalImpianti = calcolati.length;
-    const inputs = calcolati.flatMap((imp, iIdx) =>
+    return calcolati.flatMap((imp, iIdx) =>
       imp.falde.map((f, fIdx) => ({
         label: buildMacroLabel(totalImpianti, imp.falde.length, iIdx + 1, fIdx + 1),
         items: f.result?.items ?? [],
@@ -203,7 +201,21 @@ export default function FotovoltaicoPage() {
         groups: getGroups(f.gridState, f.gridRows, f.gridCols),
       }))
     );
-    const macro = genMacroMulti(inputs, catalog);
+  };
+
+  const handleGenMacro = () => {
+    const calcolati = impianti.filter(imp => imp.calcDone);
+    if (calcolati.length === 0) return;
+    const macro = genMacroMulti(buildMacroInputs(calcolati), catalog);
+    setMacroData(macro);
+    downloadFile(macro.xml, macro.filename);
+    showToast('✅ ' + macro.filename);
+  };
+
+  const handleGenMacroContact = () => {
+    const calcolati = impianti.filter(imp => imp.calcDone);
+    if (calcolati.length === 0) return;
+    const macro = genMacroMulti(buildMacroInputs(calcolati), catalog, true);
     setMacroData(macro);
     downloadFile(macro.xml, macro.filename);
     showToast('✅ ' + macro.filename);
@@ -293,9 +305,14 @@ export default function FotovoltaicoPage() {
                 {imp.calcDone ? '✓ COMPLETATO' : '⚡ CALCOLA MATERIALI'}
               </button>
               {imp.calcDone && (
-                <button className="btn btn-blue" onClick={handleGenMacro}>
-                  📄 GENERA MACRO
-                </button>
+                <>
+                  <button className="btn btn-blue" onClick={handleGenMacro}>
+                    📄 GENERA MACRO
+                  </button>
+                  <button className="btn btn-blue" onClick={handleGenMacroContact}>
+                    📄 MACRO CONTACT
+                  </button>
+                </>
               )}
             </div>
 
