@@ -172,31 +172,6 @@ export default function WesternPage() {
     showToast('✅ ' + macro.filename);
   };
 
-  const handleGenMacroWestern = () => {
-    if (!result) return;
-    let invLabel: string;
-    let totKwh: number | null = null;
-    if (isTriHybrid && triHybTotalKw !== null) {
-      const kwhVal = triHybKwh ?? 0;
-      const towers = kwhVal >= 40 ? 2 : kwhVal >= 5 ? 1 : 0;
-      const numHHT = towers === 2 ? 2 : 1;
-      const hptKw = triHybTotalKw - numHHT * 10;
-      invLabel = `W-HHT-10K_x${numHHT}${hptKw > 0 ? `_W-HPT-${hptKw}K` : ''}`;
-      totKwh = kwhVal > 0 ? kwhVal : null;
-    } else {
-      if (!selectedInverter) return;
-      invLabel = selectedInverter.label;
-      const towers = compatBattery && battTowers ? battTowers : 1;
-      totKwh = compatBattery && battModPerTower
-        ? towers * battModPerTower * compatBattery.moduleKwh
-        : null;
-    }
-    const macro = genMacro(result, invLabel, phase, wtype, totKwh, true);
-    setMacroData(macro);
-    downloadFile(macro.xml, macro.filename);
-    showToast('✅ ' + macro.filename);
-  };
-
   // Inverter disponibili (non usato per tri hybrid)
   const availableInverters = catalog.inverters
     .filter(i => {
@@ -523,11 +498,6 @@ export default function WesternPage() {
                 📄 GENERA MACRO
               </button>
             )}
-            {calcDone && (
-              <button className="btn btn-secondary" onClick={handleGenMacroWestern}>
-                📄 MACRO WESTERN
-              </button>
-            )}
           </div>
         </div>
 
@@ -545,7 +515,6 @@ export default function WesternPage() {
             <div className="wes-table">
               <div className="wes-t-head">
                 <span className="wt-prec">Prec.</span>
-                <span className="wt-codint">Cod. Int.</span>
                 <span className="wt-art">Articolo</span>
                 <span className="wt-desc">Descrizione</span>
                 <span className="wt-qty">Qtà</span>
@@ -553,7 +522,6 @@ export default function WesternPage() {
               {result.map((it, idx) => (
                 <div key={`${it.id}-${idx}`} className="wes-t-row">
                   <span className="wt-prec wt-v-prec">{it.prefix || 'WST'}</span>
-                  <span className="wt-codint wt-v-codint">{it.code || '—'}</span>
                   <span className="wt-art wt-v-art">{it.catalogCode || '—'}</span>
                   <div className="wt-desc">
                     <div className="wt-v-desc">{it.desc}</div>

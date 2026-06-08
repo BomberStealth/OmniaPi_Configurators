@@ -1,8 +1,7 @@
 export interface ArticleEntry {
   p: string; // precedente (prefisso magazzino)
-  c: string; // codice articolo (EDIF interno)
+  c: string; // codice prodotto (produttore/Contact)
   d: string; // descrizione
-  cc?: string; // codice prodotto Contact
 }
 
 export type CatalogKey =
@@ -67,177 +66,177 @@ export type Catalog = Record<CatalogKey, ArticleEntry>;
 
 export const DEFAULT_CATALOG: Catalog = {
   // ── Calcolati dal configuratore (Solar-Light) ─────────────────────────────
-  profilo:    { p: 'IIC', c: '530370', d: 'PROFILO TRAVE SOLAR-LIGHT 2,60MT',     cc: 'PRT2334-260' },
-  giunto:     { p: 'IIC', c: '438522', d: 'PROFILO/GIUNTO SOLAR-LIGHT 200MM',     cc: 'PRL3360' },
-  mCentrale:  { p: 'IIC', c: '533019', d: 'KIT MORSETTO CENTRALE 28-48 MM',       cc: 'KMCN2848' },
-  mTerminale: { p: 'IIC', c: '532649', d: 'KIT MORSETTO TERMINALE UNIV. 28-48',   cc: 'KMTN2848' },
-  vitone:     { p: 'IIC', c: '438561', d: 'VITE DOPPIO FILETTO M10X300 C/3 DADI', cc: 'STA10300' },
-  tMartello:  { p: 'IIC', c: '438552', d: 'VITE M8X25 TESTA A MARTELLO INOX',     cc: 'VT1001' },
-  piastra:    { p: 'IIC', c: '438565', d: 'PIASTRA DI CONNESSIONE PROFILO/M10',   cc: 'ACC0001' },
-  dado:       { p: 'IIC', c: '438553', d: 'DADO ESAGONALE FLANGIATO M8 INOX',     cc: 'VT0006' },
-  chimico:    { p: 'FIS', c: '181706', d: 'ANCORANTE CHIMICO BICOMPONENTE 300ML' },
-  bituminoso: { p: 'FIS', c: '238900', d: 'TH/SILICONE NERO SB 310ML BITUMINOSO' },
-  flatSlim038:{ p: 'IIC', c: '438534', d: 'PROFILO CONTACT FLAT-SLIM 0,38MT',     cc: 'PRT2264-38' },
-  flatSlim260:{ p: 'IIC', c: '530377', d: 'PROFILO CONTACT FLAT-SLIM 2,60MT',     cc: 'PRT2264-260' },
-  vitiFlat:   { p: 'IIC', c: '438547', d: 'VT0172 VITI FISSAGGIO FLAT (50PZ)',    cc: 'VT0172' },
-  nastroFlat: { p: 'IIC', c: '438549', d: 'VT0020 NASTRO SIGILLANTE 10MT',        cc: 'VT0020' },
-  zavorra0:   { p: 'IIC', c: '440876', d: 'ZAVORRA CEMENTO 0°' },
-  ztp1311:    { p: 'IIC', c: '469283', d: 'ZTP1311 (2 PER ZAVORRA)',              cc: 'ZTP1311' },
-  kzclm8:     { p: 'IIC', c: '440885', d: 'KIT COLLARE LATERALE M8 CONTROV.',     cc: 'KZCLM8' },
-  kstz0002:   { p: 'IIC', c: '440884', d: 'KIT STAFFA CONTROVENTO LATERALE',      cc: 'KSTZ0002' },
-  prc2525z:   { p: 'IIC', c: '440880', d: 'PROFILO CONTROVENTO 25X25 2MT',        cc: 'PRC2525Z-200' },
-  prg3030z:   { p: 'IIC', c: '440881', d: 'PROFILO/GIUNTO CONTROVENTO 200MM',     cc: 'PRG3030Z' },
-  kstz0006:   { p: 'IIC', c: '440886', d: 'KIT STAFFA INCROCI CONTROVENTO',       cc: 'KSTZ0006' },
-  vt1010:     { p: 'IIC', c: '440883', d: 'VT1010 VITI GIUNTO (PACCO 50PZ)',      cc: 'VT1010' },
+  profilo:    { p: 'IIC', c: 'PRT2334-260', d: 'PROFILO TRAVE SOLAR-LIGHT 2,60MT' },
+  giunto:     { p: 'IIC', c: 'PRL3360', d: 'PROFILO/GIUNTO SOLAR-LIGHT 200MM' },
+  mCentrale:  { p: 'IIC', c: 'KMCN2848', d: 'KIT MORSETTO CENTRALE 28-48 MM' },
+  mTerminale: { p: 'IIC', c: 'KMTN2848', d: 'KIT MORSETTO TERMINALE UNIV. 28-48' },
+  vitone:     { p: 'IIC', c: 'STA10300', d: 'VITE DOPPIO FILETTO M10X300 C/3 DADI' },
+  tMartello:  { p: 'IIC', c: 'VT1001', d: 'VITE M8X25 TESTA A MARTELLO INOX' },
+  piastra:    { p: 'IIC', c: 'ACC0001', d: 'PIASTRA DI CONNESSIONE PROFILO/M10' },
+  dado:       { p: 'IIC', c: 'VT0006', d: 'DADO ESAGONALE FLANGIATO M8 INOX' },
+  chimico:    { p: 'FIS', c: '', d: 'ANCORANTE CHIMICO BICOMPONENTE 300ML' },
+  bituminoso: { p: 'FIS', c: '', d: 'TH/SILICONE NERO SB 310ML BITUMINOSO' },
+  flatSlim038:{ p: 'IIC', c: 'PRT2264-38', d: 'PROFILO CONTACT FLAT-SLIM 0,38MT' },
+  flatSlim260:{ p: 'IIC', c: 'PRT2264-260', d: 'PROFILO CONTACT FLAT-SLIM 2,60MT' },
+  vitiFlat:   { p: 'IIC', c: 'VT0172', d: 'VT0172 VITI FISSAGGIO FLAT (50PZ)' },
+  nastroFlat: { p: 'IIC', c: 'VT0020', d: 'VT0020 NASTRO SIGILLANTE 10MT' },
+  zavorra0:   { p: 'IIC', c: '', d: 'ZAVORRA CEMENTO 0°' },
+  ztp1311:    { p: 'IIC', c: 'ZTP1311', d: 'ZTP1311 (2 PER ZAVORRA)' },
+  kzclm8:     { p: 'IIC', c: 'KZCLM8', d: 'KIT COLLARE LATERALE M8 CONTROV.' },
+  kstz0002:   { p: 'IIC', c: 'KSTZ0002', d: 'KIT STAFFA CONTROVENTO LATERALE' },
+  prc2525z:   { p: 'IIC', c: 'PRC2525Z-200', d: 'PROFILO CONTROVENTO 25X25 2MT' },
+  prg3030z:   { p: 'IIC', c: 'PRG3030Z', d: 'PROFILO/GIUNTO CONTROVENTO 200MM' },
+  kstz0006:   { p: 'IIC', c: 'KSTZ0006', d: 'KIT STAFFA INCROCI CONTROVENTO' },
+  vt1010:     { p: 'IIC', c: 'VT1010', d: 'VT1010 VITI GIUNTO (PACCO 50PZ)' },
 
   // ── Morsetti varianti ─────────────────────────────────────────────────────
-  kmcn2848n: { p: 'IIC', c: '', cc: 'KMCN2848N', d: 'KIT MORSETTO CENTRALE 28-48 NERO' },
-  kmcn2950:  { p: 'IIC', c: '', cc: 'KMCN2950',  d: 'KIT MORSETTO CENTRALE UNIV. 29-50' },
-  kmcu2950:  { p: 'IIC', c: '', cc: 'KMCU2950',  d: 'KIT MORSETTO CENTRALE UNIV. 29-50 MM' },
-  kmtn2848n: { p: 'IIC', c: '', cc: 'KMTN2848N', d: 'KIT MORSETTO TERMINALE 28-48 NERO' },
-  kmtn2950:  { p: 'IIC', c: '', cc: 'KMTN2950',  d: 'KIT MORSETTO TERMINALE UNIV. 29-50' },
-  kmtu2950:  { p: 'IIC', c: '', cc: 'KMTU2950',  d: 'KIT MORSETTO TERMINALE UNIV. 29-50 MM' },
+  kmcn2848n: { p: 'IIC', c: 'KMCN2848N', d: 'KIT MORSETTO CENTRALE 28-48 NERO' },
+  kmcn2950:  { p: 'IIC', c: 'KMCN2950',  d: 'KIT MORSETTO CENTRALE UNIV. 29-50' },
+  kmcu2950:  { p: 'IIC', c: 'KMCU2950',  d: 'KIT MORSETTO CENTRALE UNIV. 29-50 MM' },
+  kmtn2848n: { p: 'IIC', c: 'KMTN2848N', d: 'KIT MORSETTO TERMINALE 28-48 NERO' },
+  kmtn2950:  { p: 'IIC', c: 'KMTN2950',  d: 'KIT MORSETTO TERMINALE UNIV. 29-50' },
+  kmtu2950:  { p: 'IIC', c: 'KMTU2950',  d: 'KIT MORSETTO TERMINALE UNIV. 29-50 MM' },
 
   // ── Profili trave Solar-Light (varianti lunghezza) ────────────────────────
-  prt2334x113: { p: 'IIC', c: '', cc: 'PRT2334-113', d: 'PROFILO TRAVE SOLAR-LIGHT 1,13MT' },
-  prt2334x340: { p: 'IIC', c: '', cc: 'PRT2334-340', d: 'PROFILO TRAVE SOLAR-LIGHT 3,40MT' },
+  prt2334x113: { p: 'IIC', c: 'PRT2334-113', d: 'PROFILO TRAVE SOLAR-LIGHT 1,13MT' },
+  prt2334x340: { p: 'IIC', c: 'PRT2334-340', d: 'PROFILO TRAVE SOLAR-LIGHT 3,40MT' },
 
   // ── Profili trave Solar-Plus ──────────────────────────────────────────────
-  prl2580:     { p: 'IIC', c: '', cc: 'PRL2580',     d: 'PROFILO/GIUNTO SOLAR-PLUS 200MM' },
-  prt2947x113: { p: 'IIC', c: '', cc: 'PRT2947-113', d: 'PROFILO TRAVE SOLAR-PLUS 1,13MT' },
-  prt2947x260: { p: 'IIC', c: '', cc: 'PRT2947-260', d: 'PROFILO TRAVE SOLAR-PLUS 2,60MT' },
-  prt2947x340: { p: 'IIC', c: '', cc: 'PRT2947-340', d: 'PROFILO TRAVE SOLAR-PLUS 3,40MT' },
+  prl2580:     { p: 'IIC', c: 'PRL2580',     d: 'PROFILO/GIUNTO SOLAR-PLUS 200MM' },
+  prt2947x113: { p: 'IIC', c: 'PRT2947-113', d: 'PROFILO TRAVE SOLAR-PLUS 1,13MT' },
+  prt2947x260: { p: 'IIC', c: 'PRT2947-260', d: 'PROFILO TRAVE SOLAR-PLUS 2,60MT' },
+  prt2947x340: { p: 'IIC', c: 'PRT2947-340', d: 'PROFILO TRAVE SOLAR-PLUS 3,40MT' },
 
   // ── Profili trave Contact Solar Pro ───────────────────────────────────────
-  prt2640x260: { p: 'IIC', c: '', cc: 'PRT2640-260', d: 'PROFILO TRAVE CONTACT SOLAR PRO 2,60MT' },
-  prt2640x340: { p: 'IIC', c: '', cc: 'PRT2640-340', d: 'PROFILO TRAVE CONTACT SOLAR PRO 3,40MT' },
-  prt2640x520: { p: 'IIC', c: '', cc: 'PRT2640-520', d: 'PROFILO TRAVE CONTACT SOLAR PRO 5,20MT' },
+  prt2640x260: { p: 'IIC', c: 'PRT2640-260', d: 'PROFILO TRAVE CONTACT SOLAR PRO 2,60MT' },
+  prt2640x340: { p: 'IIC', c: 'PRT2640-340', d: 'PROFILO TRAVE CONTACT SOLAR PRO 3,40MT' },
+  prt2640x520: { p: 'IIC', c: 'PRT2640-520', d: 'PROFILO TRAVE CONTACT SOLAR PRO 5,20MT' },
 
   // ── Profili trave Solar-Strong / Solar-Supreme ────────────────────────────
-  prt4689x340: { p: 'IIC', c: '', cc: 'PRT4689-340', d: 'PROFILO TRAVE SOLAR-STRONG 3,40MT' },
-  prt7834x340: { p: 'IIC', c: '', cc: 'PRT7834-340', d: 'PROFILO TRAVE SOLAR-SUPREME 3,40MT' },
+  prt4689x340: { p: 'IIC', c: 'PRT4689-340', d: 'PROFILO TRAVE SOLAR-STRONG 3,40MT' },
+  prt7834x340: { p: 'IIC', c: 'PRT7834-340', d: 'PROFILO TRAVE SOLAR-SUPREME 3,40MT' },
 
   // ── Sistema Flat varianti ─────────────────────────────────────────────────
-  fixprt2038:   { p: 'IIC', c: '', cc: 'FIXPRT2038',    d: 'PROFILO/STAFFA CONTACT FIX LAMIERA GREC.' },
-  flyprt2038:   { p: 'IIC', c: '', cc: 'FLYPRT2038',    d: 'PROFILO/STAFFA CONTACT FLY LAMIERA GREC.' },
-  prt2264x38ef: { p: 'IIC', c: '', cc: 'PRT2264-38-EF', d: 'CONTACT FLAT-SLIM 380MM CON FORI' },
-  prt2785x260:  { p: 'IIC', c: '', cc: 'PRT2785-260',   d: 'PROFILO CONTACT FLAT H38 2,60MT' },
-  prt2785x38:   { p: 'IIC', c: '', cc: 'PRT2785-38',    d: 'PROFILO CONTACT FLAT H38 380MM' },
+  fixprt2038:   { p: 'IIC', c: 'FIXPRT2038',    d: 'PROFILO/STAFFA CONTACT FIX LAMIERA GREC.' },
+  flyprt2038:   { p: 'IIC', c: 'FLYPRT2038',    d: 'PROFILO/STAFFA CONTACT FLY LAMIERA GREC.' },
+  prt2264x38ef: { p: 'IIC', c: 'PRT2264-38-EF', d: 'CONTACT FLAT-SLIM 380MM CON FORI' },
+  prt2785x260:  { p: 'IIC', c: 'PRT2785-260',   d: 'PROFILO CONTACT FLAT H38 2,60MT' },
+  prt2785x38:   { p: 'IIC', c: 'PRT2785-38',    d: 'PROFILO CONTACT FLAT H38 380MM' },
 
   // ── Piastra M12 variante ──────────────────────────────────────────────────
-  acc0001m12: { p: 'IIC', c: '', cc: 'ACC0001-M12', d: 'PIASTRA DI CONNESSIONE PROFILO/M12' },
+  acc0001m12: { p: 'IIC', c: 'ACC0001-M12', d: 'PIASTRA DI CONNESSIONE PROFILO/M12' },
 
   // ── Triangoli / supporti angolati ─────────────────────────────────────────
-  kto076:      { p: 'IIC', c: '', cc: 'KTO076',      d: 'KIT TRIANGOLO 10° ORIZZ ALLUM' },
-  ktv0164:     { p: 'IIC', c: '', cc: 'KTV0164',     d: 'KIT TRIANGOLO REG 20°-25°-30°' },
-  kqf0010000s: { p: 'IIC', c: '', cc: 'KQF0010000S', d: 'KIT SUPPORTO POSTERIORE 10 SPIDER' },
+  kto076:      { p: 'IIC', c: 'KTO076',      d: 'KIT TRIANGOLO 10° ORIZZ ALLUM' },
+  ktv0164:     { p: 'IIC', c: 'KTV0164',     d: 'KIT TRIANGOLO REG 20°-25°-30°' },
+  kqf0010000s: { p: 'IIC', c: 'KQF0010000S', d: 'KIT SUPPORTO POSTERIORE 10 SPIDER' },
 
   // ── Controvento extra ─────────────────────────────────────────────────────
-  kzcpm8:      { p: 'IIC', c: '', cc: 'KZCPM8',      d: 'KIT COLLARE POSTERIORE M8 CONTROV.' },
-  prl1233:     { p: 'IIC', c: '', cc: 'PRL1233',     d: 'PROFILO CONTROVENTO "L" 3000MM' },
-  prl1233x200: { p: 'IIC', c: '', cc: 'PRL1233-200', d: 'PROFILO CONTROVENTO "L" 2000MM' },
-  prg2525z65:  { p: 'IIC', c: '', cc: 'PRG2525Z-65', d: 'GIUNZIONE VELA 5°' },
-  prg2612:     { p: 'IIC', c: '', cc: 'PRG2612',     d: 'GIUNZIONE PROFILO PRT2640' },
+  kzcpm8:      { p: 'IIC', c: 'KZCPM8',      d: 'KIT COLLARE POSTERIORE M8 CONTROV.' },
+  prl1233:     { p: 'IIC', c: 'PRL1233',     d: 'PROFILO CONTROVENTO "L" 3000MM' },
+  prl1233x200: { p: 'IIC', c: 'PRL1233-200', d: 'PROFILO CONTROVENTO "L" 2000MM' },
+  prg2525z65:  { p: 'IIC', c: 'PRG2525Z-65', d: 'GIUNZIONE VELA 5°' },
+  prg2612:     { p: 'IIC', c: 'PRG2612',     d: 'GIUNZIONE PROFILO PRT2640' },
 
   // ── Zavorra / supporti ────────────────────────────────────────────────────
-  acc0011:     { p: 'IIC', c: '', cc: 'ACC0011',      d: 'MANIGLIA PER ZAVORRE' },
-  kaz08022601: { p: 'IIC', c: '', cc: 'KAZ-08022601', d: 'KIT STAFFA PER ZAVORRE AGGIUNTIVE' },
-  kstf0003:    { p: 'IIC', c: '', cc: 'KSTF0003',     d: 'KIT STAFFA FISS. ZAVORRA AGG.' },
-  prc14005z:   { p: 'IIC', c: '', cc: 'PRC14005Z',    d: 'PROFILO ZAVORRA B-DUE' },
-  prc0561x10:  { p: 'IIC', c: '', cc: 'PRC0561-10',   d: 'SUPPORTO ANTERIORE A 10°' },
-  prc1583x10:  { p: 'IIC', c: '', cc: 'PRC1583-10',   d: 'SUPPORTO POSTERIORE A 10°' },
+  acc0011:     { p: 'IIC', c: 'ACC0011',      d: 'MANIGLIA PER ZAVORRE' },
+  kaz08022601: { p: 'IIC', c: 'KAZ-08022601', d: 'KIT STAFFA PER ZAVORRE AGGIUNTIVE' },
+  kstf0003:    { p: 'IIC', c: 'KSTF0003',     d: 'KIT STAFFA FISS. ZAVORRA AGG.' },
+  prc14005z:   { p: 'IIC', c: 'PRC14005Z',    d: 'PROFILO ZAVORRA B-DUE' },
+  prc0561x10:  { p: 'IIC', c: 'PRC0561-10',   d: 'SUPPORTO ANTERIORE A 10°' },
+  prc1583x10:  { p: 'IIC', c: 'PRC1583-10',   d: 'SUPPORTO POSTERIORE A 10°' },
 
   // ── Sistema basculante / TILT ─────────────────────────────────────────────
-  prb1843x38:   { p: 'IIC', c: '', cc: 'PRB1843-38',    d: 'PROFILO BASE SISTEMA 380MM' },
-  prb1843x38ef: { p: 'IIC', c: '', cc: 'PRB1843-38-EF', d: 'PROFILO BASE SISTEMA 380MM CON FORI' },
-  prb2169:      { p: 'IIC', c: '', cc: 'PRB2169',        d: 'PROFILO BASCULANTE 80MM' },
-  prb4816:      { p: 'IIC', c: '', cc: 'PRB4816',        d: 'TILT LT - PROFILO BASCULANTE 80MM' },
-  prb7897:      { p: 'IIC', c: '', cc: 'PRB7897',        d: 'TILT LT - PROFILO BASCULANTE 80MM L' },
+  prb1843x38:   { p: 'IIC', c: 'PRB1843-38',    d: 'PROFILO BASE SISTEMA 380MM' },
+  prb1843x38ef: { p: 'IIC', c: 'PRB1843-38-EF', d: 'PROFILO BASE SISTEMA 380MM CON FORI' },
+  prb2169:      { p: 'IIC', c: 'PRB2169',        d: 'PROFILO BASCULANTE 80MM' },
+  prb4816:      { p: 'IIC', c: 'PRB4816',        d: 'TILT LT - PROFILO BASCULANTE 80MM' },
+  prb7897:      { p: 'IIC', c: 'PRB7897',        d: 'TILT LT - PROFILO BASCULANTE 80MM L' },
 
   // ── Sistema SolarLock (NTH) ───────────────────────────────────────────────
-  nth1163:  { p: 'IIC', c: '', cc: 'NTH1163',  d: 'BLOCCA PANNELLI CENTRALE 3100MM' },
-  nth1164:  { p: 'IIC', c: '', cc: 'NTH1164',  d: 'BLOCCA PANNELLI TERMINALE 3100MM' },
-  nth1362:  { p: 'IIC', c: '', cc: 'NTH1362',  d: 'COPRIFILI 3100MM DA 28 A 44MM' },
-  nth2198:  { p: 'IIC', c: '', cc: 'NTH2198',  d: 'GIUNZIONE 200MM PROFILO SOLARLOCK' },
-  nth5114:  { p: 'IIC', c: '', cc: 'NTH5114',  d: 'PROFILO TERMINALE 3100MM DA 28 A 44' },
-  nth5717:  { p: 'IIC', c: '', cc: 'NTH5717',  d: 'PROFILO CENTRALE 3100MM DA 28 A 44' },
-  nthtappo: { p: 'IIC', c: '', cc: 'NTHTAPPO', d: 'TAPPO CHIUSURA INOX C/VITE AUTOFOR.' },
+  nth1163:  { p: 'IIC', c: 'NTH1163',  d: 'BLOCCA PANNELLI CENTRALE 3100MM' },
+  nth1164:  { p: 'IIC', c: 'NTH1164',  d: 'BLOCCA PANNELLI TERMINALE 3100MM' },
+  nth1362:  { p: 'IIC', c: 'NTH1362',  d: 'COPRIFILI 3100MM DA 28 A 44MM' },
+  nth2198:  { p: 'IIC', c: 'NTH2198',  d: 'GIUNZIONE 200MM PROFILO SOLARLOCK' },
+  nth5114:  { p: 'IIC', c: 'NTH5114',  d: 'PROFILO TERMINALE 3100MM DA 28 A 44' },
+  nth5717:  { p: 'IIC', c: 'NTH5717',  d: 'PROFILO CENTRALE 3100MM DA 28 A 44' },
+  nthtappo: { p: 'IIC', c: 'NTHTAPPO', d: 'TAPPO CHIUSURA INOX C/VITE AUTOFOR.' },
 
   // ── Staffe fisse ──────────────────────────────────────────────────────────
-  stf0001:   { p: 'IIC', c: '', cc: 'STF0001',   d: 'STAFFA FISSA COPPI/TEGOLE SP.5MM' },
-  stf00012:  { p: 'IIC', c: '', cc: 'STF00012',  d: 'STAFFA FISSA PER GUAINE ARDESIATA' },
-  stf00021:  { p: 'IIC', c: '', cc: 'STF00021',  d: 'STAFFA FISSA TEGOLA PIANA SP.8MM' },
-  stf0008:   { p: 'IIC', c: '', cc: 'STF0008',   d: 'STAFFA FISSA COPPI/TEGOLE SP.5MM' },
-  stf0015:   { p: 'IIC', c: '', cc: 'STF0015',   d: 'STAFFA FISSA COPPI/TEGOLE PIATTE' },
-  stf0025:   { p: 'IIC', c: '', cc: 'STF0025',   d: 'STAFFA "C" INOX ARDESIA/SOLARE' },
-  stg0055gr: { p: 'IIC', c: '', cc: 'STG0055GR', d: 'STAFFA INOX LAMIERA AGGRAFFATA' },
+  stf0001:   { p: 'IIC', c: 'STF0001',   d: 'STAFFA FISSA COPPI/TEGOLE SP.5MM' },
+  stf00012:  { p: 'IIC', c: 'STF00012',  d: 'STAFFA FISSA PER GUAINE ARDESIATA' },
+  stf00021:  { p: 'IIC', c: 'STF00021',  d: 'STAFFA FISSA TEGOLA PIANA SP.8MM' },
+  stf0008:   { p: 'IIC', c: 'STF0008',   d: 'STAFFA FISSA COPPI/TEGOLE SP.5MM' },
+  stf0015:   { p: 'IIC', c: 'STF0015',   d: 'STAFFA FISSA COPPI/TEGOLE PIATTE' },
+  stf0025:   { p: 'IIC', c: 'STF0025',   d: 'STAFFA "C" INOX ARDESIA/SOLARE' },
+  stg0055gr: { p: 'IIC', c: 'STG0055GR', d: 'STAFFA INOX LAMIERA AGGRAFFATA' },
 
   // ── Piastre laterali / angolari ───────────────────────────────────────────
-  stl2040:   { p: 'IIC', c: '', cc: 'STL2040',    d: 'PIASTRA FISSAGGIO LATERALE PROFILO' },
-  stl4750:   { p: 'IIC', c: '', cc: 'STL4750',    d: 'PIASTRA ANGOLARE 50X50 M10' },
-  stl4750m12:{ p: 'IIC', c: '', cc: 'STL4750-M12',d: 'PIASTRA ANGOLARE 50X50 M12' },
+  stl2040:   { p: 'IIC', c: 'STL2040',    d: 'PIASTRA FISSAGGIO LATERALE PROFILO' },
+  stl4750:   { p: 'IIC', c: 'STL4750',    d: 'PIASTRA ANGOLARE 50X50 M10' },
+  stl4750m12:{ p: 'IIC', c: 'STL4750-M12',d: 'PIASTRA ANGOLARE 50X50 M12' },
 
   // ── Staffe regolabili ─────────────────────────────────────────────────────
-  str0002: { p: 'IIC', c: '', cc: 'STR0002', d: 'STAFFA REGOLAB. COPPI/TEGOLE SP.5MM' },
-  str0003: { p: 'IIC', c: '', cc: 'STR0003', d: 'STAFFA REGOLAB. COPPI/TEGOLE SP.5MM' },
-  str0009: { p: 'IIC', c: '', cc: 'STR0009', d: 'STAFFA REGOLABILE COPPI SP.5MM H' },
+  str0002: { p: 'IIC', c: 'STR0002', d: 'STAFFA REGOLAB. COPPI/TEGOLE SP.5MM' },
+  str0003: { p: 'IIC', c: 'STR0003', d: 'STAFFA REGOLAB. COPPI/TEGOLE SP.5MM' },
+  str0009: { p: 'IIC', c: 'STR0009', d: 'STAFFA REGOLABILE COPPI SP.5MM H' },
 
   // ── Tappi profilo ─────────────────────────────────────────────────────────
-  tp2334: { p: 'IIC', c: '', cc: 'TP2334', d: 'TAPPO PER PROFILO PRT2334' },
-  tp2640: { p: 'IIC', c: '', cc: 'TP2640', d: 'TAPPO PER PROFILO PRT2640' },
-  tp2947: { p: 'IIC', c: '', cc: 'TP2947', d: 'TAPPO PER PROFILO PRT2947' },
-  tp7834: { p: 'IIC', c: '', cc: 'TP7834', d: 'TAPPO PROFILO PRT7834' },
+  tp2334: { p: 'IIC', c: 'TP2334', d: 'TAPPO PER PROFILO PRT2334' },
+  tp2640: { p: 'IIC', c: 'TP2640', d: 'TAPPO PER PROFILO PRT2640' },
+  tp2947: { p: 'IIC', c: 'TP2947', d: 'TAPPO PER PROFILO PRT2947' },
+  tp7834: { p: 'IIC', c: 'TP7834', d: 'TAPPO PROFILO PRT7834' },
 
   // ── Viti e dadi Contact ───────────────────────────────────────────────────
-  sta0009:    { p: 'IIC', c: '', cc: 'STA0009',    d: 'ANCORANTE CEMENTO M10X190 C/DADI' },
-  sta10200:   { p: 'IIC', c: '', cc: 'STA10200',   d: 'VITE DOPPIO FILETTO M10X200 C/3 DADI' },
-  sta12300:   { p: 'IIC', c: '', cc: 'STA12300',   d: 'VITE DOPPIO FILETTO M12X300 C/3 DADI' },
-  sta12400:   { p: 'IIC', c: '', cc: 'STA12400',   d: 'VITE DOPPIO FILETTO M12X400 C/3 DADI' },
-  vt0001:     { p: 'IIC', c: '', cc: 'VT0001',     d: 'VITE TE M8X20 INOX' },
-  vt0002:     { p: 'IIC', c: '', cc: 'VT0002',     d: 'VITE M8X25 TESTA A MARTELLO AISI' },
-  vt1002:     { p: 'IIC', c: '', cc: 'VT1002',     d: 'VITE M10X25 TESTA A MARTELLO INOX' },
-  vt0009:     { p: 'IIC', c: '', cc: 'VT0009',     d: 'RONDELLA M8 UNI 6593/9021' },
-  vt0011:     { p: 'IIC', c: '', cc: 'VT0011',     d: 'VITE AUTOFORANTE 4,8X50 DIN 7504' },
-  vt0014:     { p: 'IIC', c: '', cc: 'VT0014',     d: 'GUARNIZIONE PVC COESTRUSO 2,5MT' },
-  vt0018:     { p: 'IIC', c: '', cc: 'VT0018',     d: 'DADO ESAGONALE FLANGIATO M10 INOX' },
-  vt0019:     { p: 'IIC', c: '', cc: 'VT0019',     d: 'VITE AUTOFORANTE 6,3X19 DIN 7504' },
-  vt0023:     { p: 'IIC', c: '', cc: 'VT0023',     d: 'RIVETTO ALLUM FARFALLA 5,2X19' },
-  vt0030:     { p: 'IIC', c: '', cc: 'VT0030',     d: 'GUARNIZIONE PER IMPIANTI FV A "T"' },
-  vte42013fi: { p: 'IIC', c: '', cc: 'VTE42013-FI',d: 'VITE AUTOFILLETTANTE 4,2X13 ISO' },
+  sta0009:    { p: 'IIC', c: 'STA0009',    d: 'ANCORANTE CEMENTO M10X190 C/DADI' },
+  sta10200:   { p: 'IIC', c: 'STA10200',   d: 'VITE DOPPIO FILETTO M10X200 C/3 DADI' },
+  sta12300:   { p: 'IIC', c: 'STA12300',   d: 'VITE DOPPIO FILETTO M12X300 C/3 DADI' },
+  sta12400:   { p: 'IIC', c: 'STA12400',   d: 'VITE DOPPIO FILETTO M12X400 C/3 DADI' },
+  vt0001:     { p: 'IIC', c: 'VT0001',     d: 'VITE TE M8X20 INOX' },
+  vt0002:     { p: 'IIC', c: 'VT0002',     d: 'VITE M8X25 TESTA A MARTELLO AISI' },
+  vt1002:     { p: 'IIC', c: 'VT1002',     d: 'VITE M10X25 TESTA A MARTELLO INOX' },
+  vt0009:     { p: 'IIC', c: 'VT0009',     d: 'RONDELLA M8 UNI 6593/9021' },
+  vt0011:     { p: 'IIC', c: 'VT0011',     d: 'VITE AUTOFORANTE 4,8X50 DIN 7504' },
+  vt0014:     { p: 'IIC', c: 'VT0014',     d: 'GUARNIZIONE PVC COESTRUSO 2,5MT' },
+  vt0018:     { p: 'IIC', c: 'VT0018',     d: 'DADO ESAGONALE FLANGIATO M10 INOX' },
+  vt0019:     { p: 'IIC', c: 'VT0019',     d: 'VITE AUTOFORANTE 6,3X19 DIN 7504' },
+  vt0023:     { p: 'IIC', c: 'VT0023',     d: 'RIVETTO ALLUM FARFALLA 5,2X19' },
+  vt0030:     { p: 'IIC', c: 'VT0030',     d: 'GUARNIZIONE PER IMPIANTI FV A "T"' },
+  vte42013fi: { p: 'IIC', c: 'VTE42013-FI',d: 'VITE AUTOFILLETTANTE 4,2X13 ISO' },
 
   // ── Supporto Wall-Up ──────────────────────────────────────────────────────
-  w175up: { p: 'IIC', c: '', cc: 'W175UP', d: 'SUPPORTO WALL-UP' },
+  w175up: { p: 'IIC', c: 'W175UP', d: 'SUPPORTO WALL-UP' },
 
   // ── Accessori ─────────────────────────────────────────────────────────────
-  act0156:    { p: 'IIC', c: '', cc: 'ACT0156',    d: 'TAPPETINO IN EPDM' },
-  acp0013:    { p: 'IIC', c: '', cc: 'ACP0013',    d: 'FASCETTA FISSACAVI 100PZ' },
-  kfr2400x35: { p: 'IIC', c: '', cc: 'KFR2400-35', d: 'KIT FRANGISOLE REGOLAB 35° 1MOD VERT' },
-  mcr1602:    { p: 'IIC', c: '', cc: 'MCR1602',    d: 'MORSETTO CERAMICO SEZ.16 MMQ 2 POLI' },
+  act0156:    { p: 'IIC', c: 'ACT0156',    d: 'TAPPETINO IN EPDM' },
+  acp0013:    { p: 'IIC', c: 'ACP0013',    d: 'FASCETTA FISSACAVI 100PZ' },
+  kfr2400x35: { p: 'IIC', c: 'KFR2400-35', d: 'KIT FRANGISOLE REGOLAB 35° 1MOD VERT' },
+  mcr1602:    { p: 'IIC', c: 'MCR1602',    d: 'MORSETTO CERAMICO SEZ.16 MMQ 2 POLI' },
 
   // ── Zavorre anteriori ─────────────────────────────────────────────────────
-  za0518: { p: 'IIC', c: '', cc: 'ZA0518', d: 'ZAVORRA ANTERIORE 5° - 18 KG' },
-  za1021: { p: 'IIC', c: '', cc: 'ZA1021', d: 'ZAVORRA ANTERIORE 10° - 21 KG' },
-  za1523: { p: 'IIC', c: '', cc: 'ZA1523', d: 'ZAVORRA ANTERIORE 15° - 23 KG' },
+  za0518: { p: 'IIC', c: 'ZA0518', d: 'ZAVORRA ANTERIORE 5° - 18 KG' },
+  za1021: { p: 'IIC', c: 'ZA1021', d: 'ZAVORRA ANTERIORE 10° - 21 KG' },
+  za1523: { p: 'IIC', c: 'ZA1523', d: 'ZAVORRA ANTERIORE 15° - 23 KG' },
 
   // ── Zavorre 0°-5°-10°-15°-20° (ZC) ──────────────────────────────────────
-  zc0027: { p: 'IIC', c: '', cc: 'ZC0027', d: 'ZAVORRA PESO AGGIUNTIVO 27 KG' },
-  zc0030: { p: 'IIC', c: '', cc: 'ZC0030', d: 'ZAVORRA 0° - 30 KG - 1 FILA' },
-  zc0055: { p: 'IIC', c: '', cc: 'ZC0055', d: 'ZAVORRA PESO AGGIUNTIVO 55 KG' },
-  zc0536: { p: 'IIC', c: '', cc: 'ZC0536', d: 'ZAVORRA 5° - 36 KG - 1 FILA' },
-  zc0544: { p: 'IIC', c: '', cc: 'ZC0544', d: 'ZAVORRA 5° - 44 KG - 2 FILE' },
-  zc0551: { p: 'IIC', c: '', cc: 'ZC0551', d: 'ZAVORRA 5° - 51 KG - 3 FILE' },
-  zc0558: { p: 'IIC', c: '', cc: 'ZC0558', d: 'ZAVORRA 5° - 58 KG - 4 FILE' },
-  zc0572: { p: 'IIC', c: '', cc: 'ZC0572', d: 'ZAVORRA 5° - 72 KG - 5 FILE' },
-  zc0580: { p: 'IIC', c: '', cc: 'ZC0580', d: 'ZAVORRA 5° - 80 KG - 6 FILE' },
-  zc1042: { p: 'IIC', c: '', cc: 'ZC1042', d: 'ZAVORRA 10° - 42 KG' },
-  zc1052: { p: 'IIC', c: '', cc: 'ZC1052', d: 'ZAVORRA 10° - 52 KG' },
-  zc1564: { p: 'IIC', c: '', cc: 'ZC1564', d: 'ZAVORRA 15° - 64 KG' },
-  zc2068: { p: 'IIC', c: '', cc: 'ZC2068', d: 'ZAVORRA 20° - 68 KG' },
+  zc0027: { p: 'IIC', c: 'ZC0027', d: 'ZAVORRA PESO AGGIUNTIVO 27 KG' },
+  zc0030: { p: 'IIC', c: 'ZC0030', d: 'ZAVORRA 0° - 30 KG - 1 FILA' },
+  zc0055: { p: 'IIC', c: 'ZC0055', d: 'ZAVORRA PESO AGGIUNTIVO 55 KG' },
+  zc0536: { p: 'IIC', c: 'ZC0536', d: 'ZAVORRA 5° - 36 KG - 1 FILA' },
+  zc0544: { p: 'IIC', c: 'ZC0544', d: 'ZAVORRA 5° - 44 KG - 2 FILE' },
+  zc0551: { p: 'IIC', c: 'ZC0551', d: 'ZAVORRA 5° - 51 KG - 3 FILE' },
+  zc0558: { p: 'IIC', c: 'ZC0558', d: 'ZAVORRA 5° - 58 KG - 4 FILE' },
+  zc0572: { p: 'IIC', c: 'ZC0572', d: 'ZAVORRA 5° - 72 KG - 5 FILE' },
+  zc0580: { p: 'IIC', c: 'ZC0580', d: 'ZAVORRA 5° - 80 KG - 6 FILE' },
+  zc1042: { p: 'IIC', c: 'ZC1042', d: 'ZAVORRA 10° - 42 KG' },
+  zc1052: { p: 'IIC', c: 'ZC1052', d: 'ZAVORRA 10° - 52 KG' },
+  zc1564: { p: 'IIC', c: 'ZC1564', d: 'ZAVORRA 15° - 64 KG' },
+  zc2068: { p: 'IIC', c: 'ZC2068', d: 'ZAVORRA 20° - 68 KG' },
 
   // ── Zavorre posteriori ────────────────────────────────────────────────────
-  zp0521: { p: 'IIC', c: '', cc: 'ZP0521', d: 'ZAVORRA POSTERIORE 5° - 21 KG' },
-  zp1027: { p: 'IIC', c: '', cc: 'ZP1027', d: 'ZAVORRA POSTERIORE 10° - 27 KG' },
-  zp1532: { p: 'IIC', c: '', cc: 'ZP1532', d: 'ZAVORRA POSTERIORE 15° - 32 KG' },
+  zp0521: { p: 'IIC', c: 'ZP0521', d: 'ZAVORRA POSTERIORE 5° - 21 KG' },
+  zp1027: { p: 'IIC', c: 'ZP1027', d: 'ZAVORRA POSTERIORE 10° - 27 KG' },
+  zp1532: { p: 'IIC', c: 'ZP1532', d: 'ZAVORRA POSTERIORE 15° - 32 KG' },
 };
 
 export const ARTICLE_LABELS: Record<CatalogKey, string> = {
@@ -338,7 +337,7 @@ export const ARTICLE_LABELS: Record<CatalogKey, string> = {
   zp1532: 'Zavorra post. 15° 32KG',
 };
 
-const STORAGE_KEY = 'ftv_cat_v8';
+const STORAGE_KEY = 'ftv_cat_v9';
 
 export function loadCatalog(): Catalog {
   try {

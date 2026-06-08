@@ -23,19 +23,19 @@ export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
     JSON.parse(JSON.stringify(catalog)) as WCatalog
   );
 
-  const setInv = (id: string, field: 'prefix' | 'code', val: string) =>
+  const setInv = (id: string, field: 'prefix' | 'catalogCode', val: string) =>
     setLocal(p => ({
       ...p,
       inverters: p.inverters.map(i => i.id === id ? { ...i, [field]: val } : i),
     }));
 
-  const setBat = (id: string, field: 'prefix' | 'code', val: string) =>
+  const setBat = (id: string, field: 'prefix' | 'catalogCode', val: string) =>
     setLocal(p => ({
       ...p,
       batteries: p.batteries.map(b => b.id === id ? { ...b, [field]: val } : b),
     }));
 
-  const setAcc = (id: string, field: 'prefix' | 'code' | 'catalogCode', val: string) =>
+  const setAcc = (id: string, field: 'prefix' | 'catalogCode', val: string) =>
     setLocal(p => ({
       ...p,
       accessories: p.accessories.map(a => a.id === id ? { ...a, [field]: val } : a),
@@ -65,7 +65,7 @@ export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
               <div key={grp.label} className="wset-section">
                 <div className="wset-section-title">{grp.label}</div>
                 <div className="wset-row wset-header-row">
-                  <span>Modello</span><span>Prec.</span><span>Cod. Int.</span><span>WHi</span>
+                  <span>Modello</span><span>Prec.</span><span>Cod. WHi</span>
                 </div>
                 {items.map(inv => (
                   <div key={inv.id} className="wset-row">
@@ -76,10 +76,9 @@ export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
                     <input className="wset-input wset-input-prec" value={inv.prefix}
                       placeholder="prec."
                       onChange={e => setInv(inv.id, 'prefix', e.target.value)} />
-                    <input className="wset-input" value={inv.code}
-                      placeholder="cod. interno"
-                      onChange={e => setInv(inv.id, 'code', e.target.value)} />
-                    <span className="wset-catalog-ref">{inv.catalogCode || '—'}</span>
+                    <input className="wset-input" value={inv.catalogCode}
+                      placeholder="cod. WHi"
+                      onChange={e => setInv(inv.id, 'catalogCode', e.target.value)} />
                   </div>
                 ))}
               </div>
@@ -90,7 +89,7 @@ export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
           <div className="wset-section">
             <div className="wset-section-title">Batterie (modulo × N)</div>
             <div className="wset-row wset-header-row">
-              <span>Modello</span><span>Prec.</span><span>Cod. Int.</span><span>WHi</span>
+              <span>Modello</span><span>Prec.</span><span>Cod. WHi</span>
             </div>
             {local.batteries.map(bat => (
               <div key={bat.id} className="wset-row">
@@ -104,14 +103,14 @@ export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
                 <input className="wset-input wset-input-prec" value={bat.prefix}
                   placeholder="prec."
                   onChange={e => setBat(bat.id, 'prefix', e.target.value)} />
-                <input className="wset-input" value={bat.code}
-                  placeholder="cod. interno"
-                  onChange={e => setBat(bat.id, 'code', e.target.value)} />
-                <span className="wset-catalog-ref">{bat.catalogCode || '—'}</span>
+                <input className="wset-input" value={bat.catalogCode}
+                  placeholder="cod. WHi"
+                  onChange={e => setBat(bat.id, 'catalogCode', e.target.value)} />
               </div>
             ))}
             <div className="wset-note">
-              ⚠ W-HP51100: codice 019090 da catalogo pag.25 (in grigio) — verificare con W&amp;Co
+              ⚠ W-HP51100: codice 019090 da catalogo pag.25 (in grigio) — verificare con W&amp;Co<br />
+              ⚠ Force-H3 FH10050: codice prodotto WHi non disponibile — inserire manualmente
             </div>
           </div>
 
@@ -119,7 +118,7 @@ export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
           <div className="wset-section">
             <div className="wset-section-title">Accessori (BMS, CT/Meter)</div>
             <div className="wset-row wset-header-row">
-              <span>Accessorio</span><span>Prec.</span><span>Cod. Int.</span><span>Articolo</span>
+              <span>Accessorio</span><span>Prec.</span><span>Cod. WHi</span>
             </div>
             {local.accessories.map(acc => (
               <div key={acc.id} className="wset-row">
@@ -127,16 +126,13 @@ export default function WSettingsModal({ catalog, onSave, onClose }: Props) {
                 <input className="wset-input wset-input-prec" value={acc.prefix}
                   placeholder="prec."
                   onChange={e => setAcc(acc.id, 'prefix', e.target.value)} />
-                <input className="wset-input" value={acc.code}
-                  placeholder="cod. interno"
-                  onChange={e => setAcc(acc.id, 'code', e.target.value)} />
                 <input className="wset-input" value={acc.catalogCode}
-                  placeholder="articolo"
+                  placeholder="cod. WHi"
                   onChange={e => setAcc(acc.id, 'catalogCode', e.target.value)} />
               </div>
             ))}
             <div className="wset-note">
-              ⚠ Force-H3 BMS e Force-H3 FH10050: codice articolo WHi non disponibile — inserire manualmente
+              ⚠ Force-H3 BMS: codice prodotto WHi non disponibile — inserire manualmente
             </div>
           </div>
         </div>

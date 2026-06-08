@@ -12,7 +12,7 @@ interface Props {
 export default function SettingsModal({ catalog, onSave, onClose }: Props) {
   const [draft, setDraft] = useState<Catalog>({ ...catalog });
 
-  const update = (key: CatalogKey, field: 'p' | 'cc' | 'd', value: string) => {
+  const update = (key: CatalogKey, field: 'p' | 'c' | 'd', value: string) => {
     setDraft(prev => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
   };
 
@@ -65,9 +65,9 @@ export default function SettingsModal({ catalog, onSave, onClose }: Props) {
                     <td>
                       <input
                         className="settings-input input-code"
-                        value={draft[key].cc ?? ''}
+                        value={draft[key].c}
                         maxLength={20}
-                        onChange={e => update(key, 'cc', e.target.value.toUpperCase())}
+                        onChange={e => update(key, 'c', e.target.value.toUpperCase())}
                       />
                     </td>
                     <td>

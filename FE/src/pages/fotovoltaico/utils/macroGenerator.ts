@@ -68,15 +68,14 @@ function itemBlock(c: { p?: string; c: string }, qty: number): string {
             <input value="[+cr]" row="0" col="0" movecursor="true" xlatehostkeys="true" encrypted="false" />`;
 }
 
-export function genMacroMulti(falde: FaldaMacroInput[], cat: Catalog, useCatalogCodes = false): MacroResult {
+export function genMacroMulti(falde: FaldaMacroInput[], cat: Catalog): MacroResult {
   const nameParts = falde.map(f => {
     const o = getOrientCode(f.orient);
     const s = getStructCode(f.struct);
     const desc = f.groups.map(g => g.count).join('+') || '0';
     return `${o}_${s}_${desc}`;
   });
-  const suffix = useCatalogCodes ? '_Contact' : '';
-  const filename = `Str_${nameParts.join('-')}${suffix}.mac`;
+  const filename = `Str_${nameParts.join('-')}.mac`;
 
   let mac = `<HAScript name="StrutturaFTV" description="" timeout="60000" pausetime="400" promptall="true" blockinput="true" author="export" creationdate="${getDT()}" supressclearevents="false" usevars="false" ignorepauseforenhancedtn="true" delayifnotenhancedtn="0" ignorepausetimeforenhancedtn="true" continueontimeout="true">
     <screen name="Schermo1" entryscreen="true" exitscreen="true" transient="false">
@@ -96,9 +95,8 @@ export function genMacroMulti(falde: FaldaMacroInput[], cat: Catalog, useCatalog
     for (const it of f.items) {
       if (it.qty <= 0) continue;
       const entry = cat[it.key];
-      const code = useCatalogCodes ? (entry.cc ?? '') : entry.c;
-      if (!code) continue;
-      mac += itemBlock({ p: entry.p, c: code }, it.qty);
+      if (!entry.c) continue;
+      mac += itemBlock(entry, it.qty);
       totalCnt++;
     }
   }
@@ -123,7 +121,6 @@ export function genMacro(
   orient: Orientation,
   struct: StructType,
   groups: Group[],
-  useCatalogCodes = false,
 ): MacroResult {
-  return genMacroMulti([{ label: '', items, orient, struct, groups }], cat, useCatalogCodes);
+  return genMacroMulti([{ label: '', items, orient, struct, groups }], cat);
 }

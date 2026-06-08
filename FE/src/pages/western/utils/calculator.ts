@@ -3,8 +3,7 @@ import type { WCatalog, AccessoryEntry } from './catalog';
 export interface WResultItem {
   id: string;
   prefix: string;
-  code: string;         // codice interno AS400
-  catalogCode: string;  // articolo catalogo WHi (6 cifre)
+  catalogCode: string;  // codice prodotto WHi (6 cifre)
   desc: string;
   qty: number;
   note: string;
@@ -14,7 +13,7 @@ export type TriMeterType = 'direct' | 'ta';
 export type TaAmps = 150 | 300 | 600;
 
 function accItem(acc: AccessoryEntry, qty: number, note: string): WResultItem {
-  return { id: acc.id, prefix: acc.prefix, code: acc.code, catalogCode: acc.catalogCode, desc: acc.desc, qty, note };
+  return { id: acc.id, prefix: acc.prefix, catalogCode: acc.catalogCode, desc: acc.desc, qty, note };
 }
 
 export function calcola(
@@ -43,7 +42,7 @@ export function calcola(
     const hht = catalog.inverters.find(i => i.id === 'w-hht-10k');
     if (hht) {
       items.push({
-        id: hht.id, prefix: hht.prefix, code: hht.code,
+        id: hht.id, prefix: hht.prefix,
         catalogCode: hht.catalogCode, desc: hht.desc,
         qty: numHHT,
         note: numHHT > 1 ? `${numHHT}× W-HHT-10K` : 'W-HHT-10K',
@@ -57,7 +56,7 @@ export function calcola(
       );
       if (hpt) {
         items.push({
-          id: hpt.id, prefix: hpt.prefix, code: hpt.code,
+          id: hpt.id, prefix: hpt.prefix,
           catalogCode: hpt.catalogCode, desc: hpt.desc,
           qty: 1,
           note: `${hpt.label} — complemento potenza`,
@@ -85,7 +84,7 @@ export function calcola(
         const modPerTower = storageKwh / towers / 5;
         const totalMods = modPerTower * towers;
         items.push({
-          id: bat.id, prefix: bat.prefix, code: bat.code,
+          id: bat.id, prefix: bat.prefix,
           catalogCode: bat.catalogCode, desc: bat.desc,
           qty: totalMods,
           note: `${towers > 1 ? `${towers} torri × ` : ''}${modPerTower} mod — ${storageKwh} kWh`,
@@ -107,7 +106,6 @@ export function calcola(
   items.push({
     id: inv.id,
     prefix: inv.prefix,
-    code: inv.code,
     catalogCode: inv.catalogCode,
     desc: inv.desc,
     qty: 1,
@@ -126,7 +124,6 @@ export function calcola(
       items.push({
         id: bat.id,
         prefix: bat.prefix,
-        code: bat.code,
         catalogCode: bat.catalogCode,
         desc: bat.desc,
         qty: totalModules,

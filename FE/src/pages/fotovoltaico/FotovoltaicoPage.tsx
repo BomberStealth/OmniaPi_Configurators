@@ -212,15 +212,6 @@ export default function FotovoltaicoPage() {
     showToast('✅ ' + macro.filename);
   };
 
-  const handleGenMacroContact = () => {
-    const calcolati = impianti.filter(imp => imp.calcDone);
-    if (calcolati.length === 0) return;
-    const macro = genMacroMulti(buildMacroInputs(calcolati), catalog, true);
-    setMacroData(macro);
-    downloadFile(macro.xml, macro.filename);
-    showToast('✅ ' + macro.filename);
-  };
-
   return (
     <div className="ftv-page">
       <div className="ftv-body">
@@ -305,14 +296,9 @@ export default function FotovoltaicoPage() {
                 {imp.calcDone ? '✓ COMPLETATO' : '⚡ CALCOLA MATERIALI'}
               </button>
               {imp.calcDone && (
-                <>
-                  <button className="btn btn-blue" onClick={handleGenMacro}>
-                    📄 GENERA MACRO
-                  </button>
-                  <button className="btn btn-blue" onClick={handleGenMacroContact}>
-                    📄 MACRO CONTACT
-                  </button>
-                </>
+                <button className="btn btn-blue" onClick={handleGenMacro}>
+                  📄 GENERA MACRO
+                </button>
               )}
             </div>
 
