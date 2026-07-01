@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login, getSession } from '../auth';
+import './Login.css';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -30,17 +31,23 @@ export default function Login() {
 
   return (
     <div className="login-page">
+      <div className="login-bg-anim" aria-hidden="true">
+        <span className="login-blob login-blob-1" />
+        <span className="login-blob login-blob-2" />
+        <span className="login-blob login-blob-3" />
+      </div>
+
       <div className="login-card">
         <div className="login-logo">
-          <span className="login-logo-icon">⚙</span>
+          <span className="login-icon-badge">⚙</span>
           <div>
-            <div className="login-logo-title">OmniaPi</div>
+            <div className="login-title-grad">OmniaPi</div>
             <div className="login-logo-sub">Configuratori — Accesso riservato</div>
           </div>
         </div>
         <a href="/" className="login-back-link">← Torna a OmniaPi</a>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
             <label className="form-label">Email</label>
             <input className="form-input" type="email" value={email}
@@ -53,17 +60,13 @@ export default function Login() {
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••" required />
           </div>
-          {error && (
-            <div style={{
-              background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)',
-              color: '#ef4444', borderRadius: 8, padding: '10px 14px', fontSize: 13, fontWeight: 500
-            }}>{error}</div>
-          )}
-          <button className="btn btn-primary" type="submit" disabled={loading}
-            style={{ justifyContent: 'center', marginTop: 4 }}>
+          {error && <div className="login-error">⚠ {error}</div>}
+          <button className="btn btn-primary login-submit" type="submit" disabled={loading}>
             {loading ? 'Accesso in corso…' : 'Accedi'}
           </button>
         </form>
+
+        <div className="login-footnote">🔒 Accesso protetto · dati riservati</div>
       </div>
     </div>
   );
