@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OmniaPi — Hub</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F1F4FB;
+    --surface: #FFFFFF;
+    --border: rgba(37, 99, 235, 0.14);
+    --border-hover: rgba(37, 99, 235, 0.35);
+    --accent: #2563EB;
+    --accent-dim: rgba(37, 99, 235, 0.10);
+    --accent-glow: rgba(37, 99, 235, 0.22);
+    --secondary: #0891B2;
+    --secondary-dim: rgba(8, 145, 178, 0.10);
+    --secondary-glow: rgba(8, 145, 178, 0.22);
+    --text: #1A1E30;
+    --text-secondary: rgba(26, 30, 48, 0.75);
+    --text-muted: rgba(26, 30, 48, 0.58);
+    --success: #059669;
+    --card-gradient: linear-gradient(165deg, #ffffff 0%, #f7f9ff 60%, #f1f4fb 100%);
+    --shadow-card: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(37,99,235,0.07);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background:
+      radial-gradient(ellipse 80% 40% at 50% -5%, rgba(37,99,235,0.06) 0%, transparent 60%),
+      linear-gradient(to bottom, #E8EDF9 0%, #F1F4FB 100%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* === BACKGROUND EFFECTS === */
+  .bg-grain {
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(rgba(37,99,235,0.10) 1px, transparent 1px);
+    background-size: 26px 26px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 0%, transparent 75%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 0%, transparent 75%);
+    opacity: 0.5;
+    z-index: 0;
+  }
+
+  .bg-blob { position: fixed; border-radius: 50%; filter: blur(64px); opacity: 0.30; z-index: 0; will-change: transform; }
+
+  .bg-blob-1 {
+    width: 440px; height: 440px; top: -140px; left: -100px;
+    background: radial-gradient(circle at 32% 32%, var(--accent), transparent 72%);
+    animation: blobFloatA 24s ease-in-out infinite;
+  }
+
+  .bg-blob-2 {
+    width: 380px; height: 380px; top: 6%; right: -120px;
+    background: radial-gradient(circle at 32% 32%, var(--secondary), transparent 72%);
+    animation: blobFloatB 28s ease-in-out infinite;
+  }
+
+  .bg-blob-3 {
+    width: 320px; height: 320px; bottom: -110px; left: 18%;
+    background: radial-gradient(circle at 32% 32%, #10b981, transparent 72%);
+    animation: blobFloatC 32s ease-in-out infinite;
+  }
+
+  @keyframes blobFloatA {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%      { transform: translate(46px, 32px) scale(1.08); }
+    66%      { transform: translate(-22px, 54px) scale(0.94); }
+  }
+  @keyframes blobFloatB {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(-56px, 44px) scale(1.10); }
+  }
+  @keyframes blobFloatC {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(34px, -46px) scale(1.06); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bg-blob { animation: none; }
+  }
+
+  /* === HEADER === */
+  .header {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    margin-bottom: 56px;
+    animation: fadeInDown 0.8s ease-out;
+  }
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .logo-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(37,99,235,0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px var(--accent-glow);
+    animation: pulse-glow 3.2s ease-in-out infinite;
+  }
+
+  .logo-icon svg { width: 28px; height: 28px; fill: var(--accent); }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 4px 20px var(--accent-glow); }
+    50%      { box-shadow: 0 4px 30px var(--accent-glow), 0 0 0 6px rgba(37,99,235,0); }
+  }
+
+  .logo-text {
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(125deg, var(--text) 25%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* === CARDS CONTAINER === */
+  .cards-container {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    gap: 32px;
+    padding: 0 24px;
+    animation: fadeInUp 0.8s ease-out 0.15s both;
+  }
+
+  /* === CARD === */
+  .card {
+    width: 300px;
+    height: 350px;
+    background: var(--card-gradient);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 20%; right: 20%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(37,99,235,0.28), transparent);
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    z-index: 0;
+  }
+
+  .card--config::after   { background: radial-gradient(circle at 50% 30%, var(--accent-dim) 0%, transparent 70%); }
+  .card--domotica::after { background: radial-gradient(circle at 50% 30%, var(--secondary-dim) 0%, transparent 70%); }
+
+  .card:hover {
+    transform: translateY(-6px);
+    border-color: var(--border-hover);
+  }
+
+  .card--config:hover   { box-shadow: 0 16px 44px var(--accent-glow), 0 4px 12px rgba(0,0,0,0.08); }
+  .card--domotica:hover { box-shadow: 0 16px 44px var(--secondary-glow), 0 4px 12px rgba(0,0,0,0.08); }
+
+  .card:hover::after { opacity: 1; }
+
+  /* === CARD ICON === */
+  .card-icon {
+    position: relative; z-index: 1;
+    width: 82px; height: 82px;
+    border-radius: 22px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.35s ease;
+  }
+
+  .card--config .card-icon   { background: var(--accent-dim);    border: 1px solid rgba(37,99,235,0.22); }
+  .card--domotica .card-icon { background: var(--secondary-dim); border: 1px solid rgba(8,145,178,0.22); }
+
+  .card:hover .card-icon { transform: scale(1.08); }
+
+  .card-icon svg { width: 40px; height: 40px; transition: all 0.35s ease; }
+
+  .card--config .card-icon svg   { stroke: var(--accent); fill: none; }
+  .card--domotica .card-icon svg { stroke: var(--secondary); fill: none; }
+
+  /* === CARD TEXT === */
+  .card-title {
+    position: relative; z-index: 1;
+    font-size: 22px; font-weight: 700;
+    letter-spacing: -0.3px;
+    transition: color 0.25s ease;
+  }
+
+  .card--config:hover .card-title   { color: var(--accent); }
+  .card--domotica:hover .card-title { color: var(--secondary); }
+
+  .card-description {
+    position: relative; z-index: 1;
+    font-size: 13.5px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.6;
+    max-width: 230px;
+  }
+
+  /* === CARD ARROW === */
+  .card-arrow {
+    position: relative; z-index: 1;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.35s ease;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  .card--config .card-arrow   { background: var(--accent-dim);    border: 1px solid rgba(37,99,235,0.22); }
+  .card--domotica .card-arrow { background: var(--secondary-dim); border: 1px solid rgba(8,145,178,0.22); }
+
+  .card:hover .card-arrow { opacity: 1; transform: translateY(0); }
+
+  .card-arrow svg { width: 17px; height: 17px; }
+
+  .card--config .card-arrow svg   { stroke: var(--accent); }
+  .card--domotica .card-arrow svg { stroke: var(--secondary); }
+
+  /* === FOOTER === */
+  .footer {
+    position: relative; z-index: 10;
+    margin-top: 56px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: fadeInUp 0.8s ease-out 0.3s both;
+  }
+
+  .footer-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: blink 2s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.3; }
+  }
+
+  .footer-text {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.03em;
+  }
+
+  /* === VERSION TAG === */
+  .version-tag {
+    position: fixed;
+    bottom: 18px;
+    right: 22px;
+    font-size: 10.5px;
+    color: var(--text-muted);
+    background: rgba(37,99,235,0.05);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 3px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    z-index: 10;
+  }
+
+  /* === ANIMATIONS === */
+  @keyframes fadeInDown { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeInUp   { from { opacity: 0; transform: translateY(24px); }  to { opacity: 1; transform: translateY(0); } }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 720px) {
+    .cards-container { flex-direction: column; gap: 20px; align-items: center; }
+    .card { width: 290px; height: 300px; padding: 30px 26px; }
+    .logo-text { font-size: 30px; }
+    .header { margin-bottom: 36px; }
+    .footer { margin-top: 36px; }
+    body { overflow-y: auto; padding: 40px 0; }
+  }
+
+  @media (max-width: 360px) {
+    .card { width: 270px; height: 290px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Background effects -->
+<div class="bg-grain"></div>
+<div class="bg-blob bg-blob-1"></div>
+<div class="bg-blob bg-blob-2"></div>
+<div class="bg-blob bg-blob-3"></div>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo-container">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L3 9V20C3 20.55 3.45 21 4 21H9V14H15V21H20C20.55 21 21 20.55 21 20V9L12 2Z"/>
+      </svg>
+    </div>
+    <div class="logo-text">OmniaPi</div>
+  </div>
+  <div class="subtitle">Scegli la tua piattaforma</div>
+</div>
+
+<!-- Cards -->
+<div class="cards-container">
+
+  <!-- Configuratori Card -->
+  <a href="/configuratori/" class="card card--config">
+    <div class="card-icon">
+      <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 1V3"/>
+        <path d="M12 21V23"/>
+        <path d="M4.22 4.22L5.64 5.64"/>
+        <path d="M18.36 18.36L19.78 19.78"/>
+        <path d="M1 12H3"/>
+        <path d="M21 12H23"/>
+        <path d="M4.22 19.78L5.64 18.36"/>
+        <path d="M18.36 5.64L19.78 4.22"/>
+      </svg>
+    </div>
+    <div class="card-title">Configuratori</div>
+    <div class="card-description">
+      Preventivi fotovoltaico, videocitofonia e soluzioni personalizzate per ogni esigenza.
+    </div>
+    <div class="card-arrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="5" y1="12" x2="19" y2="12"/>
+        <polyline points="12 5 19 12 12 19"/>
+      </svg>
+    </div>
+  </a>
+
+  <!-- Domotica Card -->
+  <a href="/domotica/" class="card card--domotica">
+    <div class="card-icon">
+      <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9L12 2L21 9V20C21 20.55 20.55 21 20 21H4C3.45 21 3 20.55 3 20V9Z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    </div>
+    <div class="card-title">Domotica</div>
+    <div class="card-description">
+      Gestisci il tuo impianto domotico. Luci, tapparelle, scene e dispositivi connessi.
+    </div>
+    <div class="card-arrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="5" y1="12" x2="19" y2="12"/>
+        <polyline points="12 5 19 12 12 19"/>
+      </svg>
+    </div>
+  </a>
+
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <div class="footer-dot"></div>
+  <div class="footer-text">sistema attivo — connessione sicura SSL/TLS</div>
+</div>
+
+<div class="version-tag">OmniaPi Hub v2.0.0</div>
+
+</body>
+</html>

@@ -6,8 +6,9 @@ Monorepo con Frontend React + Backend Express per i configuratori/preventivatori
 
 ```
 OmniaPi_Configurators/
-├── BE/   # Express + TypeScript, porta 3001
-└── FE/   # React + Vite + TypeScript, base /configuratori/
+├── BE/        # Express + TypeScript, porta 3001
+├── FE/        # React + Vite + TypeScript, base /configuratori/
+└── landing/   # Hub statico servito su "/" (nessuna build richiesta)
 ```
 
 ## Avvio rapido (Pi)
