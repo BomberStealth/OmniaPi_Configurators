@@ -14,6 +14,8 @@ interface Tool {
   status: Status;
 }
 
+const HOME_VERSION = 'v1.1.0';
+
 const TOOLS: Tool[] = [
   {
     id: 'fotovoltaico', path: '/fotovoltaico', icon: '☀',
@@ -74,7 +76,7 @@ export default function Home() {
       </div>
       <div className="container">
         <section className="home-hero">
-          <div className="home-hero-eyebrow">OmniaPi · Suite</div>
+          <div className="home-hero-eyebrow">OmniaPi · Suite<span className="ftv-version">{HOME_VERSION}</span></div>
           <h1 className="home-hero-title">Configuratori &amp;<br/>Preventivatori</h1>
           <p className="home-hero-sub">
             Strumenti professionali per la configurazione di impianti,
