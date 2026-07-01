@@ -1,0 +1,249 @@
+.pi-page { position: relative; min-height: 100vh; }
+.pi-page .container { position: relative; z-index: 1; padding-bottom: 56px; }
+
+/* ── Background ── */
+.pi-bg-anim { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+
+.pi-blob { position: absolute; border-radius: 50%; filter: blur(64px); opacity: 0.22; will-change: transform; }
+
+.pi-blob-1 {
+  width: 380px; height: 380px; top: -120px; right: -80px;
+  background: radial-gradient(circle at 32% 32%, #f5a800, transparent 72%);
+  animation: piBlobA 26s ease-in-out infinite;
+}
+
+.pi-blob-2 {
+  width: 320px; height: 320px; bottom: -100px; left: 6%;
+  background: radial-gradient(circle at 32% 32%, var(--accent), transparent 72%);
+  animation: piBlobB 30s ease-in-out infinite;
+}
+
+@keyframes piBlobA {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-40px, 34px) scale(1.08); }
+}
+@keyframes piBlobB {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(36px, -30px) scale(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pi-blob { animation: none; }
+}
+
+/* ── Brand pin (barra marca selezionata) ── */
+.pi-brand-pin {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 6px 12px;
+}
+
+.pi-brand-pin-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 3px rgba(0,0,0,0.04); }
+
+.pi-brand-pin-change {
+  margin-left: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ── Wizard card ── */
+.pi-wizard-card { margin-top: 16px; min-height: 320px; }
+
+.pi-back-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 18px;
+  transition: color 0.15s;
+}
+.pi-back-btn:hover { color: var(--accent); }
+
+.pi-step-header { margin-bottom: 22px; }
+.pi-step-title { font-size: 18px; font-weight: 700; color: var(--text); }
+.pi-step-sub { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
+
+/* ── Brand grid + fly animation ── */
+.pi-brand-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.pi-brand-btn {
+  position: relative;
+  flex: 1 1 180px;
+  min-width: 160px;
+  padding: 22px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--card-gradient);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.35s ease, border-color 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.pi-brand-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--bc, var(--accent));
+}
+
+.pi-brand-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-color: var(--border-hover);
+  box-shadow: 0 10px 32px rgba(37,99,235,0.14);
+}
+
+.pi-brand-soon {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pi-brand-btn.pi-fly-out:nth-child(1) { transform: translate(-160px, -90px) rotate(-18deg) scale(0.7); opacity: 0; }
+.pi-brand-btn.pi-fly-out:nth-child(2) { transform: translate(160px, -90px) rotate(18deg) scale(0.7); opacity: 0; }
+.pi-brand-btn.pi-fly-out:nth-child(3) { transform: translate(-190px, 60px) rotate(-10deg) scale(0.7); opacity: 0; }
+.pi-brand-btn.pi-fly-out:nth-child(4) { transform: translate(190px, 60px) rotate(10deg) scale(0.7); opacity: 0; }
+.pi-brand-btn.pi-fly-out:nth-child(5) { transform: translate(0, 140px) scale(0.7); opacity: 0; }
+
+.pi-brand-btn.pi-fly-up {
+  transform: translateY(-40px) scale(0.85);
+  box-shadow: 0 16px 40px var(--accent-glow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pi-brand-btn { transition: opacity 0.2s ease; }
+  .pi-brand-btn.pi-fly-out { transform: none; }
+  .pi-brand-btn.pi-fly-up { transform: none; }
+}
+
+/* ── Category cards ── */
+.pi-category-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.pi-category-card {
+  flex: 1 1 220px;
+  min-width: 200px;
+  padding: 28px 22px;
+  border-radius: var(--radius);
+  background: var(--card-gradient);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  animation: piCardIn 0.35s ease both;
+}
+
+@keyframes piCardIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pi-category-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-hover);
+  box-shadow: 0 12px 36px rgba(37,99,235,0.14);
+}
+
+.pi-category-icon {
+  width: 64px; height: 64px;
+  color: var(--accent);
+}
+
+.pi-category-title { font-size: 15.5px; font-weight: 700; color: var(--text); }
+.pi-category-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+
+/* ── Generic choice buttons ── */
+.pi-choice-row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.pi-choice-btn {
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--glass-hover);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+
+.pi-choice-btn:hover { border-color: var(--border-hover); background: var(--accent-dim); transform: translateY(-1px); }
+
+.pi-choice-btn-lg { padding: 14px 26px; font-size: 14.5px; font-family: 'Space Grotesk', sans-serif; }
+
+/* ── Amp/poles list ── */
+.pi-amp-groups { display: flex; flex-direction: column; gap: 16px; }
+.pi-amp-group-title { font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* ── Result ── */
+.pi-result-card {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+
+.pi-result-spec { font-size: 13.5px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+
+.pi-result-codes { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+
+.pi-result-code-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+}
+
+.pi-result-material { font-size: 12.5px; color: var(--text-muted); }
+.pi-result-code { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent); font-size: 14px; }
+
+.pi-result-empty { font-size: 12.5px; color: var(--text-muted); font-style: italic; margin-bottom: 10px; }
+
+.pi-result-warning { font-size: 11.5px; color: var(--text-muted); }
+
+/* ── Quadretto summary ── */
+.pi-quadretto-summary { display: flex; flex-direction: column; gap: 18px; margin-bottom: 18px; }
+.pi-posto-block { border-top: 1px solid var(--border); padding-top: 14px; }
+.pi-posto-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+.pi-calotta-double { display: flex; flex-wrap: wrap; gap: 14px; }
+.pi-calotta-double > div { flex: 1 1 240px; }

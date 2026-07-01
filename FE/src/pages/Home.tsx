@@ -30,6 +30,12 @@ const TOOLS: Tool[] = [
     category: 'Energia', color: '#0891B2', status: 'active',
   },
   {
+    id: 'prese-interbloccate', path: '/prese-interbloccate', icon: '🔐',
+    title: 'Scelta Prese Interbloccate',
+    desc: 'Configuratore guidato per prese interbloccate e quadretti, per marca e specifica tecnica.',
+    category: 'Impianti', color: '#f5a800', status: 'active',
+  },
+  {
     id: 'elettrico', path: null, icon: '⚡',
     title: 'Preventivatore Elettrico',
     desc: 'Calcolo materiale per impianti elettrici civili e industriali, quadri e dorsali.',

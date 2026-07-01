@@ -32,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
 const TOOL_CRUMBS: Record<string, string> = {
   '/fotovoltaico': 'Struttura FTV',
   '/western': 'Western Energy',
+  '/prese-interbloccate': 'Prese Interbloccate',
 };
 
 export default function Navbar() {
