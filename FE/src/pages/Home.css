@@ -1,4 +1,79 @@
-.home-page { min-height: 100vh; }
+.home-page { min-height: 100vh; position: relative; overflow: hidden; }
+.home-page .container { position: relative; z-index: 1; }
+
+/* ── Animated background (blobs in theme colors) ── */
+.home-bg-anim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.home-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(64px);
+  opacity: 0.30;
+  will-change: transform;
+}
+
+.home-blob-1 {
+  width: 440px; height: 440px;
+  top: -140px; left: -100px;
+  background: radial-gradient(circle at 32% 32%, var(--accent), transparent 72%);
+  animation: blobFloatA 24s ease-in-out infinite;
+}
+
+.home-blob-2 {
+  width: 380px; height: 380px;
+  top: 6%; right: -120px;
+  background: radial-gradient(circle at 32% 32%, #0891B2, transparent 72%);
+  animation: blobFloatB 28s ease-in-out infinite;
+}
+
+.home-blob-3 {
+  width: 320px; height: 320px;
+  bottom: -110px; left: 18%;
+  background: radial-gradient(circle at 32% 32%, #10b981, transparent 72%);
+  animation: blobFloatC 32s ease-in-out infinite;
+}
+
+.home-blob-4 {
+  width: 280px; height: 280px;
+  bottom: 8%; right: 12%;
+  background: radial-gradient(circle at 32% 32%, #8b5cf6, transparent 72%);
+  animation: blobFloatA 26s ease-in-out infinite reverse;
+}
+
+.home-grain {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(37,99,235,0.10) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 0%, transparent 75%);
+  opacity: 0.5;
+}
+
+@keyframes blobFloatA {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(46px, 32px) scale(1.08); }
+  66%      { transform: translate(-22px, 54px) scale(0.94); }
+}
+
+@keyframes blobFloatB {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-56px, 44px) scale(1.10); }
+}
+
+@keyframes blobFloatC {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(34px, -46px) scale(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-blob { animation: none; }
+}
 
 /* ── Hero ── */
 .home-hero {
@@ -11,11 +86,21 @@
   position: absolute;
   right: -20px; top: 10px;
   font-size: 220px;
-  opacity: 0.022;
+  opacity: 0.028;
   line-height: 1;
   pointer-events: none;
   user-select: none;
   transform: rotate(12deg);
+  animation: decoSpin 90s linear infinite;
+}
+
+@keyframes decoSpin {
+  from { transform: rotate(12deg); }
+  to   { transform: rotate(372deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-deco { animation: none; }
 }
 
 .home-hero-eyebrow {
@@ -32,6 +117,16 @@
   background: var(--accent-dim);
   border-radius: 99px;
   border: 1px solid rgba(37,99,235,0.22);
+  animation: eyebrowPulse 3.2s ease-in-out infinite;
+}
+
+@keyframes eyebrowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+  50%      { box-shadow: 0 0 0 5px rgba(37,99,235,0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-eyebrow { animation: none; }
 }
 
 .home-hero-title {

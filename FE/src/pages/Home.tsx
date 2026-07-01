@@ -65,6 +65,13 @@ export default function Home() {
 
   return (
     <div className="page home-page">
+      <div className="home-bg-anim" aria-hidden="true">
+        <span className="home-blob home-blob-1" />
+        <span className="home-blob home-blob-2" />
+        <span className="home-blob home-blob-3" />
+        <span className="home-blob home-blob-4" />
+        <span className="home-grain" />
+      </div>
       <div className="container">
         <section className="home-hero">
           <div className="home-hero-eyebrow">OmniaPi · Suite</div>
