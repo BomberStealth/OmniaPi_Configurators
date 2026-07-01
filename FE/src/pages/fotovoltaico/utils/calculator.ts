@@ -304,7 +304,7 @@ export function calcola(
       { key: pk, qty: tProf, note: `${fd.length} gr` },
       { key: 'mCentrale', qty: tMC, note: 'tra pan' },
       { key: 'mTerminale', qty: tMT, note: 'estremità' },
-      { key: 'vitiFlat', qty: pacchi, note: `${totViti} viti → ${pacchi}×50` },
+      { key: 'vitiFlat', qty: totViti, note: `${pacchi}×50` },
       { key: 'nastroFlat', qty: rotN, note: `${nastM.toFixed(1)}m → ${rotN}×10m` },
       { key: 'bituminoso', qty: totBit, note: `1/20 prof` },
     );
@@ -327,7 +327,7 @@ export function calcola(
         { key: 'prc2525z', qty: z.cvData.totProfili, note: `${z.cvData.segments.length} segmenti perim.` },
         { key: 'prg3030z', qty: z.cvData.totGiunti, note: 'prof-1 per segmento' },
         { key: 'kstz0006', qty: z.cvData.totAngoli, note: '1 per angolo' },
-        { key: 'vt1010', qty: z.cvData.pacchiViti, note: `${z.cvData.totVitiGiunti} viti (4/giunto) → ${z.cvData.pacchiViti}×50` },
+        { key: 'vt1010', qty: z.cvData.totVitiGiunti, note: `4/giunto → ${z.cvData.pacchiViti}×50` },
       );
       if (z.cvData.totAvanzoM > 0) {
         avanzoText = `Avanzo profili controvento: ${z.cvData.totAvanzoM.toFixed(2)}m totali — ${z.cvData.avanzi.map((a) => `${a.side === 'H' ? 'Oriz' : 'Vert'} ${(a.avanzo / 1000).toFixed(2)}m`).join(', ')}`;
