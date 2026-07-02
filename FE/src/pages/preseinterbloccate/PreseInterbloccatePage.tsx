@@ -1,32 +1,39 @@
 import { useState } from 'react';
 import {
-  BRANDS, AMP_OPTIONS, AVAILABLE_POLES, POLES_LABEL, MATERIAL_LABEL,
-  getCatalogCodes,
+  BRANDS, AMP_OPTIONS, POLES_LABEL, FUSE_LABEL,
+  availableInterlockedPoles, availableInterlockedFuses, getInterlockedCode,
+  availableFixedPoles, getFixedCode,
+  ADAPTER_2POSTI, CIVIL_COVERS, CIVIL_MODULES, CIVIL_MODULE_CAPACITY,
+  getQuadrettoBoxCode,
 } from './utils/catalog';
 import type { BrandId, Amp, Poles, FuseChoice } from './utils/catalog';
 import './PreseInterbloccatePage.css';
 
-const VERSION = 'v0.1.0';
+const VERSION = 'v0.2.0';
 
 type Mount = 'incasso' | 'parete';
-type PostoType = 'interbloccata' | 'calotta2';
+type PostoType = 'interbloccata' | 'supporto2';
+type SupportoKind = 'industriali' | 'civili';
 
 interface AmpPoles { amp: Amp; poles: Poles }
 
 interface PositionResult {
   type: PostoType;
-  fuse?: FuseChoice;
-  singola?: AmpPoles;
-  presa1?: AmpPoles;
-  presa2?: AmpPoles;
+  interbloccata?: { amp: Amp; poles: Poles; fuse: FuseChoice };
+  supportoKind?: SupportoKind;
+  industriali?: { presa1: AmpPoles; presa2: AmpPoles };
+  civili?: { coverId: string; modulePicks: string[] };
 }
 
 type Step =
   | 'brand' | 'category'
-  | 'singola-mount' | 'singola-fuse' | 'singola-list' | 'singola-result'
+  | 'singola-mount' | 'singola-list' | 'singola-fuse' | 'singola-result'
   | 'quadretto-din' | 'quadretto-numposti'
-  | 'posto-category' | 'posto-fuse' | 'posto-list'
-  | 'posto-calotta-list1' | 'posto-calotta-list2'
+  | 'posto-category'
+  | 'posto-list' | 'posto-fuse'
+  | 'posto-supporto-type'
+  | 'posto-industriale-list1' | 'posto-industriale-list2'
+  | 'posto-civile-cover' | 'posto-civile-modules'
   | 'quadretto-result';
 
 function SocketIcon() {
@@ -39,6 +46,17 @@ function SocketIcon() {
       <circle cx="32" cy="43" r="1.8" fill="currentColor" />
       <path d="M22 14V9c0-3 2.2-5 5.5-5S33 6 33 9v5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
       <rect x="19" y="6" width="10" height="6" rx="2" fill="currentColor" fillOpacity="0.5" />
+    </svg>
+  );
+}
+
+function DoubleSocketIcon() {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="6" y="16" width="24" height="34" rx="7" fill="currentColor" fillOpacity="0.10" stroke="currentColor" strokeWidth="2" />
+      <rect x="34" y="16" width="24" height="34" rx="7" fill="currentColor" fillOpacity="0.10" stroke="currentColor" strokeWidth="2" />
+      <circle cx="18" cy="33" r="7" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="46" cy="33" r="7" fill="none" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   );
 }
@@ -72,16 +90,18 @@ export default function PreseInterbloccatePage() {
 
   // singola
   const [mount, setMount] = useState<Mount | null>(null);
-  const [fuse, setFuse] = useState<FuseChoice | null>(null);
-  const [singolaResult, setSingolaResult] = useState<AmpPoles | null>(null);
+  const [singolaAmpPoles, setSingolaAmpPoles] = useState<AmpPoles | null>(null);
+  const [singolaFuse, setSingolaFuse] = useState<FuseChoice | null>(null);
 
   // quadretto
   const [din, setDin] = useState<boolean | null>(null);
   const [numPosti, setNumPosti] = useState<number | null>(null);
   const [posizioni, setPosizioni] = useState<(PositionResult | null)[]>([]);
   const [postoIdx, setPostoIdx] = useState(0);
-  const [postoFuse, setPostoFuse] = useState<FuseChoice | null>(null);
-  const [calottaPresa1, setCalottaPresa1] = useState<AmpPoles | null>(null);
+  const [postoAmpPoles, setPostoAmpPoles] = useState<AmpPoles | null>(null);
+  const [industrialePresa1, setIndustrialePresa1] = useState<AmpPoles | null>(null);
+  const [civileCoverId, setCivileCoverId] = useState<string | null>(null);
+  const [civilePicks, setCivilePicks] = useState<string[]>([]);
 
   const selectedBrand = BRANDS.find(b => b.id === brand) ?? null;
 
@@ -101,23 +121,21 @@ export default function PreseInterbloccatePage() {
 
   const resetAll = () => {
     setStep('brand'); setHistory([]); setBrand(null); setFlying(false);
-    setMount(null); setFuse(null); setSingolaResult(null);
+    setMount(null); setSingolaAmpPoles(null); setSingolaFuse(null);
     setDin(null); setNumPosti(null); setPosizioni([]); setPostoIdx(0);
-    setPostoFuse(null); setCalottaPresa1(null);
+    setPostoAmpPoles(null); setIndustrialePresa1(null);
+    setCivileCoverId(null); setCivilePicks([]);
   };
 
   const handlePickBrand = (id: BrandId) => {
     setBrand(id);
     setFlying(true);
-    setTimeout(() => {
-      setFlying(false);
-      goTo('category');
-    }, 550);
+    setTimeout(() => { setFlying(false); goTo('category'); }, 550);
   };
 
-  const handlePickCategory = (cat: 'singola' | 'quadretto') => {
-    if (cat === 'singola') goTo('singola-mount');
-    else goTo('quadretto-din');
+  const resetPostoTransient = () => {
+    setPostoAmpPoles(null); setIndustrialePresa1(null);
+    setCivileCoverId(null); setCivilePicks([]);
   };
 
   const finishPosto = (result: PositionResult) => {
@@ -126,8 +144,7 @@ export default function PreseInterbloccatePage() {
       next[postoIdx] = result;
       return next;
     });
-    setPostoFuse(null);
-    setCalottaPresa1(null);
+    resetPostoTransient();
     if (numPosti && postoIdx + 1 < numPosti) {
       setPostoIdx(i => i + 1);
       goTo('posto-category');
@@ -137,13 +154,13 @@ export default function PreseInterbloccatePage() {
   };
 
   // ── Rendering helpers ─────────────────────────────────────────────────
-  const renderAmpPolesList = (onPick: (a: Amp, p: Poles) => void) => (
+  const renderAmpPolesList = (amps: Amp[], polesFor: (a: Amp) => Poles[], onPick: (a: Amp, p: Poles) => void) => (
     <div className="pi-amp-groups">
-      {AMP_OPTIONS.map(amp => (
+      {amps.filter(a => polesFor(a).length > 0).map(amp => (
         <div key={amp} className="pi-amp-group">
           <div className="pi-amp-group-title">{amp}A</div>
           <div className="pi-choice-row">
-            {AVAILABLE_POLES[amp].map(poles => (
+            {polesFor(amp).map(poles => (
               <button key={poles} className="pi-choice-btn" onClick={() => onPick(amp, poles)}>
                 {POLES_LABEL[poles]}
               </button>
@@ -154,28 +171,31 @@ export default function PreseInterbloccatePage() {
     </div>
   );
 
-  const renderCodeResult = (amp: Amp, poles: Poles, fuseChoice: FuseChoice) => {
-    const codes = brand ? getCatalogCodes(brand, amp, poles, fuseChoice) : [];
+  const renderInterlockedResult = (amp: Amp, poles: Poles, fuseChoice: FuseChoice) => {
+    const code = getInterlockedCode(amp, poles, fuseChoice);
     return (
       <div className="pi-result-card">
-        <div className="pi-result-spec">
-          {amp}A · {POLES_LABEL[poles]} · {fuseChoice === 'fusibili' ? 'Con fusibili' : 'Diretta (senza fusibili)'}
-        </div>
-        {codes.length > 0 ? (
+        <div className="pi-result-spec">{amp}A · {POLES_LABEL[poles]} · {FUSE_LABEL[fuseChoice]}</div>
+        {code ? (
           <div className="pi-result-codes">
-            {codes.map(c => (
-              <div key={c.material} className="pi-result-code-row">
-                <span className="pi-result-material">{MATERIAL_LABEL[c.material]}</span>
-                <span className="pi-result-code">{c.code}</span>
-              </div>
-            ))}
+            <div className="pi-result-code-row">
+              <span className="pi-result-material">topTER — presa interbloccata</span>
+              <span className="pi-result-code">{code}</span>
+            </div>
           </div>
         ) : (
-          <div className="pi-result-empty">
-            Nessun codice disponibile per {selectedBrand?.label} — catalogo da completare.
-          </div>
+          <div className="pi-result-empty">Combinazione non disponibile a catalogo.</div>
         )}
-        <div className="pi-result-warning">⚠️ Verifica sempre il codice sul listino ufficiale prima dell'ordine.</div>
+      </div>
+    );
+  };
+
+  const renderFixedResult = (label: string, amp: Amp, poles: Poles) => {
+    const code = getFixedCode(amp, poles);
+    return (
+      <div className="pi-result-code-row">
+        <span className="pi-result-material">{label} — {amp}A {POLES_LABEL[poles]} (IP66/67)</span>
+        <span className="pi-result-code">{code ?? '—'}</span>
       </div>
     );
   };
@@ -208,15 +228,15 @@ export default function PreseInterbloccatePage() {
       <>
         <StepHeader title="Cosa vuoi configurare?" />
         <div className="pi-category-grid">
-          <button className="pi-category-card" onClick={() => handlePickCategory('singola')}>
+          <button className="pi-category-card" onClick={() => goTo('singola-mount')}>
             <div className="pi-category-icon"><SocketIcon /></div>
             <div className="pi-category-title">Presa interbloccata</div>
             <div className="pi-category-desc">Singola presa con interruttore di blocco, a incasso o a parete.</div>
           </button>
-          <button className="pi-category-card" onClick={() => handlePickCategory('quadretto')}>
+          <button className="pi-category-card" onClick={() => goTo('quadretto-din')}>
             <div className="pi-category-icon"><PanelIcon /></div>
             <div className="pi-category-title">Quadretto</div>
-            <div className="pi-category-desc">Centralino con più posizioni: prese interbloccate e/o calotte 2 posti.</div>
+            <div className="pi-category-desc">Centralino con più posti: prese interbloccate e/o supporti 2 prese.</div>
           </button>
         </div>
       </>
@@ -226,33 +246,41 @@ export default function PreseInterbloccatePage() {
       <>
         <StepHeader title="Scatola" sub="Da incasso o a parete?" />
         <div className="pi-choice-row">
-          <button className="pi-choice-btn pi-choice-btn-lg" onClick={() => { setMount('incasso'); goTo('singola-fuse'); }}>Da incasso</button>
-          <button className="pi-choice-btn pi-choice-btn-lg" onClick={() => { setMount('parete'); goTo('singola-fuse'); }}>A parete</button>
-        </div>
-      </>
-    );
-  } else if (step === 'singola-fuse') {
-    content = (
-      <>
-        <StepHeader title="Fusibili" sub={mount === 'incasso' ? 'Scatola da incasso' : 'Scatola a parete'} />
-        <div className="pi-choice-row">
-          <button className="pi-choice-btn pi-choice-btn-lg" onClick={() => { setFuse('fusibili'); goTo('singola-list'); }}>Con fusibili</button>
-          <button className="pi-choice-btn pi-choice-btn-lg" onClick={() => { setFuse('diretta'); goTo('singola-list'); }}>Senza fusibili</button>
+          <button className="pi-choice-btn pi-choice-btn-lg" onClick={() => { setMount('incasso'); goTo('singola-list'); }}>Da incasso</button>
+          <button className="pi-choice-btn pi-choice-btn-lg" onClick={() => { setMount('parete'); goTo('singola-list'); }}>A parete</button>
         </div>
       </>
     );
   } else if (step === 'singola-list') {
     content = (
       <>
-        <StepHeader title="Amperaggio e poli" />
-        {renderAmpPolesList((amp, poles) => { setSingolaResult({ amp, poles }); goTo('singola-result'); })}
+        <StepHeader title="Amperaggio e poli" sub={mount === 'incasso' ? 'Scatola da incasso' : 'Scatola a parete'} />
+        {renderAmpPolesList(AMP_OPTIONS, availableInterlockedPoles, (amp, poles) => {
+          setSingolaAmpPoles({ amp, poles });
+          const fuses = availableInterlockedFuses(amp, poles);
+          if (fuses.length === 1) { setSingolaFuse(fuses[0]); goTo('singola-result'); }
+          else goTo('singola-fuse');
+        })}
       </>
     );
-  } else if (step === 'singola-result' && singolaResult && fuse) {
+  } else if (step === 'singola-fuse' && singolaAmpPoles) {
+    content = (
+      <>
+        <StepHeader title="Fusibili" sub={`${singolaAmpPoles.amp}A · ${POLES_LABEL[singolaAmpPoles.poles]}`} />
+        <div className="pi-choice-row">
+          {availableInterlockedFuses(singolaAmpPoles.amp, singolaAmpPoles.poles).map(f => (
+            <button key={f} className="pi-choice-btn pi-choice-btn-lg" onClick={() => { setSingolaFuse(f); goTo('singola-result'); }}>
+              {FUSE_LABEL[f]}
+            </button>
+          ))}
+        </div>
+      </>
+    );
+  } else if (step === 'singola-result' && singolaAmpPoles && singolaFuse) {
     content = (
       <>
         <StepHeader title="Configurazione completata" />
-        {renderCodeResult(singolaResult.amp, singolaResult.poles, fuse)}
+        {renderInterlockedResult(singolaAmpPoles.amp, singolaAmpPoles.poles, singolaFuse)}
         <button className="btn btn-secondary" onClick={resetAll}>↺ Nuova configurazione</button>
       </>
     );
@@ -269,7 +297,7 @@ export default function PreseInterbloccatePage() {
   } else if (step === 'quadretto-numposti') {
     content = (
       <>
-        <StepHeader title="Numero posizioni" sub={din ? 'Con barra DIN' : 'Senza barra DIN'} />
+        <StepHeader title="Numero posti" sub={din ? 'Con barra DIN' : 'Senza barra DIN'} />
         <div className="pi-choice-row">
           {[1, 2, 3, 4].map(n => (
             <button key={n} className="pi-choice-btn pi-choice-btn-lg" onClick={() => {
@@ -287,74 +315,191 @@ export default function PreseInterbloccatePage() {
       <>
         <StepHeader title={`${postoIdx + 1}° posto`} sub={`Posizione ${postoIdx + 1} di ${numPosti}`} />
         <div className="pi-category-grid">
-          <button className="pi-category-card" onClick={() => goTo('posto-fuse')}>
+          <button className="pi-category-card" onClick={() => goTo('posto-list')}>
             <div className="pi-category-icon"><SocketIcon /></div>
             <div className="pi-category-title">Presa interbloccata</div>
+            <div className="pi-category-desc">Occupa lo spazio di 2 buchi.</div>
           </button>
-          <button className="pi-category-card" onClick={() => goTo('posto-calotta-list1')}>
-            <div className="pi-category-icon"><PanelIcon /></div>
-            <div className="pi-category-title">Calotta 2 posti</div>
+          <button className="pi-category-card" onClick={() => goTo('posto-supporto-type')}>
+            <div className="pi-category-icon"><DoubleSocketIcon /></div>
+            <div className="pi-category-title">Supporto 2 Prese</div>
+            <div className="pi-category-desc">2 prese industriali o civili nello stesso buco (con {ADAPTER_2POSTI.code}).</div>
           </button>
-        </div>
-      </>
-    );
-  } else if (step === 'posto-fuse') {
-    content = (
-      <>
-        <StepHeader title={`${postoIdx + 1}° posto — Fusibili`} />
-        <div className="pi-choice-row">
-          <button className="pi-choice-btn pi-choice-btn-lg" onClick={() => { setPostoFuse('fusibili'); goTo('posto-list'); }}>Con fusibili</button>
-          <button className="pi-choice-btn pi-choice-btn-lg" onClick={() => { setPostoFuse('diretta'); goTo('posto-list'); }}>Senza fusibili</button>
         </div>
       </>
     );
   } else if (step === 'posto-list') {
     content = (
       <>
-        <StepHeader title={`${postoIdx + 1}° posto — Amperaggio e poli`} />
-        {renderAmpPolesList((amp, poles) => {
-          if (!postoFuse) return;
-          finishPosto({ type: 'interbloccata', fuse: postoFuse, singola: { amp, poles } });
+        <StepHeader title={`${postoIdx + 1}° posto — Presa interbloccata`} sub="Amperaggio e poli" />
+        {renderAmpPolesList(AMP_OPTIONS, availableInterlockedPoles, (amp, poles) => {
+          setPostoAmpPoles({ amp, poles });
+          const fuses = availableInterlockedFuses(amp, poles);
+          if (fuses.length === 1) {
+            finishPosto({ type: 'interbloccata', interbloccata: { amp, poles, fuse: fuses[0] } });
+          } else {
+            goTo('posto-fuse');
+          }
         })}
       </>
     );
-  } else if (step === 'posto-calotta-list1') {
+  } else if (step === 'posto-fuse' && postoAmpPoles) {
     content = (
       <>
-        <StepHeader title={`${postoIdx + 1}° posto — Calotta 2 posti`} sub="1ª presa" />
-        {renderAmpPolesList((amp, poles) => { setCalottaPresa1({ amp, poles }); goTo('posto-calotta-list2'); })}
+        <StepHeader title={`${postoIdx + 1}° posto — Fusibili`} sub={`${postoAmpPoles.amp}A · ${POLES_LABEL[postoAmpPoles.poles]}`} />
+        <div className="pi-choice-row">
+          {availableInterlockedFuses(postoAmpPoles.amp, postoAmpPoles.poles).map(f => (
+            <button key={f} className="pi-choice-btn pi-choice-btn-lg" onClick={() => {
+              finishPosto({ type: 'interbloccata', interbloccata: { amp: postoAmpPoles.amp, poles: postoAmpPoles.poles, fuse: f } });
+            }}>{FUSE_LABEL[f]}</button>
+          ))}
+        </div>
       </>
     );
-  } else if (step === 'posto-calotta-list2') {
+  } else if (step === 'posto-supporto-type') {
     content = (
       <>
-        <StepHeader title={`${postoIdx + 1}° posto — Calotta 2 posti`} sub="2ª presa" />
-        {renderAmpPolesList((amp, poles) => {
-          if (!calottaPresa1) return;
-          finishPosto({ type: 'calotta2', presa1: calottaPresa1, presa2: { amp, poles } });
+        <StepHeader title={`${postoIdx + 1}° posto — Supporto 2 Prese`} sub={`Adattatore ${ADAPTER_2POSTI.code}`} />
+        <div className="pi-choice-row">
+          <button className="pi-choice-btn pi-choice-btn-lg" onClick={() => goTo('posto-industriale-list1')}>2 prese industriali</button>
+          <button className="pi-choice-btn pi-choice-btn-lg" onClick={() => goTo('posto-civile-cover')}>Prese civili</button>
+        </div>
+      </>
+    );
+  } else if (step === 'posto-industriale-list1') {
+    content = (
+      <>
+        <StepHeader title={`${postoIdx + 1}° posto — 2 prese industriali`} sub="1ª presa (IP66/67)" />
+        {renderAmpPolesList(AMP_OPTIONS, availableFixedPoles, (amp, poles) => {
+          setIndustrialePresa1({ amp, poles });
+          goTo('posto-industriale-list2');
         })}
       </>
     );
-  } else if (step === 'quadretto-result') {
+  } else if (step === 'posto-industriale-list2' && industrialePresa1) {
     content = (
       <>
-        <StepHeader title="Configurazione quadretto completata" sub={`${numPosti} posizioni · ${din ? 'con' : 'senza'} barra DIN`} />
+        <StepHeader title={`${postoIdx + 1}° posto — 2 prese industriali`} sub="2ª presa (IP66/67)" />
+        {renderAmpPolesList(AMP_OPTIONS, availableFixedPoles, (amp, poles) => {
+          finishPosto({ type: 'supporto2', supportoKind: 'industriali', industriali: { presa1: industrialePresa1, presa2: { amp, poles } } });
+        })}
+      </>
+    );
+  } else if (step === 'posto-civile-cover') {
+    content = (
+      <>
+        <StepHeader title={`${postoIdx + 1}° posto — Prese civili`} sub="Scegli la copertura" />
+        <div className="pi-choice-row">
+          {CIVIL_COVERS.map(c => (
+            <button key={c.id} className="pi-choice-btn pi-choice-btn-lg" onClick={() => { setCivileCoverId(c.id); goTo('posto-civile-modules'); }}>
+              {c.label} <span className="pi-choice-code">{c.code}</span>
+            </button>
+          ))}
+        </div>
+      </>
+    );
+  } else if (step === 'posto-civile-modules') {
+    const used = civilePicks.reduce((s, id) => s + (CIVIL_MODULES.find(m => m.id === id)?.modules ?? 0), 0);
+    const remaining = CIVIL_MODULE_CAPACITY - used;
+    content = (
+      <>
+        <StepHeader title={`${postoIdx + 1}° posto — Prese civili`} sub={`Moduli: ${used}/${CIVIL_MODULE_CAPACITY}`} />
+        <div className="pi-choice-row">
+          {CIVIL_MODULES.map(m => {
+            const disabled = m.modules > remaining;
+            return (
+              <button key={m.id} className="pi-choice-btn pi-choice-btn-lg" disabled={disabled}
+                onClick={() => setCivilePicks(prev => [...prev, m.id])}>
+                {m.label} <span className="pi-choice-code">{m.code}</span> · {m.modules} mod.
+              </button>
+            );
+          })}
+        </div>
+        {civilePicks.length > 0 && (
+          <div className="pi-civil-picks">
+            {civilePicks.map((id, i) => {
+              const m = CIVIL_MODULES.find(x => x.id === id)!;
+              return (
+                <div key={i} className="pi-result-code-row">
+                  <span className="pi-result-material">{m.label} <span className="pi-choice-code">{m.code}</span></span>
+                  <button className="pi-remove-btn" onClick={() => setCivilePicks(prev => prev.filter((_, idx) => idx !== i))}>✕</button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <button className="btn btn-primary" disabled={civilePicks.length === 0}
+          style={{ marginTop: 16 }}
+          onClick={() => {
+            if (!civileCoverId) return;
+            finishPosto({ type: 'supporto2', supportoKind: 'civili', civili: { coverId: civileCoverId, modulePicks: civilePicks } });
+          }}>
+          Conferma
+        </button>
+      </>
+    );
+  } else if (step === 'quadretto-result' && numPosti !== null && din !== null) {
+    const hasInterlocked = posizioni.some(p => p?.type === 'interbloccata');
+    const boxCode = getQuadrettoBoxCode(numPosti, din, hasInterlocked);
+    content = (
+      <>
+        <StepHeader title="Configurazione quadretto completata" sub={`${numPosti} posti · ${din ? 'con' : 'senza'} barra DIN`} />
+
+        <div className="pi-result-card" style={{ marginBottom: 18 }}>
+          <div className="pi-result-spec">Quadretto</div>
+          <div className="pi-result-codes">
+            <div className="pi-result-code-row">
+              <span className="pi-result-material">Contenitore ({numPosti} posti, {din ? 'con' : 'senza'} DIN)</span>
+              <span className="pi-result-code">{boxCode ?? '—'}</span>
+            </div>
+          </div>
+          <div className="pi-result-warning">⚠️ Taglia dedotta dalla brochure — verifica sempre sul listino ufficiale.</div>
+        </div>
+
         <div className="pi-quadretto-summary">
           {posizioni.map((pos, i) => (
             <div key={i} className="pi-posto-block">
               <div className="pi-posto-title">{i + 1}° posto</div>
-              {pos?.type === 'interbloccata' && pos.singola && pos.fuse && (
-                renderCodeResult(pos.singola.amp, pos.singola.poles, pos.fuse)
+
+              {pos?.type === 'interbloccata' && pos.interbloccata && (
+                renderInterlockedResult(pos.interbloccata.amp, pos.interbloccata.poles, pos.interbloccata.fuse)
               )}
-              {pos?.type === 'calotta2' && pos.presa1 && pos.presa2 && (
-                <div className="pi-calotta-double">
-                  <div>
-                    <div className="pi-result-material">1ª presa</div>
-                    {renderCodeResult(pos.presa1.amp, pos.presa1.poles, 'diretta')}
+
+              {pos?.type === 'supporto2' && pos.supportoKind === 'industriali' && pos.industriali && (
+                <div className="pi-result-card">
+                  <div className="pi-result-spec">2 prese industriali — {ADAPTER_2POSTI.label}</div>
+                  <div className="pi-result-codes">
+                    <div className="pi-result-code-row">
+                      <span className="pi-result-material">Adattatore</span>
+                      <span className="pi-result-code">{ADAPTER_2POSTI.code}</span>
+                    </div>
+                    {renderFixedResult('1ª presa', pos.industriali.presa1.amp, pos.industriali.presa1.poles)}
+                    {renderFixedResult('2ª presa', pos.industriali.presa2.amp, pos.industriali.presa2.poles)}
                   </div>
-                  <div>
-                    <div className="pi-result-material">2ª presa</div>
-                    {renderCodeResult(pos.presa2.amp, pos.presa2.poles, 'diretta')}
+                </div>
+              )}
+
+              {pos?.type === 'supporto2' && pos.supportoKind === 'civili' && pos.civili && (
+                <div className="pi-result-card">
+                  <div className="pi-result-spec">Prese civili — {ADAPTER_2POSTI.label}</div>
+                  <div className="pi-result-codes">
+                    <div className="pi-result-code-row">
+                      <span className="pi-result-material">Adattatore</span>
+                      <span className="pi-result-code">{ADAPTER_2POSTI.code}</span>
+                    </div>
+                    <div className="pi-result-code-row">
+                      <span className="pi-result-material">Copertura</span>
+                      <span className="pi-result-code">{CIVIL_COVERS.find(c => c.id === pos.civili!.coverId)?.code}</span>
+                    </div>
+                    {pos.civili.modulePicks.map((id, mi) => {
+                      const m = CIVIL_MODULES.find(x => x.id === id)!;
+                      return (
+                        <div key={mi} className="pi-result-code-row">
+                          <span className="pi-result-material">{m.label}</span>
+                          <span className="pi-result-code">{m.code}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
