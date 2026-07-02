@@ -118,28 +118,32 @@ function QuadrettoVisual({ numPosti, din, posizioni, onSlotClick }: {
 }) {
   return (
     <div className="pi-panel-wrap">
-      <div className="pi-panel-box">
-        <span className="pi-panel-screw pi-panel-screw-tl" />
-        <span className="pi-panel-screw pi-panel-screw-tr" />
-        <span className="pi-panel-screw pi-panel-screw-bl" />
-        <span className="pi-panel-screw pi-panel-screw-br" />
-        <div className="pi-panel-slots">
-          {Array.from({ length: numPosti }).map((_, i) => {
-            const pos = posizioni[i];
-            return (
-              <button
-                key={i}
-                className={`pi-panel-slot${pos ? ' pi-panel-slot-filled' : ''}`}
-                onClick={() => onSlotClick(i)}
-                title={pos ? 'Modifica posto' : 'Configura posto'}
-              >
-                {pos ? <SlotContentIcon pos={pos} /> : <span className="pi-panel-slot-plus">+</span>}
-                <span className="pi-panel-slot-num">{i + 1}</span>
-              </button>
-            );
-          })}
+      <div className="pi-panel-outer">
+        <div className="pi-panel-lid">
+          <span className="pi-panel-screw pi-panel-screw-tl" />
+          <span className="pi-panel-screw pi-panel-screw-tr" />
         </div>
-        {din && <div className="pi-panel-din"><span className="pi-panel-din-label">barra DIN</span></div>}
+        <div className="pi-panel-box">
+          <span className="pi-panel-screw pi-panel-screw-bl" />
+          <span className="pi-panel-screw pi-panel-screw-br" />
+          <div className="pi-panel-slots">
+            {Array.from({ length: numPosti }).map((_, i) => {
+              const pos = posizioni[i];
+              return (
+                <button
+                  key={i}
+                  className={`pi-panel-slot${pos ? ' pi-panel-slot-filled' : ''}`}
+                  onClick={() => onSlotClick(i)}
+                  title={pos ? 'Modifica posto' : 'Configura posto'}
+                >
+                  {pos ? <SlotContentIcon pos={pos} /> : <span className="pi-panel-slot-plus">+</span>}
+                  <span className="pi-panel-slot-num">{i + 1}</span>
+                </button>
+              );
+            })}
+          </div>
+          {din && <div className="pi-panel-din"><span className="pi-panel-din-label">barra DIN</span></div>}
+        </div>
       </div>
       <div className="pi-panel-hint">Clicca su un posto per configurarlo</div>
     </div>
@@ -366,7 +370,9 @@ export default function PreseInterbloccatePage() {
       <>
         <StepHeader title="Configurazione completata" />
         {renderInterlockedResult(singolaAmpPoles.amp, singolaAmpPoles.poles, singolaFuse)}
-        <button className="btn btn-secondary" onClick={resetAll}>↺ Nuova configurazione</button>
+        <div className="pi-cta-row">
+          <button className="btn btn-secondary" onClick={resetAll}>↺ Nuova configurazione</button>
+        </div>
       </>
     );
   } else if (step === 'quadretto-din') {
@@ -400,9 +406,11 @@ export default function PreseInterbloccatePage() {
       <>
         <StepHeader title="Il tuo quadretto" sub={`${numPosti} posti · ${din ? 'con' : 'senza'} barra DIN`} />
         <QuadrettoVisual numPosti={numPosti} din={din} posizioni={posizioni} onSlotClick={openSlot} />
-        <button className="btn btn-primary" disabled={!allFilled} style={{ marginTop: 20 }} onClick={() => goTo('quadretto-result')}>
-          {allFilled ? 'Vedi configurazione completa →' : `Configura tutti i posti (${posizioni.filter(Boolean).length}/${numPosti})`}
-        </button>
+        <div className="pi-cta-row">
+          <button className="btn btn-primary" disabled={!allFilled} onClick={() => goTo('quadretto-result')}>
+            {allFilled ? 'Vedi configurazione completa →' : `Configura tutti i posti (${posizioni.filter(Boolean).length}/${numPosti})`}
+          </button>
+        </div>
       </>
     );
   } else if (step === 'quadretto-result' && numPosti !== null && din !== null) {
@@ -473,7 +481,9 @@ export default function PreseInterbloccatePage() {
             </div>
           ))}
         </div>
-        <button className="btn btn-secondary" onClick={resetAll}>↺ Nuova configurazione</button>
+        <div className="pi-cta-row">
+          <button className="btn btn-secondary" onClick={resetAll}>↺ Nuova configurazione</button>
+        </div>
       </>
     );
   }
@@ -598,14 +608,15 @@ export default function PreseInterbloccatePage() {
             })}
           </div>
         )}
-        <button className="btn btn-primary" disabled={civilePicks.length === 0}
-          style={{ marginTop: 16 }}
-          onClick={() => {
-            if (!civileCoverId) return;
-            saveSlot({ type: 'supporto2', supportoKind: 'civili', civili: { coverId: civileCoverId, modulePicks: civilePicks } });
-          }}>
-          Conferma
-        </button>
+        <div className="pi-cta-row">
+          <button className="btn btn-primary" disabled={civilePicks.length === 0}
+            onClick={() => {
+              if (!civileCoverId) return;
+              saveSlot({ type: 'supporto2', supportoKind: 'civili', civili: { coverId: civileCoverId, modulePicks: civilePicks } });
+            }}>
+            Conferma
+          </button>
+        </div>
       </>
     );
   }
