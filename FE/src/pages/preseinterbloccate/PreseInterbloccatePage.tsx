@@ -9,20 +9,24 @@ import {
 import type { BrandId, Amp, Poles, FuseChoice } from './utils/catalog';
 import './PreseInterbloccatePage.css';
 
-const VERSION = 'v0.3.0';
+const VERSION = 'v0.4.0';
 
 type Mount = 'incasso' | 'parete';
 type PostoType = 'interbloccata' | 'supporto2';
-type SupportoKind = 'industriali' | 'civili';
+type SubSlotId = 'top' | 'bottom';
 
 interface AmpPoles { amp: Amp; poles: Poles }
+
+interface SubSlotResult {
+  kind: 'industriale' | 'civile';
+  amp?: Amp; poles?: Poles;                 // industriale
+  coverId?: string; modulePicks?: string[]; // civile
+}
 
 interface PositionResult {
   type: PostoType;
   interbloccata?: { amp: Amp; poles: Poles; fuse: FuseChoice };
-  supportoKind?: SupportoKind;
-  industriali?: { presa1: AmpPoles; presa2: AmpPoles };
-  civili?: { coverId: string; modulePicks: string[] };
+  supporto2?: { top: SubSlotResult | null; bottom: SubSlotResult | null };
 }
 
 type Step =
@@ -31,12 +35,12 @@ type Step =
   | 'quadretto-din' | 'quadretto-numposti' | 'quadretto-editor'
   | 'quadretto-result';
 
-type ModalStep =
+type EditorStep =
   | 'category'
   | 'list' | 'fuse'
-  | 'supporto-type'
-  | 'industriale-list1' | 'industriale-list2'
-  | 'civile-cover' | 'civile-modules';
+  | 'sub-list'
+  | 'sub-industriale-list'
+  | 'sub-civile-modules';
 
 function SocketIcon() {
   return (
@@ -75,17 +79,18 @@ function PanelIcon() {
   );
 }
 
-function SlotContentIcon({ pos }: { pos: PositionResult }) {
-  if (pos.type === 'interbloccata') {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="6" width="16" height="15" rx="3" fill="currentColor" fillOpacity="0.16" stroke="currentColor" strokeWidth="1.6" />
-        <circle cx="12" cy="14" r="4.2" fill="none" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M8 6V4c0-1.4 1.4-2.4 4-2.4S16 2.6 16 4v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    );
-  }
-  if (pos.supportoKind === 'civili') {
+function InterlockedIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="6" width="16" height="15" rx="3" fill="currentColor" fillOpacity="0.16" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="12" cy="14" r="4.2" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M8 6V4c0-1.4 1.4-2.4 4-2.4S16 2.6 16 4v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SubSlotIcon({ r }: { r: SubSlotResult }) {
+  if (r.kind === 'civile') {
     return (
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" fillOpacity="0.16" stroke="currentColor" strokeWidth="1.6" />
@@ -96,10 +101,8 @@ function SlotContentIcon({ pos }: { pos: PositionResult }) {
   }
   return (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="3" y="5" width="8" height="14" rx="2.5" fill="currentColor" fillOpacity="0.16" stroke="currentColor" strokeWidth="1.4" />
-      <rect x="13" y="5" width="8" height="14" rx="2.5" fill="currentColor" fillOpacity="0.16" stroke="currentColor" strokeWidth="1.4" />
-      <circle cx="7" cy="12" r="2.2" fill="none" stroke="currentColor" strokeWidth="1.2" />
-      <circle cx="17" cy="12" r="2.2" fill="none" stroke="currentColor" strokeWidth="1.2" />
+      <rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" fillOpacity="0.16" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="12" cy="12" r="4.4" fill="none" stroke="currentColor" strokeWidth="1.4" />
     </svg>
   );
 }
@@ -113,8 +116,10 @@ function StepHeader({ title, sub }: { title: string; sub?: string }) {
   );
 }
 
-function QuadrettoVisual({ numPosti, din, posizioni, onSlotClick }: {
-  numPosti: number; din: boolean; posizioni: (PositionResult | null)[]; onSlotClick: (i: number) => void;
+function QuadrettoVisual({ numPosti, din, posizioni, onSlotClick, onSubSlotClick }: {
+  numPosti: number; din: boolean; posizioni: (PositionResult | null)[];
+  onSlotClick: (i: number) => void;
+  onSubSlotClick: (i: number, sub: SubSlotId) => void;
 }) {
   return (
     <div className="pi-panel-wrap">
@@ -129,6 +134,29 @@ function QuadrettoVisual({ numPosti, din, posizioni, onSlotClick }: {
           <div className="pi-panel-slots">
             {Array.from({ length: numPosti }).map((_, i) => {
               const pos = posizioni[i];
+
+              if (pos?.type === 'supporto2') {
+                return (
+                  <div key={i} className="pi-panel-slot-split">
+                    <button
+                      className={`pi-panel-subslot${pos.supporto2?.top ? ' pi-panel-subslot-filled' : ''}`}
+                      onClick={() => onSubSlotClick(i, 'top')}
+                      title={pos.supporto2?.top ? 'Modifica' : 'Configura'}
+                    >
+                      {pos.supporto2?.top ? <SubSlotIcon r={pos.supporto2.top} /> : <span className="pi-panel-slot-plus-sm">+</span>}
+                    </button>
+                    <button
+                      className={`pi-panel-subslot${pos.supporto2?.bottom ? ' pi-panel-subslot-filled' : ''}`}
+                      onClick={() => onSubSlotClick(i, 'bottom')}
+                      title={pos.supporto2?.bottom ? 'Modifica' : 'Configura'}
+                    >
+                      {pos.supporto2?.bottom ? <SubSlotIcon r={pos.supporto2.bottom} /> : <span className="pi-panel-slot-plus-sm">+</span>}
+                    </button>
+                    <span className="pi-panel-slot-num">{i + 1}</span>
+                  </div>
+                );
+              }
+
               return (
                 <button
                   key={i}
@@ -136,7 +164,7 @@ function QuadrettoVisual({ numPosti, din, posizioni, onSlotClick }: {
                   onClick={() => onSlotClick(i)}
                   title={pos ? 'Modifica posto' : 'Configura posto'}
                 >
-                  {pos ? <SlotContentIcon pos={pos} /> : <span className="pi-panel-slot-plus">+</span>}
+                  {pos ? <InterlockedIcon /> : <span className="pi-panel-slot-plus">+</span>}
                   <span className="pi-panel-slot-num">{i + 1}</span>
                 </button>
               );
@@ -148,6 +176,13 @@ function QuadrettoVisual({ numPosti, din, posizioni, onSlotClick }: {
       <div className="pi-panel-hint">Clicca su un posto per configurarlo</div>
     </div>
   );
+}
+
+function isPostoComplete(pos: PositionResult | null): boolean {
+  if (!pos) return false;
+  if (pos.type === 'interbloccata') return !!pos.interbloccata;
+  if (pos.type === 'supporto2') return !!pos.supporto2?.top && !!pos.supporto2?.bottom;
+  return false;
 }
 
 export default function PreseInterbloccatePage() {
@@ -166,12 +201,12 @@ export default function PreseInterbloccatePage() {
   const [numPosti, setNumPosti] = useState<number | null>(null);
   const [posizioni, setPosizioni] = useState<(PositionResult | null)[]>([]);
 
-  // modal (configurazione di un singolo posto)
+  // editor inline (configurazione di un posto/sotto-posto, nessun overlay)
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
-  const [modalStep, setModalStep] = useState<ModalStep | null>(null);
-  const [modalHistory, setModalHistory] = useState<ModalStep[]>([]);
+  const [activeSub, setActiveSub] = useState<SubSlotId | null>(null);
+  const [editorStep, setEditorStep] = useState<EditorStep | null>(null);
+  const [editorHistory, setEditorHistory] = useState<EditorStep[]>([]);
   const [postoAmpPoles, setPostoAmpPoles] = useState<AmpPoles | null>(null);
-  const [industrialePresa1, setIndustrialePresa1] = useState<AmpPoles | null>(null);
   const [civileCoverId, setCivileCoverId] = useState<string | null>(null);
   const [civilePicks, setCivilePicks] = useState<string[]>([]);
 
@@ -191,11 +226,20 @@ export default function PreseInterbloccatePage() {
     });
   };
 
+  const resetEditorTransient = () => {
+    setPostoAmpPoles(null); setCivileCoverId(null); setCivilePicks([]);
+  };
+
+  const closeEditor = () => {
+    setActiveSlot(null); setActiveSub(null); setEditorStep(null); setEditorHistory([]);
+    resetEditorTransient();
+  };
+
   const resetAll = () => {
     setStep('brand'); setHistory([]); setBrand(null); setFlying(false);
     setMount(null); setSingolaAmpPoles(null); setSingolaFuse(null);
     setDin(null); setNumPosti(null); setPosizioni([]);
-    closeModal();
+    closeEditor();
   };
 
   const handlePickBrand = (id: BrandId) => {
@@ -205,41 +249,58 @@ export default function PreseInterbloccatePage() {
   };
 
   const openSlot = (i: number) => {
-    setActiveSlot(i);
-    setModalStep('category');
-    setModalHistory([]);
-    setPostoAmpPoles(null); setIndustrialePresa1(null);
-    setCivileCoverId(null); setCivilePicks([]);
+    setActiveSlot(i); setActiveSub(null); setEditorStep('category'); setEditorHistory([]);
+    resetEditorTransient();
   };
 
-  const closeModal = () => {
-    setActiveSlot(null); setModalStep(null); setModalHistory([]);
-    setPostoAmpPoles(null); setIndustrialePresa1(null);
-    setCivileCoverId(null); setCivilePicks([]);
+  const openSubSlot = (i: number, sub: SubSlotId) => {
+    setActiveSlot(i); setActiveSub(sub); setEditorStep('sub-list'); setEditorHistory([]);
+    resetEditorTransient();
   };
 
-  const modalGoTo = (next: ModalStep) => {
-    if (modalStep) setModalHistory(h => [...h, modalStep]);
-    setModalStep(next);
+  const editorGoTo = (next: EditorStep) => {
+    setEditorHistory(h => (editorStep ? [...h, editorStep] : h));
+    setEditorStep(next);
   };
 
-  const modalGoBack = () => {
-    setModalHistory(h => {
+  const editorGoBack = () => {
+    setEditorHistory(h => {
       if (h.length === 0) return h;
       const prev = h[h.length - 1];
-      setModalStep(prev);
+      setEditorStep(prev);
       return h.slice(0, -1);
     });
   };
 
-  const saveSlot = (result: PositionResult) => {
+  const chooseSupporto2 = () => {
     if (activeSlot === null) return;
     setPosizioni(prev => {
       const next = [...prev];
-      next[activeSlot] = result;
+      next[activeSlot] = { type: 'supporto2', supporto2: { top: null, bottom: null } };
       return next;
     });
-    closeModal();
+    closeEditor();
+  };
+
+  const saveInterbloccata = (amp: Amp, poles: Poles, fuse: FuseChoice) => {
+    if (activeSlot === null) return;
+    setPosizioni(prev => {
+      const next = [...prev];
+      next[activeSlot] = { type: 'interbloccata', interbloccata: { amp, poles, fuse } };
+      return next;
+    });
+    closeEditor();
+  };
+
+  const saveSubSlot = (result: SubSlotResult) => {
+    if (activeSlot === null || activeSub === null) return;
+    setPosizioni(prev => {
+      const next = [...prev];
+      const existing = next[activeSlot]?.supporto2 ?? { top: null, bottom: null };
+      next[activeSlot] = { type: 'supporto2', supporto2: { ...existing, [activeSub]: result } };
+      return next;
+    });
+    closeEditor();
   };
 
   // ── Rendering helpers ─────────────────────────────────────────────────
@@ -275,16 +336,6 @@ export default function PreseInterbloccatePage() {
         ) : (
           <div className="pi-result-empty">Combinazione non disponibile a catalogo.</div>
         )}
-      </div>
-    );
-  };
-
-  const renderFixedResult = (label: string, amp: Amp, poles: Poles) => {
-    const code = getFixedCode(amp, poles);
-    return (
-      <div className="pi-result-code-row">
-        <span className="pi-result-material">{label} — {amp}A {POLES_LABEL[poles]} (IP66/67)</span>
-        <span className="pi-result-code">{code ?? '—'}</span>
       </div>
     );
   };
@@ -401,14 +452,141 @@ export default function PreseInterbloccatePage() {
       </>
     );
   } else if (step === 'quadretto-editor' && numPosti !== null && din !== null) {
-    const allFilled = posizioni.length === numPosti && posizioni.every(p => p !== null);
+    const allFilled = posizioni.length === numPosti && posizioni.every(isPostoComplete);
+
+    // ── contenuto del pannello editor inline (nessun overlay) ──
+    let editorContent: React.ReactNode = null;
+    if (editorStep === 'category') {
+      editorContent = (
+        <div className="pi-category-grid">
+          <button className="pi-category-card" onClick={() => editorGoTo('list')}>
+            <div className="pi-category-icon"><SocketIcon /></div>
+            <div className="pi-category-title">Presa interbloccata</div>
+            <div className="pi-category-desc">Occupa lo spazio di 2 buchi.</div>
+          </button>
+          <button className="pi-category-card" onClick={chooseSupporto2}>
+            <div className="pi-category-icon"><DoubleSocketIcon /></div>
+            <div className="pi-category-title">Supporto 2 Prese</div>
+            <div className="pi-category-desc">2 spazi indipendenti (con {ADAPTER_2POSTI.code}), sopra e sotto.</div>
+          </button>
+        </div>
+      );
+    } else if (editorStep === 'list') {
+      editorContent = (
+        <>
+          <StepHeader title="Presa interbloccata" sub="Amperaggio e poli" />
+          {renderAmpPolesList(AMP_OPTIONS, availableInterlockedPoles, (amp, poles) => {
+            setPostoAmpPoles({ amp, poles });
+            const fuses = availableInterlockedFuses(amp, poles);
+            if (fuses.length === 1) saveInterbloccata(amp, poles, fuses[0]);
+            else editorGoTo('fuse');
+          })}
+        </>
+      );
+    } else if (editorStep === 'fuse' && postoAmpPoles) {
+      editorContent = (
+        <>
+          <StepHeader title="Fusibili" sub={`${postoAmpPoles.amp}A · ${POLES_LABEL[postoAmpPoles.poles]}`} />
+          <div className="pi-choice-row">
+            {availableInterlockedFuses(postoAmpPoles.amp, postoAmpPoles.poles).map(f => (
+              <button key={f} className="pi-choice-btn pi-choice-btn-lg" onClick={() => saveInterbloccata(postoAmpPoles.amp, postoAmpPoles.poles, f)}>
+                {FUSE_LABEL[f]}
+              </button>
+            ))}
+          </div>
+        </>
+      );
+    } else if (editorStep === 'sub-list') {
+      editorContent = (
+        <>
+          <StepHeader title="Cosa metti in questo spazio?" />
+          <div className="pi-choice-row">
+            <button className="pi-choice-btn pi-choice-btn-lg" onClick={() => editorGoTo('sub-industriale-list')}>Presa CEE</button>
+            {CIVIL_COVERS.map(c => (
+              <button key={c.id} className="pi-choice-btn pi-choice-btn-lg" onClick={() => { setCivileCoverId(c.id); editorGoTo('sub-civile-modules'); }}>
+                {c.label} <span className="pi-choice-code">{c.code}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      );
+    } else if (editorStep === 'sub-industriale-list') {
+      editorContent = (
+        <>
+          <StepHeader title="Presa CEE" sub="Amperaggio e poli (IP66/67)" />
+          {renderAmpPolesList(AMP_OPTIONS, availableFixedPoles, (amp, poles) => {
+            saveSubSlot({ kind: 'industriale', amp, poles });
+          })}
+        </>
+      );
+    } else if (editorStep === 'sub-civile-modules') {
+      const used = civilePicks.reduce((s, id) => s + (CIVIL_MODULES.find(m => m.id === id)?.modules ?? 0), 0);
+      const remaining = CIVIL_MODULE_CAPACITY - used;
+      editorContent = (
+        <>
+          <StepHeader title="Prese civili" sub={`Moduli: ${used}/${CIVIL_MODULE_CAPACITY}`} />
+          <div className="pi-choice-row">
+            {CIVIL_MODULES.map(m => {
+              const disabled = m.modules > remaining;
+              return (
+                <button key={m.id} className="pi-choice-btn pi-choice-btn-lg" disabled={disabled}
+                  onClick={() => setCivilePicks(prev => [...prev, m.id])}>
+                  {m.label} <span className="pi-choice-code">{m.code}</span> · {m.modules} mod.
+                </button>
+              );
+            })}
+          </div>
+          {civilePicks.length > 0 && (
+            <div className="pi-civil-picks">
+              {civilePicks.map((id, i) => {
+                const m = CIVIL_MODULES.find(x => x.id === id)!;
+                return (
+                  <div key={i} className="pi-result-code-row">
+                    <span className="pi-result-material">{m.label} <span className="pi-choice-code">{m.code}</span></span>
+                    <button className="pi-remove-btn" onClick={() => setCivilePicks(prev => prev.filter((_, idx) => idx !== i))}>✕</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <div className="pi-cta-row">
+            <button className="btn btn-primary" disabled={civilePicks.length === 0}
+              onClick={() => {
+                if (!civileCoverId) return;
+                saveSubSlot({ kind: 'civile', coverId: civileCoverId, modulePicks: civilePicks });
+              }}>
+              Conferma
+            </button>
+          </div>
+        </>
+      );
+    }
+
+    const editorTitle = activeSlot !== null
+      ? `${activeSlot + 1}° posto${activeSub ? (activeSub === 'top' ? ' — sopra' : ' — sotto') : ''}`
+      : '';
+
     content = (
       <>
         <StepHeader title="Il tuo quadretto" sub={`${numPosti} posti · ${din ? 'con' : 'senza'} barra DIN`} />
-        <QuadrettoVisual numPosti={numPosti} din={din} posizioni={posizioni} onSlotClick={openSlot} />
+        <QuadrettoVisual numPosti={numPosti} din={din} posizioni={posizioni} onSlotClick={openSlot} onSubSlotClick={openSubSlot} />
+
+        {activeSlot !== null && (
+          <div className="pi-editor-panel">
+            <div className="pi-editor-header">
+              <span className="pi-editor-title">{editorTitle}</span>
+              <button className="btn-icon" onClick={closeEditor}>✕</button>
+            </div>
+            {editorHistory.length > 0 && (
+              <button className="pi-back-btn" onClick={editorGoBack}>← Indietro</button>
+            )}
+            {editorContent}
+          </div>
+        )}
+
         <div className="pi-cta-row">
           <button className="btn btn-primary" disabled={!allFilled} onClick={() => goTo('quadretto-result')}>
-            {allFilled ? 'Vedi configurazione completa →' : `Configura tutti i posti (${posizioni.filter(Boolean).length}/${numPosti})`}
+            {allFilled ? 'Vedi configurazione completa →' : `Configura tutti i posti (${posizioni.filter(isPostoComplete).length}/${numPosti})`}
           </button>
         </div>
       </>
@@ -440,38 +618,42 @@ export default function PreseInterbloccatePage() {
                 renderInterlockedResult(pos.interbloccata.amp, pos.interbloccata.poles, pos.interbloccata.fuse)
               )}
 
-              {pos?.type === 'supporto2' && pos.supportoKind === 'industriali' && pos.industriali && (
+              {pos?.type === 'supporto2' && pos.supporto2 && (
                 <div className="pi-result-card">
-                  <div className="pi-result-spec">2 prese industriali — {ADAPTER_2POSTI.label}</div>
+                  <div className="pi-result-spec">Supporto 2 Prese — {ADAPTER_2POSTI.label}</div>
                   <div className="pi-result-codes">
                     <div className="pi-result-code-row">
                       <span className="pi-result-material">Adattatore</span>
                       <span className="pi-result-code">{ADAPTER_2POSTI.code}</span>
                     </div>
-                    {renderFixedResult('1ª presa', pos.industriali.presa1.amp, pos.industriali.presa1.poles)}
-                    {renderFixedResult('2ª presa', pos.industriali.presa2.amp, pos.industriali.presa2.poles)}
-                  </div>
-                </div>
-              )}
-
-              {pos?.type === 'supporto2' && pos.supportoKind === 'civili' && pos.civili && (
-                <div className="pi-result-card">
-                  <div className="pi-result-spec">Prese civili — {ADAPTER_2POSTI.label}</div>
-                  <div className="pi-result-codes">
-                    <div className="pi-result-code-row">
-                      <span className="pi-result-material">Adattatore</span>
-                      <span className="pi-result-code">{ADAPTER_2POSTI.code}</span>
-                    </div>
-                    <div className="pi-result-code-row">
-                      <span className="pi-result-material">Copertura</span>
-                      <span className="pi-result-code">{CIVIL_COVERS.find(c => c.id === pos.civili!.coverId)?.code}</span>
-                    </div>
-                    {pos.civili.modulePicks.map((id, mi) => {
-                      const m = CIVIL_MODULES.find(x => x.id === id)!;
+                    {(['top', 'bottom'] as const).map(sub => {
+                      const r = pos.supporto2![sub];
+                      if (!r) return null;
+                      const label = sub === 'top' ? 'Sopra' : 'Sotto';
+                      if (r.kind === 'industriale' && r.amp && r.poles) {
+                        const code = getFixedCode(r.amp, r.poles);
+                        return (
+                          <div key={sub} className="pi-result-code-row">
+                            <span className="pi-result-material">{label} — presa CEE {r.amp}A {POLES_LABEL[r.poles]} (IP66/67)</span>
+                            <span className="pi-result-code">{code ?? '—'}</span>
+                          </div>
+                        );
+                      }
                       return (
-                        <div key={mi} className="pi-result-code-row">
-                          <span className="pi-result-material">{m.label}</span>
-                          <span className="pi-result-code">{m.code}</span>
+                        <div key={sub} style={{ display: 'contents' }}>
+                          <div className="pi-result-code-row">
+                            <span className="pi-result-material">{label} — copertura</span>
+                            <span className="pi-result-code">{CIVIL_COVERS.find(c => c.id === r.coverId)?.code}</span>
+                          </div>
+                          {r.modulePicks?.map((id, mi) => {
+                            const m = CIVIL_MODULES.find(x => x.id === id)!;
+                            return (
+                              <div key={`${sub}-${mi}`} className="pi-result-code-row">
+                                <span className="pi-result-material">{label} — {m.label}</span>
+                                <span className="pi-result-code">{m.code}</span>
+                              </div>
+                            );
+                          })}
                         </div>
                       );
                     })}
@@ -483,139 +665,6 @@ export default function PreseInterbloccatePage() {
         </div>
         <div className="pi-cta-row">
           <button className="btn btn-secondary" onClick={resetAll}>↺ Nuova configurazione</button>
-        </div>
-      </>
-    );
-  }
-
-  // ── Modal content (configurazione di un posto) ──────────────────────
-  let modalContent: React.ReactNode = null;
-
-  if (modalStep === 'category') {
-    modalContent = (
-      <>
-        <div className="pi-category-grid">
-          <button className="pi-category-card" onClick={() => modalGoTo('list')}>
-            <div className="pi-category-icon"><SocketIcon /></div>
-            <div className="pi-category-title">Presa interbloccata</div>
-            <div className="pi-category-desc">Occupa lo spazio di 2 buchi.</div>
-          </button>
-          <button className="pi-category-card" onClick={() => modalGoTo('supporto-type')}>
-            <div className="pi-category-icon"><DoubleSocketIcon /></div>
-            <div className="pi-category-title">Supporto 2 Prese</div>
-            <div className="pi-category-desc">2 prese industriali o civili (con {ADAPTER_2POSTI.code}).</div>
-          </button>
-        </div>
-      </>
-    );
-  } else if (modalStep === 'list') {
-    modalContent = (
-      <>
-        <StepHeader title="Presa interbloccata" sub="Amperaggio e poli" />
-        {renderAmpPolesList(AMP_OPTIONS, availableInterlockedPoles, (amp, poles) => {
-          setPostoAmpPoles({ amp, poles });
-          const fuses = availableInterlockedFuses(amp, poles);
-          if (fuses.length === 1) {
-            saveSlot({ type: 'interbloccata', interbloccata: { amp, poles, fuse: fuses[0] } });
-          } else {
-            modalGoTo('fuse');
-          }
-        })}
-      </>
-    );
-  } else if (modalStep === 'fuse' && postoAmpPoles) {
-    modalContent = (
-      <>
-        <StepHeader title="Fusibili" sub={`${postoAmpPoles.amp}A · ${POLES_LABEL[postoAmpPoles.poles]}`} />
-        <div className="pi-choice-row">
-          {availableInterlockedFuses(postoAmpPoles.amp, postoAmpPoles.poles).map(f => (
-            <button key={f} className="pi-choice-btn pi-choice-btn-lg" onClick={() => {
-              saveSlot({ type: 'interbloccata', interbloccata: { amp: postoAmpPoles.amp, poles: postoAmpPoles.poles, fuse: f } });
-            }}>{FUSE_LABEL[f]}</button>
-          ))}
-        </div>
-      </>
-    );
-  } else if (modalStep === 'supporto-type') {
-    modalContent = (
-      <>
-        <StepHeader title="Supporto 2 Prese" sub={`Adattatore ${ADAPTER_2POSTI.code}`} />
-        <div className="pi-choice-row">
-          <button className="pi-choice-btn pi-choice-btn-lg" onClick={() => modalGoTo('industriale-list1')}>2 prese industriali</button>
-          <button className="pi-choice-btn pi-choice-btn-lg" onClick={() => modalGoTo('civile-cover')}>Prese civili</button>
-        </div>
-      </>
-    );
-  } else if (modalStep === 'industriale-list1') {
-    modalContent = (
-      <>
-        <StepHeader title="2 prese industriali" sub="1ª presa (IP66/67)" />
-        {renderAmpPolesList(AMP_OPTIONS, availableFixedPoles, (amp, poles) => {
-          setIndustrialePresa1({ amp, poles });
-          modalGoTo('industriale-list2');
-        })}
-      </>
-    );
-  } else if (modalStep === 'industriale-list2' && industrialePresa1) {
-    modalContent = (
-      <>
-        <StepHeader title="2 prese industriali" sub="2ª presa (IP66/67)" />
-        {renderAmpPolesList(AMP_OPTIONS, availableFixedPoles, (amp, poles) => {
-          saveSlot({ type: 'supporto2', supportoKind: 'industriali', industriali: { presa1: industrialePresa1, presa2: { amp, poles } } });
-        })}
-      </>
-    );
-  } else if (modalStep === 'civile-cover') {
-    modalContent = (
-      <>
-        <StepHeader title="Prese civili" sub="Scegli la copertura" />
-        <div className="pi-choice-row">
-          {CIVIL_COVERS.map(c => (
-            <button key={c.id} className="pi-choice-btn pi-choice-btn-lg" onClick={() => { setCivileCoverId(c.id); modalGoTo('civile-modules'); }}>
-              {c.label} <span className="pi-choice-code">{c.code}</span>
-            </button>
-          ))}
-        </div>
-      </>
-    );
-  } else if (modalStep === 'civile-modules') {
-    const used = civilePicks.reduce((s, id) => s + (CIVIL_MODULES.find(m => m.id === id)?.modules ?? 0), 0);
-    const remaining = CIVIL_MODULE_CAPACITY - used;
-    modalContent = (
-      <>
-        <StepHeader title="Prese civili" sub={`Moduli: ${used}/${CIVIL_MODULE_CAPACITY}`} />
-        <div className="pi-choice-row">
-          {CIVIL_MODULES.map(m => {
-            const disabled = m.modules > remaining;
-            return (
-              <button key={m.id} className="pi-choice-btn pi-choice-btn-lg" disabled={disabled}
-                onClick={() => setCivilePicks(prev => [...prev, m.id])}>
-                {m.label} <span className="pi-choice-code">{m.code}</span> · {m.modules} mod.
-              </button>
-            );
-          })}
-        </div>
-        {civilePicks.length > 0 && (
-          <div className="pi-civil-picks">
-            {civilePicks.map((id, i) => {
-              const m = CIVIL_MODULES.find(x => x.id === id)!;
-              return (
-                <div key={i} className="pi-result-code-row">
-                  <span className="pi-result-material">{m.label} <span className="pi-choice-code">{m.code}</span></span>
-                  <button className="pi-remove-btn" onClick={() => setCivilePicks(prev => prev.filter((_, idx) => idx !== i))}>✕</button>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        <div className="pi-cta-row">
-          <button className="btn btn-primary" disabled={civilePicks.length === 0}
-            onClick={() => {
-              if (!civileCoverId) return;
-              saveSlot({ type: 'supporto2', supportoKind: 'civili', civili: { coverId: civileCoverId, modulePicks: civilePicks } });
-            }}>
-            Conferma
-          </button>
         </div>
       </>
     );
@@ -655,23 +704,6 @@ export default function PreseInterbloccatePage() {
           {content}
         </div>
       </div>
-
-      {activeSlot !== null && (
-        <div className="overlay" onClick={e => { if (e.target === e.currentTarget) closeModal(); }}>
-          <div className="modal pi-posto-modal">
-            <div className="modal-header">
-              <span className="modal-title">{activeSlot + 1}° posto</span>
-              <button className="btn-icon" onClick={closeModal}>✕</button>
-            </div>
-            <div className="modal-body">
-              {modalHistory.length > 0 && (
-                <button className="pi-back-btn" onClick={modalGoBack}>← Indietro</button>
-              )}
-              {modalContent}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
