@@ -124,6 +124,16 @@ function SubSlotIcon({ r }: { r: SubSlotResult }) {
   );
 }
 
+function SubSlotContent({ r }: { r: SubSlotResult }) {
+  const caption = r.kind === 'industriale' && r.poles && r.amp ? `${POLES_LABEL[r.poles]} ${r.amp}A` : null;
+  return (
+    <div className="pi-panel-subslot-content">
+      <SubSlotIcon r={r} />
+      {caption && <span className="pi-panel-subslot-caption">{caption}</span>}
+    </div>
+  );
+}
+
 function StepHeader({ title, sub }: { title: string; sub?: string }) {
   return (
     <div className="pi-step-header">
@@ -174,14 +184,14 @@ function QuadrettoVisual({ numPosti, din, posizioni, onSlotClick, onSubSlotClick
                       onClick={() => onSubSlotClick(i, 'top')}
                       title={pos.supporto2?.top ? 'Modifica' : 'Configura'}
                     >
-                      {pos.supporto2?.top ? <SubSlotIcon r={pos.supporto2.top} /> : <span className="pi-panel-slot-plus-sm">+</span>}
+                      {pos.supporto2?.top ? <SubSlotContent r={pos.supporto2.top} /> : <span className="pi-panel-slot-plus-sm">+</span>}
                     </button>
                     <button
                       className={`pi-panel-subslot ${subSlotFillClass(pos.supporto2?.bottom ?? null)}`}
                       onClick={() => onSubSlotClick(i, 'bottom')}
                       title={pos.supporto2?.bottom ? 'Modifica' : 'Configura'}
                     >
-                      {pos.supporto2?.bottom ? <SubSlotIcon r={pos.supporto2.bottom} /> : <span className="pi-panel-slot-plus-sm">+</span>}
+                      {pos.supporto2?.bottom ? <SubSlotContent r={pos.supporto2.bottom} /> : <span className="pi-panel-slot-plus-sm">+</span>}
                     </button>
                     <span className="pi-panel-slot-num">{i + 1}</span>
                   </div>
@@ -195,7 +205,14 @@ function QuadrettoVisual({ numPosti, din, posizioni, onSlotClick, onSubSlotClick
                   onClick={() => onSlotClick(i)}
                   title={pos ? 'Modifica posto' : 'Configura posto'}
                 >
-                  {pos ? <InterlockedIcon /> : <span className="pi-panel-slot-plus">+</span>}
+                  {pos?.interbloccata ? (
+                    <div className="pi-panel-slot-content">
+                      <InterlockedIcon />
+                      <span className="pi-panel-slot-caption">{POLES_LABEL[pos.interbloccata.poles]} {pos.interbloccata.amp}A</span>
+                    </div>
+                  ) : (
+                    <span className="pi-panel-slot-plus">+</span>
+                  )}
                   <span className="pi-panel-slot-num">{i + 1}</span>
                 </button>
               );

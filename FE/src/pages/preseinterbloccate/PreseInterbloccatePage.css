@@ -354,7 +354,7 @@
   box-shadow: inset 0 2px 6px rgba(0,0,0,0.28), 0 6px 16px var(--accent-glow);
 }
 
-.pi-panel-slot svg { width: 30px; height: 30px; }
+.pi-panel-slot svg { width: 40px; height: 40px; }
 
 .pi-panel-slot-plus {
   font-size: 26px;
@@ -362,23 +362,36 @@
   color: rgba(75,84,104,0.5);
 }
 
-.pi-panel-slot-filled {
+.pi-panel-slot-filled,
+.pi-panel-subslot-filled {
   background: linear-gradient(165deg, var(--accent-dim) 0%, rgba(37,99,235,0.16) 100%);
   color: var(--accent);
   border-color: rgba(37,99,235,0.4);
 }
 
-/* monofase 230V (blu) / trifase 400V (rosso) — sovrascrive il colore di default */
-.pi-phase-mono {
-  background: linear-gradient(165deg, var(--accent-dim) 0%, rgba(37,99,235,0.18) 100%);
-  color: var(--accent);
-  border-color: rgba(37,99,235,0.42);
+.pi-panel-slot-content, .pi-panel-subslot-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
 
-.pi-phase-tri {
-  background: linear-gradient(165deg, var(--danger-dim) 0%, rgba(220,38,38,0.18) 100%);
-  color: var(--danger);
-  border-color: rgba(220,38,38,0.42);
+.pi-panel-slot-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  text-align: center;
+  line-height: 1.25;
+  opacity: 0.9;
+}
+
+.pi-panel-subslot-caption {
+  font-size: 7.5px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  text-align: center;
+  line-height: 1.2;
+  opacity: 0.9;
 }
 
 .pi-panel-slot-num {
@@ -444,14 +457,21 @@
   box-shadow: inset 0 2px 6px rgba(0,0,0,0.28), 0 4px 12px var(--accent-glow);
 }
 
-.pi-panel-subslot svg { width: 20px; height: 20px; }
+.pi-panel-subslot svg { width: 26px; height: 26px; }
 
 .pi-panel-slot-plus-sm { font-size: 18px; font-weight: 300; color: rgba(75,84,104,0.5); }
 
-.pi-panel-subslot-filled {
-  background: linear-gradient(165deg, var(--accent-dim) 0%, rgba(37,99,235,0.16) 100%);
+/* monofase 230V (blu) / trifase 400V (rosso) — DEVE stare dopo le classi -filled per vincere la cascata */
+.pi-phase-mono {
+  background: linear-gradient(165deg, var(--accent-dim) 0%, rgba(37,99,235,0.18) 100%);
   color: var(--accent);
-  border-color: rgba(37,99,235,0.4);
+  border-color: rgba(37,99,235,0.42);
+}
+
+.pi-phase-tri {
+  background: linear-gradient(165deg, var(--danger-dim) 0%, rgba(220,38,38,0.18) 100%);
+  color: var(--danger);
+  border-color: rgba(220,38,38,0.42);
 }
 
 /* ── Pannello editor inline (senza overlay/sfondo scurito) ── */
