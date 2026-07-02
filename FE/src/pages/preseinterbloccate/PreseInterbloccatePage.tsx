@@ -120,6 +120,20 @@ function StepHeader({ title, sub }: { title: string; sub?: string }) {
   );
 }
 
+function MiniQuadretto({ numPosti, din }: { numPosti: number; din: boolean }) {
+  return (
+    <div className="pi-mini-outer">
+      <div className="pi-mini-lid" />
+      <div className="pi-mini-box">
+        <div className="pi-mini-slots">
+          {Array.from({ length: numPosti }).map((_, i) => <div key={i} className="pi-mini-slot" />)}
+        </div>
+        {din && <div className="pi-mini-din" />}
+      </div>
+    </div>
+  );
+}
+
 function QuadrettoVisual({ numPosti, din, posizioni, onSlotClick, onSubSlotClick }: {
   numPosti: number; din: boolean; posizioni: (PositionResult | null)[];
   onSlotClick: (i: number) => void;
@@ -215,6 +229,8 @@ export default function PreseInterbloccatePage() {
   const [din, setDin] = useState<boolean | null>(null);
   const [numPosti, setNumPosti] = useState<number | null>(null);
   const [posizioni, setPosizioni] = useState<(PositionResult | null)[]>([]);
+  const [numPostiFlying, setNumPostiFlying] = useState(false);
+  const [numPostiPick, setNumPostiPick] = useState<number | null>(null);
 
   // editor inline (configurazione di un posto/sotto-posto, nessun overlay)
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
@@ -261,6 +277,18 @@ export default function PreseInterbloccatePage() {
     setBrand(id);
     setFlying(true);
     setTimeout(() => { setFlying(false); goTo('category'); }, 550);
+  };
+
+  const handlePickNumPosti = (n: number) => {
+    setNumPostiPick(n);
+    setNumPostiFlying(true);
+    setTimeout(() => {
+      setNumPostiFlying(false);
+      setNumPostiPick(null);
+      setNumPosti(n);
+      setPosizioni(Array(n).fill(null));
+      goTo('quadretto-editor');
+    }, 550);
   };
 
   const openSlot = (i: number) => {
@@ -451,17 +479,21 @@ export default function PreseInterbloccatePage() {
         </div>
       </>
     );
-  } else if (step === 'quadretto-numposti') {
+  } else if (step === 'quadretto-numposti' && din !== null) {
     content = (
       <>
         <StepHeader title="Numero posti" sub={din ? 'Con barra DIN' : 'Senza barra DIN'} />
-        <div className="pi-choice-row">
+        <div className="pi-numposti-grid">
           {[1, 2, 3, 4].map(n => (
-            <button key={n} className="pi-choice-btn pi-choice-btn-lg" onClick={() => {
-              setNumPosti(n);
-              setPosizioni(Array(n).fill(null));
-              goTo('quadretto-editor');
-            }}>{n}</button>
+            <button
+              key={n}
+              className={`pi-numposti-card${numPostiFlying ? (n === numPostiPick ? ' pi-fly-up' : ' pi-fly-out') : ''}`}
+              onClick={() => !numPostiFlying && handlePickNumPosti(n)}
+              disabled={numPostiFlying}
+            >
+              <MiniQuadretto numPosti={n} din={din} />
+              <span className="pi-numposti-label">{n} {n === 1 ? 'posto' : 'posti'}</span>
+            </button>
           ))}
         </div>
       </>
