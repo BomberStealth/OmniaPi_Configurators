@@ -82,9 +82,13 @@ function PanelIcon() {
 function InterlockedIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="4" y="6" width="16" height="15" rx="3" fill="currentColor" fillOpacity="0.16" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx="12" cy="14" r="4.2" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M8 6V4c0-1.4 1.4-2.4 4-2.4S16 2.6 16 4v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <rect x="3" y="1.5" width="18" height="21" rx="4.5" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="12" cy="7.6" r="3.1" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <line x1="12" y1="7.6" x2="12" y2="5.1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="12" cy="16.2" r="4.1" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="10.1" cy="15.1" r="0.95" fill="currentColor" />
+      <circle cx="13.9" cy="15.1" r="0.95" fill="currentColor" />
+      <circle cx="12" cy="18.1" r="0.95" fill="currentColor" />
     </svg>
   );
 }
@@ -139,14 +143,14 @@ function QuadrettoVisual({ numPosti, din, posizioni, onSlotClick, onSubSlotClick
                 return (
                   <div key={i} className="pi-panel-slot-split">
                     <button
-                      className={`pi-panel-subslot${pos.supporto2?.top ? ' pi-panel-subslot-filled' : ''}`}
+                      className={`pi-panel-subslot ${subSlotFillClass(pos.supporto2?.top ?? null)}`}
                       onClick={() => onSubSlotClick(i, 'top')}
                       title={pos.supporto2?.top ? 'Modifica' : 'Configura'}
                     >
                       {pos.supporto2?.top ? <SubSlotIcon r={pos.supporto2.top} /> : <span className="pi-panel-slot-plus-sm">+</span>}
                     </button>
                     <button
-                      className={`pi-panel-subslot${pos.supporto2?.bottom ? ' pi-panel-subslot-filled' : ''}`}
+                      className={`pi-panel-subslot ${subSlotFillClass(pos.supporto2?.bottom ?? null)}`}
                       onClick={() => onSubSlotClick(i, 'bottom')}
                       title={pos.supporto2?.bottom ? 'Modifica' : 'Configura'}
                     >
@@ -160,7 +164,7 @@ function QuadrettoVisual({ numPosti, din, posizioni, onSlotClick, onSubSlotClick
               return (
                 <button
                   key={i}
-                  className={`pi-panel-slot${pos ? ' pi-panel-slot-filled' : ''}`}
+                  className={`pi-panel-slot${pos?.interbloccata ? ` pi-panel-slot-filled ${phaseClass(pos.interbloccata.poles)}` : ''}`}
                   onClick={() => onSlotClick(i)}
                   title={pos ? 'Modifica posto' : 'Configura posto'}
                 >
@@ -183,6 +187,17 @@ function isPostoComplete(pos: PositionResult | null): boolean {
   if (pos.type === 'interbloccata') return !!pos.interbloccata;
   if (pos.type === 'supporto2') return !!pos.supporto2?.top && !!pos.supporto2?.bottom;
   return false;
+}
+
+// 2P+T = monofase 230V (blu), 3P+T / 3P+N+T = trifase 400V (rosso) — come nella brochure
+function phaseClass(poles: Poles): string {
+  return poles === '2p+t' ? 'pi-phase-mono' : 'pi-phase-tri';
+}
+
+function subSlotFillClass(r: SubSlotResult | null): string {
+  if (!r) return '';
+  if (r.kind === 'industriale' && r.poles) return `pi-panel-subslot-filled ${phaseClass(r.poles)}`;
+  return 'pi-panel-subslot-filled';
 }
 
 export default function PreseInterbloccatePage() {
@@ -311,7 +326,7 @@ export default function PreseInterbloccatePage() {
           <div className="pi-amp-group-title">{amp}A</div>
           <div className="pi-choice-row">
             {polesFor(amp).map(poles => (
-              <button key={poles} className="pi-choice-btn" onClick={() => onPick(amp, poles)}>
+              <button key={poles} className={`pi-choice-btn pi-choice-btn-${poles === '2p+t' ? 'mono' : 'tri'}`} onClick={() => onPick(amp, poles)}>
                 {POLES_LABEL[poles]}
               </button>
             ))}
