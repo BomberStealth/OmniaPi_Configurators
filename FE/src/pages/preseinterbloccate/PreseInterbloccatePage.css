@@ -307,6 +307,13 @@
   box-shadow: 0 1px 2px rgba(255,255,255,0.85) inset, 0 2px 8px rgba(0,0,0,0.05) inset;
 }
 
+.pi-panel-lid .pi-panel-din {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+}
+
 .pi-panel-box {
   position: relative;
   display: flex;
@@ -556,9 +563,17 @@
 }
 
 .pi-mini-lid {
+  position: relative;
   height: 40px;
   background: linear-gradient(165deg, #f8f9fc 0%, #e9edf5 100%);
   border-bottom: 1px solid rgba(26,30,48,0.12);
+}
+
+.pi-mini-lid .pi-mini-din {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
 }
 
 .pi-mini-box {

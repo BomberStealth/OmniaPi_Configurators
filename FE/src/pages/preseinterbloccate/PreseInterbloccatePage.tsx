@@ -79,16 +79,36 @@ function PanelIcon() {
   );
 }
 
-function InterlockedIcon() {
+// pin CEE: 2P+T → 3 pin uguali · 3P+T → 4 pin (l'ultimo/terra più grosso) · 3P+N+T → 5 pin (l'ultimo più grosso)
+// Stessa funzione per presa interbloccata e presa CEE, cosi il simbolo e sempre identico a parita' di poli.
+function pinPositions(poles: Poles, cx: number, cy: number, radius: number) {
+  const pinCount = poles === '2p+t' ? 3 : poles === '3p+t' ? 4 : 5;
+  const bigPinIndex = pinCount >= 4 ? pinCount - 1 : -1;
+  return Array.from({ length: pinCount }).map((_, i) => {
+    const angle = -Math.PI / 2 + (i * 2 * Math.PI) / pinCount;
+    return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle), big: i === bigPinIndex };
+  });
+}
+
+function SocketFace({ poles, cx, cy, radius }: { poles: Poles; cx: number; cy: number; radius: number }) {
+  const pins = pinPositions(poles, cx, cy, radius);
+  return (
+    <>
+      <circle cx={cx} cy={cy} r={radius + 1.7} fill="none" stroke="currentColor" strokeWidth="1.1" opacity="0.5" />
+      {pins.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r={p.big ? 1.5 : 1} fill="currentColor" />
+      ))}
+    </>
+  );
+}
+
+function InterlockedIcon({ poles }: { poles: Poles }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="3" y="1.5" width="18" height="21" rx="4.5" fill="currentColor" fillOpacity="0.14" stroke="currentColor" strokeWidth="1.5" />
       <circle cx="12" cy="7.6" r="3.1" fill="none" stroke="currentColor" strokeWidth="1.4" />
       <line x1="12" y1="7.6" x2="12" y2="5.1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <circle cx="12" cy="16.2" r="4.1" fill="none" stroke="currentColor" strokeWidth="1.4" />
-      <circle cx="10.1" cy="15.1" r="0.95" fill="currentColor" />
-      <circle cx="13.9" cy="15.1" r="0.95" fill="currentColor" />
-      <circle cx="12" cy="18.1" r="0.95" fill="currentColor" />
+      <SocketFace poles={poles} cx={12} cy={16.2} radius={4.1} />
     </svg>
   );
 }
@@ -104,22 +124,10 @@ function SubSlotIcon({ r }: { r: SubSlotResult }) {
     );
   }
 
-  // pin CEE: 2P+T → 3 pin uguali · 3P+T → 4 pin (l'ultimo/terra più grosso) · 3P+N+T → 5 pin (l'ultimo più grosso)
-  const pinCount = r.poles === '2p+t' ? 3 : r.poles === '3p+t' ? 4 : 5;
-  const bigPinIndex = pinCount >= 4 ? pinCount - 1 : -1;
-  const cx = 12, cy = 12.5, radius = 4.3;
-  const pins = Array.from({ length: pinCount }).map((_, i) => {
-    const angle = -Math.PI / 2 + (i * 2 * Math.PI) / pinCount;
-    return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle), big: i === bigPinIndex };
-  });
-
   return (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" fillOpacity="0.16" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx={cx} cy={cy} r={radius + 1.7} fill="none" stroke="currentColor" strokeWidth="1.1" opacity="0.5" />
-      {pins.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={p.big ? 1.5 : 1} fill="currentColor" />
-      ))}
+      <SocketFace poles={r.poles!} cx={12} cy={12.5} radius={4.3} />
     </svg>
   );
 }
@@ -146,12 +154,13 @@ function StepHeader({ title, sub }: { title: string; sub?: string }) {
 function MiniQuadretto({ numPosti, din }: { numPosti: number; din: boolean }) {
   return (
     <div className="pi-mini-outer">
-      <div className="pi-mini-lid" />
+      <div className="pi-mini-lid">
+        {din && <div className="pi-mini-din" />}
+      </div>
       <div className="pi-mini-box">
         <div className="pi-mini-slots">
           {Array.from({ length: numPosti }).map((_, i) => <div key={i} className="pi-mini-slot" />)}
         </div>
-        {din && <div className="pi-mini-din" />}
       </div>
     </div>
   );
@@ -168,6 +177,7 @@ function QuadrettoVisual({ numPosti, din, posizioni, onSlotClick, onSubSlotClick
         <div className="pi-panel-lid">
           <span className="pi-panel-screw pi-panel-screw-tl" />
           <span className="pi-panel-screw pi-panel-screw-tr" />
+          {din && <div className="pi-panel-din"><span className="pi-panel-din-label">barra DIN</span></div>}
         </div>
         <div className="pi-panel-box">
           <span className="pi-panel-screw pi-panel-screw-bl" />
@@ -207,7 +217,7 @@ function QuadrettoVisual({ numPosti, din, posizioni, onSlotClick, onSubSlotClick
                 >
                   {pos?.interbloccata ? (
                     <div className="pi-panel-slot-content">
-                      <InterlockedIcon />
+                      <InterlockedIcon poles={pos.interbloccata.poles} />
                       <span className="pi-panel-slot-caption">{POLES_LABEL[pos.interbloccata.poles]} {pos.interbloccata.amp}A</span>
                     </div>
                   ) : (
@@ -218,7 +228,6 @@ function QuadrettoVisual({ numPosti, din, posizioni, onSlotClick, onSubSlotClick
               );
             })}
           </div>
-          {din && <div className="pi-panel-din"><span className="pi-panel-din-label">barra DIN</span></div>}
         </div>
       </div>
       <div className="pi-panel-hint">Clicca su un posto per configurarlo</div>
