@@ -271,3 +271,107 @@
 .pi-posto-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
 .pi-calotta-double { display: flex; flex-wrap: wrap; gap: 14px; }
 .pi-calotta-double > div { flex: 1 1 240px; }
+
+/* ── Quadretto visual (immagine stilizzata cliccabile) ── */
+.pi-panel-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 24px 0; }
+
+.pi-panel-box {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 26px 24px 20px;
+  border-radius: 14px;
+  background: linear-gradient(165deg, #f4f6fb 0%, #e3e8f2 55%, #d6dce8 100%);
+  border: 1px solid rgba(26,30,48,0.14);
+  box-shadow:
+    0 1px 2px rgba(255,255,255,0.8) inset,
+    0 -6px 14px rgba(0,0,0,0.06) inset,
+    0 10px 28px rgba(26,30,48,0.14);
+}
+
+.pi-panel-screw {
+  position: absolute;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fafbfe, #b7bfcf 70%, #8b93a6 100%);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+}
+.pi-panel-screw-tl { top: 9px; left: 9px; }
+.pi-panel-screw-tr { top: 9px; right: 9px; }
+.pi-panel-screw-bl { bottom: 9px; left: 9px; }
+.pi-panel-screw-br { bottom: 9px; right: 9px; }
+
+.pi-panel-slots { display: flex; gap: 10px; }
+
+.pi-panel-slot {
+  position: relative;
+  width: 68px; height: 92px;
+  border-radius: 8px;
+  background: linear-gradient(165deg, #c3cad9 0%, #aab2c4 100%);
+  border: 1px solid rgba(26,30,48,0.22);
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.28), inset 0 -1px 0 rgba(255,255,255,0.15);
+  color: #4b5468;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.pi-panel-slot:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.28), 0 6px 16px var(--accent-glow);
+}
+
+.pi-panel-slot svg { width: 30px; height: 30px; }
+
+.pi-panel-slot-plus {
+  font-size: 26px;
+  font-weight: 300;
+  color: rgba(75,84,104,0.5);
+}
+
+.pi-panel-slot-filled {
+  background: linear-gradient(165deg, var(--accent-dim) 0%, rgba(37,99,235,0.16) 100%);
+  color: var(--accent);
+  border-color: rgba(37,99,235,0.4);
+}
+
+.pi-panel-slot-num {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  opacity: 0.55;
+}
+
+.pi-panel-din {
+  width: 100%;
+  height: 14px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(90deg, #9199ab 0px, #9199ab 3px, #b1b8c7 3px, #b1b8c7 6px);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pi-panel-din-label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.85);
+  background: rgba(26,30,48,0.35);
+  padding: 1px 6px;
+  border-radius: 99px;
+}
+
+.pi-panel-hint { font-size: 12px; color: var(--text-muted); }
+
+/* ── Modal per configurazione posto ── */
+.pi-posto-modal { max-width: 560px; }
