@@ -103,10 +103,23 @@ function SubSlotIcon({ r }: { r: SubSlotResult }) {
       </svg>
     );
   }
+
+  // pin CEE: 2P+T → 3 pin uguali · 3P+T → 4 pin (l'ultimo/terra più grosso) · 3P+N+T → 5 pin (l'ultimo più grosso)
+  const pinCount = r.poles === '2p+t' ? 3 : r.poles === '3p+t' ? 4 : 5;
+  const bigPinIndex = pinCount >= 4 ? pinCount - 1 : -1;
+  const cx = 12, cy = 12.5, radius = 4.3;
+  const pins = Array.from({ length: pinCount }).map((_, i) => {
+    const angle = -Math.PI / 2 + (i * 2 * Math.PI) / pinCount;
+    return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle), big: i === bigPinIndex };
+  });
+
   return (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" fillOpacity="0.16" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx="12" cy="12" r="4.4" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx={cx} cy={cy} r={radius + 1.7} fill="none" stroke="currentColor" strokeWidth="1.1" opacity="0.5" />
+      {pins.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r={p.big ? 1.5 : 1} fill="currentColor" />
+      ))}
     </svg>
   );
 }
