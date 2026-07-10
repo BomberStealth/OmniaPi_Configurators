@@ -207,22 +207,19 @@ export default function AjaxPage() {
                     <div className="ajax-dev-meta">
                       <h4>{d.nome}</h4>
                       <div className="ajax-dev-tag">{d.tag}</div>
-                      <p>{d.desc}</p>
                     </div>
-                    <div className="ajax-dev-ctrl">
-                      <div className="ajax-stepper">
-                        <button onClick={() => bumpQty(d.id, -1)}>−</button>
-                        <input type="number" min={0} value={st.qty} onChange={e => setQty(d.id, e.target.value)} />
-                        <button onClick={() => bumpQty(d.id, 1)}>+</button>
-                      </div>
-                      <div className="ajax-pricebox">
-                        {st.listino > 0 ? (
-                          <>
-                            <div className="pl">Listino <s>{formatEur(st.listino)}</s></div>
-                            <div className="ps">{formatEur(unit(st.listino))}</div>
-                          </>
-                        ) : <div className="ps muted">prezzo n.d.</div>}
-                      </div>
+                    <div className="ajax-pricebox">
+                      {st.listino > 0 ? (
+                        <>
+                          <div className="pl">Listino <s>{formatEur(st.listino)}</s></div>
+                          <div className="ps">{formatEur(unit(st.listino))}</div>
+                        </>
+                      ) : <div className="ps muted">prezzo n.d.</div>}
+                    </div>
+                    <div className="ajax-stepper">
+                      <button onClick={() => bumpQty(d.id, -1)}>−</button>
+                      <input type="number" min={0} value={st.qty} onChange={e => setQty(d.id, e.target.value)} />
+                      <button onClick={() => bumpQty(d.id, 1)}>+</button>
                     </div>
                   </div>
                 );
