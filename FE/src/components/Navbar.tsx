@@ -33,6 +33,7 @@ const TOOL_CRUMBS: Record<string, string> = {
   '/fotovoltaico': 'Struttura FTV',
   '/western': 'Western Energy',
   '/prese-interbloccate': 'Prese Interbloccate',
+  '/ajax': 'Preventivi AJAX',
 };
 
 export default function Navbar() {

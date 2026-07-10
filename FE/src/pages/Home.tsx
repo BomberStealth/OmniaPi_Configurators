@@ -36,6 +36,12 @@ const TOOLS: Tool[] = [
     category: 'Impianti', color: '#f5a800', status: 'active',
   },
   {
+    id: 'ajax', path: '/ajax', icon: '🛡️',
+    title: 'Preventivi AJAX',
+    desc: 'Costruttore preventivi per impianti di sicurezza wireless AJAX, con anteprima ed export PDF.',
+    category: 'Sicurezza', color: '#e11d2a', status: 'active',
+  },
+  {
     id: 'elettrico', path: null, icon: '⚡',
     title: 'Preventivatore Elettrico',
     desc: 'Calcolo materiale per impianti elettrici civili e industriali, quadri e dorsali.',

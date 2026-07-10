@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import FotovoltaicoPage from './pages/fotovoltaico/FotovoltaicoPage';
 import WesternPage from './pages/western/WesternPage';
 import PreseInterbloccatePage from './pages/preseinterbloccate/PreseInterbloccatePage';
+import AjaxPage from './pages/ajax/AjaxPage';
 import InfoPage from './pages/InfoPage';
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/fotovoltaico" element={<FotovoltaicoPage />} />
           <Route path="/western" element={<WesternPage />} />
           <Route path="/prese-interbloccate" element={<PreseInterbloccatePage />} />
+          <Route path="/ajax" element={<AjaxPage />} />
           <Route path="/info" element={<InfoPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
