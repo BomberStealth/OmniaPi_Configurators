@@ -149,29 +149,31 @@ export default function AjaxPage() {
               </div>
             </div>
           </div>
-          <table className="ajax-listino-table">
-            <thead>
-              <tr><th></th><th>Codice</th><th>Dispositivo</th><th>Prezzo listino</th><th>Scontato</th></tr>
-            </thead>
-            <tbody>
-              {DEVICES.map(d => (
-                <tr key={d.id}>
-                  <td className="alc-img"><img src={d.img} alt="" /></td>
-                  <td className="alc-cod">{d.codice || '—'}</td>
-                  <td className="alc-name">{d.nome}<span>{d.tag}</span></td>
-                  <td className="alc-list"><span>€</span>
-                    <input type="number" min={0} step={1} value={catalogState[d.id]?.listino ?? d.listino}
-                      onChange={e => setDeviceListino(d.id, e.target.value)} />
-                  </td>
-                  <td className="alc-net">{(catalogState[d.id]?.listino ?? 0) > 0 ? formatEur(net(catalogState[d.id].listino)) : '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="ajax-listino-table-wrap">
+            <table className="ajax-listino-table">
+              <thead>
+                <tr><th></th><th>Codice</th><th>Dispositivo</th><th>Prezzo listino</th><th>Scontato</th></tr>
+              </thead>
+              <tbody>
+                {DEVICES.map(d => (
+                  <tr key={d.id}>
+                    <td className="alc-img"><img src={d.img} alt="" /></td>
+                    <td className="alc-cod">{d.codice || '—'}</td>
+                    <td className="alc-name">{d.nome}<span>{d.tag}</span></td>
+                    <td className="alc-list"><span>€</span>
+                      <input type="number" min={0} step={1} value={catalogState[d.id]?.listino ?? d.listino}
+                        onChange={e => setDeviceListino(d.id, e.target.value)} />
+                    </td>
+                    <td className="alc-net">{(catalogState[d.id]?.listino ?? 0) > 0 ? formatEur(net(catalogState[d.id].listino)) : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <p className="ajax-listino-note">Modifica un prezzo di listino per aggiornarlo ovunque. La colonna “Scontato” è il prezzo interno; nel preventivo cliente finale viene applicata la maggiorazione.</p>
         </div>
       ) : (
-        <div className="ajax-editor ajax-editor-full">
+        <div className="ajax-editor-full">
           <div className="ajax-section-title">Cliente</div>
           <div className="card ajax-panel">
             <div className="ajax-field">
