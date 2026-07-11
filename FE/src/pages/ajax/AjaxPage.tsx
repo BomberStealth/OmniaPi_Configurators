@@ -36,7 +36,7 @@ export default function AjaxPage() {
   const [clientContact, setClientContact] = useState('');
   const [labor, setLabor] = useState(0);
   const [discEuro, setDiscEuro] = useState(0);
-  const [ivaOn, setIvaOn] = useState(false);
+  const [ivaRate, setIvaRate] = useState<0 | 10 | 22>(0);
   const [notes, setNotes] = useState('');
   const [introText, setIntroText] = useState(DEFAULT_INTRO);
 
@@ -74,7 +74,7 @@ export default function AjaxPage() {
     setCatalogState(initialCatalogState());
     setCustomItems([]);
     setClientName(''); setClientAddr(''); setClientContact('');
-    setLabor(0); setDiscEuro(0); setIvaOn(false); setNotes('');
+    setLabor(0); setDiscEuro(0); setIvaRate(0); setNotes('');
   };
 
   const items = useMemo(() => {
@@ -93,7 +93,7 @@ export default function AjaxPage() {
 
   const sub = items.reduce((s, it) => s + it.qty * it.price, 0);
   const imponibile = sub + labor - discEuro;
-  const ivaVal = ivaOn ? imponibile * 0.22 : 0;
+  const ivaVal = ivaRate > 0 ? imponibile * (ivaRate / 100) : 0;
   const grand = imponibile + ivaVal;
   const laborMissing = labor <= 0;
 
@@ -250,10 +250,14 @@ export default function AjaxPage() {
                 <input className="ajax-input" type="number" value={discEuro} onChange={e => setDiscEuro(parseFloat(e.target.value) || 0)} />
               </div>
             </div>
-            <label className="ajax-switch">
-              <input type="checkbox" checked={ivaOn} onChange={e => setIvaOn(e.target.checked)} />
-              Prezzi + IVA 22%
-            </label>
+            <div className="ajax-field" style={{ marginTop: 14 }}>
+              <label>IVA</label>
+              <div className="ajax-iva-group">
+                <button type="button" className={ivaRate === 0 ? 'active' : ''} onClick={() => setIvaRate(0)}>Esclusa</button>
+                <button type="button" className={ivaRate === 10 ? 'active' : ''} onClick={() => setIvaRate(10)}>10%</button>
+                <button type="button" className={ivaRate === 22 ? 'active' : ''} onClick={() => setIvaRate(22)}>22%</button>
+              </div>
+            </div>
             <div className="ajax-field" style={{ marginTop: 14 }}>
               <label>Note (facoltative)</label>
               <textarea className="ajax-input" value={notes} onChange={e => setNotes(e.target.value)}
@@ -262,7 +266,7 @@ export default function AjaxPage() {
 
             <div className="ajax-total-box">
               <div className="ajax-total-row">
-                <span className="ajax-total-label">Totale {tabLabel}{ivaOn ? ' · IVA inclusa' : ''}</span>
+                <span className="ajax-total-label">Totale {tabLabel}{ivaRate > 0 ? ` · IVA ${ivaRate}% inclusa` : ''}</span>
                 <span className="ajax-total-value">{formatEur(grand)}</span>
               </div>
               {laborMissing && <div className="ajax-total-warning">⚠️ Manodopera non inserita</div>}
@@ -285,7 +289,7 @@ export default function AjaxPage() {
             mode={effectiveMode}
             clientName={clientName} clientAddr={clientAddr} clientContact={clientContact}
             introText={introText} notes={notes}
-            items={items} sub={sub} labor={labor} discEuro={discEuro} ivaOn={ivaOn} ivaVal={ivaVal} imponibile={imponibile} grand={grand}
+            items={items} sub={sub} labor={labor} discEuro={discEuro} ivaRate={ivaRate} ivaVal={ivaVal} imponibile={imponibile} grand={grand}
             hidePricing={activeTab === 'totale'}
             laborMissing={laborMissing}
           />
@@ -297,11 +301,11 @@ export default function AjaxPage() {
 
 interface DocItem { img: string | null; nome: string; tag: string; desc: string; specs: string[]; qty: number; price: number }
 
-function AjaxDocument({ mode, clientName, clientAddr, clientContact, introText, notes, items, sub, labor, discEuro, ivaOn, ivaVal, imponibile, grand, hidePricing, laborMissing }: {
+function AjaxDocument({ mode, clientName, clientAddr, clientContact, introText, notes, items, sub, labor, discEuro, ivaRate, ivaVal, imponibile, grand, hidePricing, laborMissing }: {
   mode: PriceMode;
   clientName: string; clientAddr: string; clientContact: string;
   introText: string; notes: string;
-  items: DocItem[]; sub: number; labor: number; discEuro: number; ivaOn: boolean; ivaVal: number; imponibile: number; grand: number;
+  items: DocItem[]; sub: number; labor: number; discEuro: number; ivaRate: number; ivaVal: number; imponibile: number; grand: number;
   hidePricing?: boolean;
   laborMissing?: boolean;
 }) {
@@ -371,7 +375,7 @@ function AjaxDocument({ mode, clientName, clientAddr, clientContact, introText, 
               </ul>
             </div>
             <div className="totals-simple-box">
-              <span className="lbl">Totale {ivaOn ? 'IVA inclusa' : ''}</span>
+              <span className="lbl">Totale {ivaRate > 0 ? 'IVA inclusa' : ''}</span>
               <span className="val">{formatEur(grand)}</span>
             </div>
           </div>
@@ -391,13 +395,13 @@ function AjaxDocument({ mode, clientName, clientAddr, clientContact, introText, 
               <div className="r"><span className="lbl">Materiale</span><span className="val">{formatEur(sub)}</span></div>
               {labor > 0 && <div className="r"><span className="lbl">Manodopera / Installazione</span><span className="val">{formatEur(labor)}</span></div>}
               {discEuro > 0 && <div className="r disc"><span className="lbl">Sconto</span><span className="val">− {formatEur(discEuro)}</span></div>}
-              {ivaOn && (
+              {ivaRate > 0 && (
                 <>
                   <div className="r"><span className="lbl">Imponibile</span><span className="val">{formatEur(imponibile)}</span></div>
-                  <div className="r"><span className="lbl">IVA 22%</span><span className="val">{formatEur(ivaVal)}</span></div>
+                  <div className="r"><span className="lbl">IVA {ivaRate}%</span><span className="val">{formatEur(ivaVal)}</span></div>
                 </>
               )}
-              <div className="r grand"><span className="lbl">Totale {ivaOn ? 'IVA inclusa' : ''}</span><span className="val">{formatEur(grand)}</span></div>
+              <div className="r grand"><span className="lbl">Totale {ivaRate > 0 ? 'IVA inclusa' : ''}</span><span className="val">{formatEur(grand)}</span></div>
             </div>
           </div>
         )}
