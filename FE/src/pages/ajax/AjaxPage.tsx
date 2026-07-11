@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
+import { useMemo, useState } from 'react';
 import {
   DEVICES, DEFAULT_INTRO, LOGO,
   netPrice, unitPrice, formatEur,
@@ -7,14 +6,14 @@ import {
 import type { PriceMode } from './utils/catalog';
 import './AjaxPage.css';
 
-const VERSION = 'v1.1.0';
+const VERSION = 'v1.2.0';
 
 interface DeviceState { qty: number; listino: number }
 type CatalogState = Record<string, DeviceState>;
 
 interface CustomItem { key: number; name: string; desc: string; qty: number; price: number }
 
-type View = 'preventivo' | 'listino';
+type ActiveTab = 'finale' | 'interno' | 'totale' | 'listino';
 
 function initialCatalogState(): CatalogState {
   return Object.fromEntries(DEVICES.map(d => [d.id, { qty: 0, listino: d.listino }]));
@@ -26,8 +25,7 @@ function todayIT(): string {
 }
 
 export default function AjaxPage() {
-  const [view, setView] = useState<View>('preventivo');
-  const [mode, setMode] = useState<PriceMode>('finale');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('finale');
   const [sconto, setSconto] = useState(50);
   const [catalogState, setCatalogState] = useState<CatalogState>(initialCatalogState);
   const [customItems, setCustomItems] = useState<CustomItem[]>([]);
@@ -42,11 +40,10 @@ export default function AjaxPage() {
   const [notes, setNotes] = useState('');
   const [introText, setIntroText] = useState(DEFAULT_INTRO);
 
-  const previewPaneRef = useRef<HTMLDivElement>(null);
-  const docWrapRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
+  // "Solo totale" usa sempre la tariffa cliente finale, come "Cliente finale"
+  const effectiveMode: PriceMode = activeTab === 'interno' ? 'interno' : 'finale';
 
-  const unit = (listino: number) => unitPrice(listino, sconto, mode);
+  const unit = (listino: number) => unitPrice(listino, sconto, effectiveMode);
   const net = (listino: number) => netPrice(listino, sconto);
 
   const bumpQty = (id: string, delta: number) => {
@@ -92,45 +89,23 @@ export default function AjaxPage() {
       .map(c => ({ img: null as string | null, nome: c.name, tag: '', desc: c.desc, specs: [] as string[], qty: c.qty, price: c.price }));
     return [...deviceItems, ...customVisible];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [catalogState, customItems, sconto, mode]);
+  }, [catalogState, customItems, sconto, effectiveMode]);
 
   const sub = items.reduce((s, it) => s + it.qty * it.price, 0);
   const imponibile = sub + labor - discEuro;
   const ivaVal = ivaOn ? imponibile * 0.22 : 0;
   const grand = imponibile + ivaVal;
+  const laborMissing = labor <= 0;
 
-  // totale "cliente finale", indipendente dalla modalità corrente: usato dal PDF senza prezzi
-  const subFinale = useMemo(() => {
-    const deviceSub = DEVICES.reduce((s, d) => {
-      const st = catalogState[d.id];
-      if (!st || st.qty <= 0) return s;
-      return s + st.qty * unitPrice(st.listino, sconto, 'finale');
-    }, 0);
-    const customSub = customItems.filter(c => c.qty > 0 && c.name.trim()).reduce((s, c) => s + c.qty * c.price, 0);
-    return deviceSub + customSub;
-  }, [catalogState, customItems, sconto]);
-  const imponibileFinale = subFinale + labor - discEuro;
-  const ivaValFinale = ivaOn ? imponibileFinale * 0.22 : 0;
-  const grandFinale = imponibileFinale + ivaValFinale;
-
-  const [printVariant, setPrintVariant] = useState<'full' | 'totale'>('full');
-  const handlePrint = (variant: 'full' | 'totale') => {
-    flushSync(() => setPrintVariant(variant));
+  const handlePrint = () => {
+    const prevTitle = document.title;
+    document.title = clientName.trim() ? `Preventivo AJAX - ${clientName.trim()}` : 'Preventivo AJAX';
+    const restore = () => { document.title = prevTitle; window.removeEventListener('afterprint', restore); };
+    window.addEventListener('afterprint', restore);
     window.print();
   };
 
-  useEffect(() => {
-    const fit = () => {
-      const pane = previewPaneRef.current, wrap = docWrapRef.current;
-      if (!pane || !wrap) return;
-      const avail = pane.clientWidth - 40;
-      const natural = wrap.offsetWidth || 794;
-      setScale(Math.min(1, avail / natural));
-    };
-    fit();
-    window.addEventListener('resize', fit);
-    return () => window.removeEventListener('resize', fit);
-  }, [view, items.length]);
+  const tabLabel = activeTab === 'interno' ? 'Interno' : 'Cliente finale';
 
   return (
     <div className="ajax-page">
@@ -147,22 +122,19 @@ export default function AjaxPage() {
         </div>
 
         <div className="ajax-view-tabs">
-          <button className={`ajax-vtab${view === 'preventivo' && mode === 'finale' ? ' active' : ''}`}
-            onClick={() => { setView('preventivo'); setMode('finale'); }}>Cliente finale</button>
-          <button className={`ajax-vtab${view === 'preventivo' && mode === 'interno' ? ' active' : ''}`}
-            onClick={() => { setView('preventivo'); setMode('interno'); }}>Interno</button>
-          <button className={`ajax-vtab${view === 'listino' ? ' active' : ''}`}
-            onClick={() => setView('listino')}>Listino prezzi</button>
+          <button className={`ajax-vtab${activeTab === 'finale' ? ' active' : ''}`} onClick={() => setActiveTab('finale')}>Cliente finale</button>
+          <button className={`ajax-vtab${activeTab === 'interno' ? ' active' : ''}`} onClick={() => setActiveTab('interno')}>Interno</button>
+          <button className={`ajax-vtab${activeTab === 'totale' ? ' active' : ''}`} onClick={() => setActiveTab('totale')}>Solo totale</button>
+          <button className={`ajax-vtab${activeTab === 'listino' ? ' active' : ''}`} onClick={() => setActiveTab('listino')}>Listino prezzi</button>
         </div>
 
         <div className="ajax-toolbar-actions">
           <button className="btn btn-secondary btn-sm" onClick={resetAll}>↺ Azzera</button>
-          <button className="btn btn-secondary btn-sm" onClick={() => handlePrint('totale')} title="PDF con solo il totale finale, senza prezzi per riga">⭳ PDF Totale</button>
-          <button className="btn btn-primary btn-sm" onClick={() => handlePrint('full')}>⭳ Genera PDF</button>
+          <button className="btn btn-primary btn-sm" onClick={handlePrint}>⭳ Genera PDF</button>
         </div>
       </div>
 
-      {view === 'listino' ? (
+      {activeTab === 'listino' ? (
         <div className="ajax-listino-wrap">
           <div className="ajax-listino-head">
             <div>
@@ -199,138 +171,122 @@ export default function AjaxPage() {
           <p className="ajax-listino-note">Modifica un prezzo di listino per aggiornarlo ovunque. La colonna “Scontato” è il prezzo interno; nel preventivo cliente finale viene applicata la maggiorazione.</p>
         </div>
       ) : (
-        <div className="ajax-layout">
-          <div className="ajax-editor">
-            <div className="ajax-section-title">Cliente</div>
-            <div className="card ajax-panel">
+        <div className="ajax-editor ajax-editor-full">
+          <div className="ajax-section-title">Cliente</div>
+          <div className="card ajax-panel">
+            <div className="ajax-field">
+              <label>Nome / Intestatario</label>
+              <input className="ajax-input" value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Es. Sig. Mario Rossi" />
+            </div>
+            <div className="ajax-grid2">
               <div className="ajax-field">
-                <label>Nome / Intestatario</label>
-                <input className="ajax-input" value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Es. Sig. Mario Rossi" />
+                <label>Indirizzo</label>
+                <input className="ajax-input" value={clientAddr} onChange={e => setClientAddr(e.target.value)} placeholder="Via, numero, città" />
               </div>
-              <div className="ajax-grid2">
-                <div className="ajax-field">
-                  <label>Indirizzo</label>
-                  <input className="ajax-input" value={clientAddr} onChange={e => setClientAddr(e.target.value)} placeholder="Via, numero, città" />
-                </div>
-                <div className="ajax-field">
-                  <label>Telefono / Email</label>
-                  <input className="ajax-input" value={clientContact} onChange={e => setClientContact(e.target.value)} placeholder="Telefono o email" />
-                </div>
-              </div>
-            </div>
-
-            <div className="ajax-section-title">Dispositivi — seleziona quantità</div>
-            <div className="ajax-catalog">
-              {DEVICES.map(d => {
-                const st = catalogState[d.id] ?? { qty: 0, listino: d.listino };
-                return (
-                  <div key={d.id} className={`ajax-dev${st.qty > 0 ? ' active' : ''}`}>
-                    <div className="ajax-dev-thumb"><img src={d.img} alt="" /></div>
-                    <div className="ajax-dev-meta">
-                      <h4>{d.nome}</h4>
-                      <div className="ajax-dev-tag">{d.tag}</div>
-                    </div>
-                    <div className="ajax-pricebox">
-                      {st.listino > 0 ? (
-                        <>
-                          <div className="pl">Listino <s>{formatEur(st.listino)}</s></div>
-                          <div className="ps">{formatEur(unit(st.listino))}</div>
-                        </>
-                      ) : <div className="ps muted">prezzo n.d.</div>}
-                    </div>
-                    <div className="ajax-stepper">
-                      <button onClick={() => bumpQty(d.id, -1)}>−</button>
-                      <input type="number" min={0} value={st.qty} onChange={e => setQty(d.id, e.target.value)} />
-                      <button onClick={() => bumpQty(d.id, 1)}>+</button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <button className="ajax-add-custom" onClick={addCustom}>＋ Aggiungi voce personalizzata</button>
-            {customItems.length > 0 && (
-              <div className="ajax-customlist">
-                {customItems.map((it, idx) => (
-                  <div key={it.key} className="ajax-customrow-group">
-                    <div className="ajax-customrow">
-                      <input className="cx-name" placeholder="Nome voce (es. Sensore rottura vetro)" value={it.name} onChange={e => setCustom(idx, 'name', e.target.value)} />
-                      <input style={{ width: 60 }} type="number" min={0} value={it.qty} title="Q.tà" onChange={e => setCustom(idx, 'qty', e.target.value)} />
-                      <input style={{ width: 80 }} type="number" min={0} placeholder="€/cad" value={it.price} onChange={e => setCustom(idx, 'price', e.target.value)} />
-                      <button className="ajax-del" onClick={() => removeCustom(idx)}>✕</button>
-                    </div>
-                    <input className="ajax-customrow-desc" placeholder="Spiegazione semplice (facoltativa)" value={it.desc} onChange={e => setCustom(idx, 'desc', e.target.value)} />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="ajax-section-title">Costi e opzioni</div>
-            <div className="card ajax-panel">
-              <div className="ajax-grid2">
-                <div className="ajax-field">
-                  <label>Manodopera / Installazione (€)</label>
-                  <input className="ajax-input" type="number" value={labor} onChange={e => setLabor(parseFloat(e.target.value) || 0)} />
-                </div>
-                <div className="ajax-field">
-                  <label>Sconto (€)</label>
-                  <input className="ajax-input" type="number" value={discEuro} onChange={e => setDiscEuro(parseFloat(e.target.value) || 0)} />
-                </div>
-              </div>
-              <label className="ajax-switch">
-                <input type="checkbox" checked={ivaOn} onChange={e => setIvaOn(e.target.checked)} />
-                Prezzi + IVA 22%
-              </label>
-              <div className="ajax-field" style={{ marginTop: 14 }}>
-                <label>Note (facoltative)</label>
-                <textarea className="ajax-input" value={notes} onChange={e => setNotes(e.target.value)}
-                  placeholder="Es. Sopralluogo gratuito. Garanzia 2 anni sul materiale. Attivazione APP inclusa." />
-              </div>
-            </div>
-
-            <div className="ajax-section-title">Testo introduttivo (modificabile)</div>
-            <div className="card ajax-panel">
               <div className="ajax-field">
-                <textarea className="ajax-input" style={{ minHeight: 90 }} value={introText} onChange={e => setIntroText(e.target.value)} />
+                <label>Telefono / Email</label>
+                <input className="ajax-input" value={clientContact} onChange={e => setClientContact(e.target.value)} placeholder="Telefono o email" />
               </div>
             </div>
           </div>
 
-          <div className="ajax-preview-pane" ref={previewPaneRef}>
-            <div className="ajax-hintbar">Anteprima A4 · premi <b>Genera PDF</b> → “Salva come PDF”</div>
-            <div className="ajax-scaler" style={{ transform: `scale(${scale})`, height: docWrapRef.current ? docWrapRef.current.offsetHeight * scale : undefined }}>
-              <div className="ajax-doc-wrap" ref={docWrapRef}>
-                <AjaxDocument
-                  mode={mode}
-                  clientName={clientName} clientAddr={clientAddr} clientContact={clientContact}
-                  introText={introText} notes={notes}
-                  items={items} sub={sub} labor={labor} discEuro={discEuro} ivaOn={ivaOn} ivaVal={ivaVal} imponibile={imponibile} grand={grand}
-                />
+          <div className="ajax-section-title">Dispositivi — seleziona quantità</div>
+          <div className="ajax-catalog">
+            {DEVICES.map(d => {
+              const st = catalogState[d.id] ?? { qty: 0, listino: d.listino };
+              return (
+                <div key={d.id} className={`ajax-dev${st.qty > 0 ? ' active' : ''}`}>
+                  <div className="ajax-dev-thumb"><img src={d.img} alt="" /></div>
+                  <div className="ajax-dev-meta">
+                    <h4>{d.nome}</h4>
+                    <div className="ajax-dev-tag">{d.tag}</div>
+                  </div>
+                  <div className="ajax-pricebox">
+                    {st.listino > 0 ? (
+                      <>
+                        <div className="pl">Listino <s>{formatEur(st.listino)}</s></div>
+                        <div className="ps">{formatEur(unit(st.listino))}</div>
+                      </>
+                    ) : <div className="ps muted">prezzo n.d.</div>}
+                  </div>
+                  <div className="ajax-stepper">
+                    <button onClick={() => bumpQty(d.id, -1)}>−</button>
+                    <input type="number" min={0} value={st.qty} onChange={e => setQty(d.id, e.target.value)} />
+                    <button onClick={() => bumpQty(d.id, 1)}>+</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <button className="ajax-add-custom" onClick={addCustom}>＋ Aggiungi voce personalizzata</button>
+          {customItems.length > 0 && (
+            <div className="ajax-customlist">
+              {customItems.map((it, idx) => (
+                <div key={it.key} className="ajax-customrow-group">
+                  <div className="ajax-customrow">
+                    <input className="cx-name" placeholder="Nome voce (es. Sensore rottura vetro)" value={it.name} onChange={e => setCustom(idx, 'name', e.target.value)} />
+                    <input style={{ width: 60 }} type="number" min={0} value={it.qty} title="Q.tà" onChange={e => setCustom(idx, 'qty', e.target.value)} />
+                    <input style={{ width: 80 }} type="number" min={0} placeholder="€/cad" value={it.price} onChange={e => setCustom(idx, 'price', e.target.value)} />
+                    <button className="ajax-del" onClick={() => removeCustom(idx)}>✕</button>
+                  </div>
+                  <input className="ajax-customrow-desc" placeholder="Spiegazione semplice (facoltativa)" value={it.desc} onChange={e => setCustom(idx, 'desc', e.target.value)} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="ajax-section-title">Costi e opzioni</div>
+          <div className="card ajax-panel">
+            <div className="ajax-grid2">
+              <div className="ajax-field">
+                <label>Manodopera / Installazione (€)</label>
+                <input className="ajax-input" type="number" value={labor} onChange={e => setLabor(parseFloat(e.target.value) || 0)} />
               </div>
+              <div className="ajax-field">
+                <label>Sconto (€)</label>
+                <input className="ajax-input" type="number" value={discEuro} onChange={e => setDiscEuro(parseFloat(e.target.value) || 0)} />
+              </div>
+            </div>
+            <label className="ajax-switch">
+              <input type="checkbox" checked={ivaOn} onChange={e => setIvaOn(e.target.checked)} />
+              Prezzi + IVA 22%
+            </label>
+            <div className="ajax-field" style={{ marginTop: 14 }}>
+              <label>Note (facoltative)</label>
+              <textarea className="ajax-input" value={notes} onChange={e => setNotes(e.target.value)}
+                placeholder="Es. Sopralluogo gratuito. Garanzia 2 anni sul materiale. Attivazione APP inclusa." />
+            </div>
+
+            <div className="ajax-total-box">
+              <div className="ajax-total-row">
+                <span className="ajax-total-label">Totale {tabLabel}{ivaOn ? ' · IVA inclusa' : ''}</span>
+                <span className="ajax-total-value">{formatEur(grand)}</span>
+              </div>
+              {laborMissing && <div className="ajax-total-warning">⚠️ Manodopera non inserita</div>}
+            </div>
+          </div>
+
+          <div className="ajax-section-title">Testo introduttivo (modificabile)</div>
+          <div className="card ajax-panel">
+            <div className="ajax-field">
+              <textarea className="ajax-input" style={{ minHeight: 90 }} value={introText} onChange={e => setIntroText(e.target.value)} />
             </div>
           </div>
         </div>
       )}
 
-      {/* Copia nascosta, sempre a scala naturale: usata solo per la stampa/PDF */}
+      {/* Copia nascosta: usata solo per la stampa/PDF, mai mostrata a schermo */}
       <div className="ajax-print-only">
         <div className="ajax-doc-wrap">
-          {printVariant === 'totale' ? (
-            <AjaxDocument
-              mode="finale"
-              clientName={clientName} clientAddr={clientAddr} clientContact={clientContact}
-              introText={introText} notes={notes}
-              items={items} sub={subFinale} labor={labor} discEuro={discEuro} ivaOn={ivaOn} ivaVal={ivaValFinale} imponibile={imponibileFinale} grand={grandFinale}
-              hidePricing
-            />
-          ) : (
-            <AjaxDocument
-              mode={mode}
-              clientName={clientName} clientAddr={clientAddr} clientContact={clientContact}
-              introText={introText} notes={notes}
-              items={items} sub={sub} labor={labor} discEuro={discEuro} ivaOn={ivaOn} ivaVal={ivaVal} imponibile={imponibile} grand={grand}
-            />
-          )}
+          <AjaxDocument
+            mode={effectiveMode}
+            clientName={clientName} clientAddr={clientAddr} clientContact={clientContact}
+            introText={introText} notes={notes}
+            items={items} sub={sub} labor={labor} discEuro={discEuro} ivaOn={ivaOn} ivaVal={ivaVal} imponibile={imponibile} grand={grand}
+            hidePricing={activeTab === 'totale'}
+            laborMissing={laborMissing}
+          />
         </div>
       </div>
     </div>
@@ -339,12 +295,13 @@ export default function AjaxPage() {
 
 interface DocItem { img: string | null; nome: string; tag: string; desc: string; specs: string[]; qty: number; price: number }
 
-function AjaxDocument({ mode, clientName, clientAddr, clientContact, introText, notes, items, sub, labor, discEuro, ivaOn, ivaVal, imponibile, grand, hidePricing }: {
+function AjaxDocument({ mode, clientName, clientAddr, clientContact, introText, notes, items, sub, labor, discEuro, ivaOn, ivaVal, imponibile, grand, hidePricing, laborMissing }: {
   mode: PriceMode;
   clientName: string; clientAddr: string; clientContact: string;
   introText: string; notes: string;
   items: DocItem[]; sub: number; labor: number; discEuro: number; ivaOn: boolean; ivaVal: number; imponibile: number; grand: number;
   hidePricing?: boolean;
+  laborMissing?: boolean;
 }) {
   const cLines = [clientAddr, clientContact].filter(Boolean).join('\n');
   const interno = mode === 'interno';
@@ -396,6 +353,8 @@ function AjaxDocument({ mode, clientName, clientAddr, clientContact, introText, 
             </div>
           ))
         )}
+
+        {laborMissing && <div className="ajax-doc-warn">⚠️ Manodopera non inserita — verificare prima dell’invio</div>}
 
         {hidePricing ? (
           <div className="totals-simple">
