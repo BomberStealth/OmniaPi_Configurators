@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import {
   DEVICES, DEFAULT_INTRO, LOGO,
   netPrice, unitPrice, formatEur,
@@ -6,7 +7,7 @@ import {
 import type { PriceMode } from './utils/catalog';
 import './AjaxPage.css';
 
-const VERSION = 'v1.0.0';
+const VERSION = 'v1.1.0';
 
 interface DeviceState { qty: number; listino: number }
 type CatalogState = Record<string, DeviceState>;
@@ -98,6 +99,26 @@ export default function AjaxPage() {
   const ivaVal = ivaOn ? imponibile * 0.22 : 0;
   const grand = imponibile + ivaVal;
 
+  // totale "cliente finale", indipendente dalla modalità corrente: usato dal PDF senza prezzi
+  const subFinale = useMemo(() => {
+    const deviceSub = DEVICES.reduce((s, d) => {
+      const st = catalogState[d.id];
+      if (!st || st.qty <= 0) return s;
+      return s + st.qty * unitPrice(st.listino, sconto, 'finale');
+    }, 0);
+    const customSub = customItems.filter(c => c.qty > 0 && c.name.trim()).reduce((s, c) => s + c.qty * c.price, 0);
+    return deviceSub + customSub;
+  }, [catalogState, customItems, sconto]);
+  const imponibileFinale = subFinale + labor - discEuro;
+  const ivaValFinale = ivaOn ? imponibileFinale * 0.22 : 0;
+  const grandFinale = imponibileFinale + ivaValFinale;
+
+  const [printVariant, setPrintVariant] = useState<'full' | 'totale'>('full');
+  const handlePrint = (variant: 'full' | 'totale') => {
+    flushSync(() => setPrintVariant(variant));
+    window.print();
+  };
+
   useEffect(() => {
     const fit = () => {
       const pane = previewPaneRef.current, wrap = docWrapRef.current;
@@ -136,7 +157,8 @@ export default function AjaxPage() {
 
         <div className="ajax-toolbar-actions">
           <button className="btn btn-secondary btn-sm" onClick={resetAll}>↺ Azzera</button>
-          <button className="btn btn-primary btn-sm" onClick={() => window.print()}>⭳ Genera PDF</button>
+          <button className="btn btn-secondary btn-sm" onClick={() => handlePrint('totale')} title="PDF con solo il totale finale, senza prezzi per riga">⭳ PDF Totale</button>
+          <button className="btn btn-primary btn-sm" onClick={() => handlePrint('full')}>⭳ Genera PDF</button>
         </div>
       </div>
 
@@ -293,12 +315,22 @@ export default function AjaxPage() {
       {/* Copia nascosta, sempre a scala naturale: usata solo per la stampa/PDF */}
       <div className="ajax-print-only">
         <div className="ajax-doc-wrap">
-          <AjaxDocument
-            mode={mode}
-            clientName={clientName} clientAddr={clientAddr} clientContact={clientContact}
-            introText={introText} notes={notes}
-            items={items} sub={sub} labor={labor} discEuro={discEuro} ivaOn={ivaOn} ivaVal={ivaVal} imponibile={imponibile} grand={grand}
-          />
+          {printVariant === 'totale' ? (
+            <AjaxDocument
+              mode="finale"
+              clientName={clientName} clientAddr={clientAddr} clientContact={clientContact}
+              introText={introText} notes={notes}
+              items={items} sub={subFinale} labor={labor} discEuro={discEuro} ivaOn={ivaOn} ivaVal={ivaValFinale} imponibile={imponibileFinale} grand={grandFinale}
+              hidePricing
+            />
+          ) : (
+            <AjaxDocument
+              mode={mode}
+              clientName={clientName} clientAddr={clientAddr} clientContact={clientContact}
+              introText={introText} notes={notes}
+              items={items} sub={sub} labor={labor} discEuro={discEuro} ivaOn={ivaOn} ivaVal={ivaVal} imponibile={imponibile} grand={grand}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -307,11 +339,12 @@ export default function AjaxPage() {
 
 interface DocItem { img: string | null; nome: string; tag: string; desc: string; specs: string[]; qty: number; price: number }
 
-function AjaxDocument({ mode, clientName, clientAddr, clientContact, introText, notes, items, sub, labor, discEuro, ivaOn, ivaVal, imponibile, grand }: {
+function AjaxDocument({ mode, clientName, clientAddr, clientContact, introText, notes, items, sub, labor, discEuro, ivaOn, ivaVal, imponibile, grand, hidePricing }: {
   mode: PriceMode;
   clientName: string; clientAddr: string; clientContact: string;
   introText: string; notes: string;
   items: DocItem[]; sub: number; labor: number; discEuro: number; ivaOn: boolean; ivaVal: number; imponibile: number; grand: number;
+  hidePricing?: boolean;
 }) {
   const cLines = [clientAddr, clientContact].filter(Boolean).join('\n');
   const interno = mode === 'interno';
@@ -352,42 +385,61 @@ function AjaxDocument({ mode, clientName, clientAddr, clientContact, introText, 
           <div style={{ padding: '14mm 0', textAlign: 'center', color: 'var(--ajax-muted)' }}>Nessun dispositivo selezionato. Imposta le quantità a sinistra.</div>
         ) : (
           items.map((it, i) => (
-            <div key={i} className="d-item">
+            <div key={i} className={`d-item${hidePricing ? ' no-price' : ''}`}>
               {it.img ? <div className="pic"><img src={it.img} alt="" /></div> : <div className="pic" style={{ fontSize: '9pt', color: 'var(--ajax-muted)' }}>—</div>}
               <div className="body">
                 <h4>{it.nome} <span className="qtybadge">×{it.qty}</span></h4>
                 {it.desc && <div className="expl">{it.desc}</div>}
                 {it.specs.length > 0 && <div className="chips">{it.specs.map((s, si) => <span key={si}>{s}</span>)}</div>}
               </div>
-              <div className="amt"><div className="unit">{formatEur(it.price)} cad.</div><div className="tot">{formatEur(it.qty * it.price)}</div></div>
+              {!hidePricing && <div className="amt"><div className="unit">{formatEur(it.price)} cad.</div><div className="tot">{formatEur(it.qty * it.price)}</div></div>}
             </div>
           ))
         )}
 
-        <div className="totals">
-          <div className="incl">
-            <div className="t">Nel prezzo è compreso</div>
-            <ul>
-              <li>Materiale del sistema di sicurezza</li>
-              <li>Programmazione secondo le preferenze del cliente</li>
-              <li>Materiale d’installazione</li>
-              <li>Manodopera per l’installazione</li>
-              <li>Configurazione APP e prova di funzionamento</li>
-            </ul>
+        {hidePricing ? (
+          <div className="totals-simple">
+            <div className="incl">
+              <div className="t">Nel prezzo è compreso</div>
+              <ul>
+                <li>Materiale del sistema di sicurezza</li>
+                <li>Programmazione secondo le preferenze del cliente</li>
+                <li>Materiale d’installazione</li>
+                <li>Manodopera per l’installazione</li>
+                <li>Configurazione APP e prova di funzionamento</li>
+              </ul>
+            </div>
+            <div className="totals-simple-box">
+              <span className="lbl">Totale {ivaOn ? 'IVA inclusa' : ''}</span>
+              <span className="val">{formatEur(grand)}</span>
+            </div>
           </div>
-          <div className="sumbox">
-            <div className="r"><span className="lbl">Materiale</span><span className="val">{formatEur(sub)}</span></div>
-            {labor > 0 && <div className="r"><span className="lbl">Manodopera / Installazione</span><span className="val">{formatEur(labor)}</span></div>}
-            {discEuro > 0 && <div className="r disc"><span className="lbl">Sconto</span><span className="val">− {formatEur(discEuro)}</span></div>}
-            {ivaOn && (
-              <>
-                <div className="r"><span className="lbl">Imponibile</span><span className="val">{formatEur(imponibile)}</span></div>
-                <div className="r"><span className="lbl">IVA 22%</span><span className="val">{formatEur(ivaVal)}</span></div>
-              </>
-            )}
-            <div className="r grand"><span className="lbl">Totale {ivaOn ? 'IVA inclusa' : ''}</span><span className="val">{formatEur(grand)}</span></div>
+        ) : (
+          <div className="totals">
+            <div className="incl">
+              <div className="t">Nel prezzo è compreso</div>
+              <ul>
+                <li>Materiale del sistema di sicurezza</li>
+                <li>Programmazione secondo le preferenze del cliente</li>
+                <li>Materiale d’installazione</li>
+                <li>Manodopera per l’installazione</li>
+                <li>Configurazione APP e prova di funzionamento</li>
+              </ul>
+            </div>
+            <div className="sumbox">
+              <div className="r"><span className="lbl">Materiale</span><span className="val">{formatEur(sub)}</span></div>
+              {labor > 0 && <div className="r"><span className="lbl">Manodopera / Installazione</span><span className="val">{formatEur(labor)}</span></div>}
+              {discEuro > 0 && <div className="r disc"><span className="lbl">Sconto</span><span className="val">− {formatEur(discEuro)}</span></div>}
+              {ivaOn && (
+                <>
+                  <div className="r"><span className="lbl">Imponibile</span><span className="val">{formatEur(imponibile)}</span></div>
+                  <div className="r"><span className="lbl">IVA 22%</span><span className="val">{formatEur(ivaVal)}</span></div>
+                </>
+              )}
+              <div className="r grand"><span className="lbl">Totale {ivaOn ? 'IVA inclusa' : ''}</span><span className="val">{formatEur(grand)}</span></div>
+            </div>
           </div>
-        </div>
+        )}
 
         {notes && <div className="notes-box">{notes}</div>}
       </div>
