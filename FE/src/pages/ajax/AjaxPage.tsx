@@ -362,49 +362,36 @@ function AjaxDocument({ mode, clientName, clientAddr, clientContact, introText, 
 
         {laborMissing && <div className="ajax-doc-warn">⚠️ Manodopera non inserita — verificare prima dell’invio</div>}
 
-        {hidePricing ? (
-          <div className="totals-simple">
-            <div className="incl">
-              <div className="t">Nel prezzo è compreso</div>
-              <ul>
-                <li>Materiale del sistema di sicurezza</li>
-                <li>Programmazione secondo le preferenze del cliente</li>
-                <li>Materiale d’installazione</li>
-                <li>Manodopera per l’installazione</li>
-                <li>Configurazione APP e prova di funzionamento</li>
-              </ul>
-            </div>
-            <div className="totals-simple-box">
-              <span className="lbl">Totale {ivaRate > 0 ? 'IVA inclusa' : ''}</span>
-              <span className="val">{formatEur(grand)}</span>
-            </div>
+        <div className="totals">
+          <div className="incl">
+            <div className="t">Nel prezzo è compreso</div>
+            <ul>
+              <li>Materiale del sistema di sicurezza</li>
+              <li>Programmazione secondo le preferenze del cliente</li>
+              <li>Materiale d’installazione</li>
+              <li>Manodopera per l’installazione</li>
+              <li>Configurazione APP e prova di funzionamento</li>
+            </ul>
           </div>
-        ) : (
-          <div className="totals">
-            <div className="incl">
-              <div className="t">Nel prezzo è compreso</div>
-              <ul>
-                <li>Materiale del sistema di sicurezza</li>
-                <li>Programmazione secondo le preferenze del cliente</li>
-                <li>Materiale d’installazione</li>
-                <li>Manodopera per l’installazione</li>
-                <li>Configurazione APP e prova di funzionamento</li>
-              </ul>
-            </div>
-            <div className="sumbox">
-              <div className="r"><span className="lbl">Materiale</span><span className="val">{formatEur(sub)}</span></div>
-              {labor > 0 && <div className="r"><span className="lbl">Manodopera / Installazione</span><span className="val">{formatEur(labor)}</span></div>}
-              {discEuro > 0 && <div className="r disc"><span className="lbl">Sconto</span><span className="val">− {formatEur(discEuro)}</span></div>}
-              {ivaRate > 0 && (
-                <>
-                  <div className="r"><span className="lbl">Imponibile</span><span className="val">{formatEur(imponibile)}</span></div>
-                  <div className="r"><span className="lbl">IVA {ivaRate}%</span><span className="val">{formatEur(ivaVal)}</span></div>
-                </>
-              )}
-              <div className="r grand"><span className="lbl">Totale {ivaRate > 0 ? 'IVA inclusa' : ''}</span><span className="val">{formatEur(grand)}</span></div>
-            </div>
+          <div className="sumbox">
+            {hidePricing ? (
+              <div className="r"><span className="lbl">Totale materiale e manodopera</span><span className="val">{formatEur(sub + labor)}</span></div>
+            ) : (
+              <>
+                <div className="r"><span className="lbl">Materiale</span><span className="val">{formatEur(sub)}</span></div>
+                {labor > 0 && <div className="r"><span className="lbl">Manodopera / Installazione</span><span className="val">{formatEur(labor)}</span></div>}
+              </>
+            )}
+            {discEuro > 0 && <div className="r disc"><span className="lbl">Sconto</span><span className="val">− {formatEur(discEuro)}</span></div>}
+            {ivaRate > 0 && (
+              <>
+                <div className="r"><span className="lbl">Imponibile</span><span className="val">{formatEur(imponibile)}</span></div>
+                <div className="r"><span className="lbl">IVA {ivaRate}%</span><span className="val">{formatEur(ivaVal)}</span></div>
+              </>
+            )}
+            <div className="r grand"><span className="lbl">Totale {ivaRate > 0 ? 'IVA inclusa' : ''}</span><span className="val">{formatEur(grand)}</span></div>
           </div>
-        )}
+        </div>
 
         {notes && <div className="notes-box">{notes}</div>}
       </div>
