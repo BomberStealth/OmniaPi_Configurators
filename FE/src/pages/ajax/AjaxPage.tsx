@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   DEVICES, DEFAULT_INTRO, LOGO,
   netPrice, unitPrice, formatEur,
@@ -96,6 +96,50 @@ export default function AjaxPage() {
   const ivaVal = ivaRate > 0 ? imponibile * (ivaRate / 100) : 0;
   const grand = imponibile + ivaVal;
   const laborMissing = labor <= 0;
+
+  // Totale cliente (finale) sempre calcolato con la tariffa finale, a prescindere dalla scheda attiva —
+  // serve per il confronto rapido nella scheda "Interno".
+  const customSubRaw = useMemo(() => (
+    customItems.filter(c => c.qty > 0 && c.name.trim()).reduce((s, c) => s + c.qty * c.price, 0)
+  ), [customItems]);
+
+  const subClienteFinale = useMemo(() => {
+    const deviceSub = DEVICES.reduce((s, d) => {
+      const st = catalogState[d.id];
+      if (!st || st.qty <= 0) return s;
+      return s + st.qty * unitPrice(st.listino, sconto, 'finale');
+    }, 0);
+    return deviceSub + customSubRaw;
+  }, [catalogState, customSubRaw, sconto]);
+  const imponibileClienteFinale = subClienteFinale + labor - discEuro;
+  const totaleCliente = imponibileClienteFinale + (ivaRate > 0 ? imponibileClienteFinale * (ivaRate / 100) : 0);
+
+  // Totale interno: SOLO materiale a prezzo interno + IVA se attiva, niente manodopera e niente sconto.
+  const subMaterialeInterno = useMemo(() => {
+    const deviceSub = DEVICES.reduce((s, d) => {
+      const st = catalogState[d.id];
+      if (!st || st.qty <= 0) return s;
+      return s + st.qty * unitPrice(st.listino, sconto, 'interno');
+    }, 0);
+    return deviceSub + customSubRaw;
+  }, [catalogState, customSubRaw, sconto]);
+  const totaleInterno = subMaterialeInterno + (ivaRate > 0 ? subMaterialeInterno * (ivaRate / 100) : 0);
+
+  // Swipe nascosto sul box totale: cicla Cliente finale -> Interno -> Solo totale -> Cliente finale
+  const TAB_CYCLE: ActiveTab[] = ['finale', 'interno', 'totale'];
+  const swipeStartX = useRef<number | null>(null);
+  const handleTotalPointerDown = (e: React.PointerEvent) => { swipeStartX.current = e.clientX; };
+  const handleTotalPointerUp = (e: React.PointerEvent) => {
+    if (swipeStartX.current === null) return;
+    const deltaX = e.clientX - swipeStartX.current;
+    swipeStartX.current = null;
+    const idx = TAB_CYCLE.indexOf(activeTab);
+    if (idx === -1 || Math.abs(deltaX) < 45) return;
+    const next = deltaX < 0
+      ? TAB_CYCLE[(idx + 1) % TAB_CYCLE.length]
+      : TAB_CYCLE[(idx - 1 + TAB_CYCLE.length) % TAB_CYCLE.length];
+    setActiveTab(next);
+  };
 
   const handlePrint = () => {
     const prevTitle = document.title;
@@ -264,11 +308,24 @@ export default function AjaxPage() {
                 placeholder="Es. Sopralluogo gratuito. Garanzia 2 anni sul materiale. Attivazione APP inclusa." />
             </div>
 
-            <div className="ajax-total-box">
-              <div className="ajax-total-row">
-                <span className="ajax-total-label">Totale {tabLabel}{ivaRate > 0 ? ` · IVA ${ivaRate}% inclusa` : ''}</span>
-                <span className="ajax-total-value">{formatEur(grand)}</span>
-              </div>
+            <div className="ajax-total-box" onPointerDown={handleTotalPointerDown} onPointerUp={handleTotalPointerUp}>
+              {activeTab === 'interno' ? (
+                <>
+                  <div className="ajax-total-row">
+                    <span className="ajax-total-label">Totale cliente{ivaRate > 0 ? ` · IVA ${ivaRate}% inclusa` : ''}</span>
+                    <span className="ajax-total-value">{formatEur(totaleCliente)}</span>
+                  </div>
+                  <div className="ajax-total-row ajax-total-row-secondary">
+                    <span className="ajax-total-label">Totale interno (solo materiale{ivaRate > 0 ? ` + IVA ${ivaRate}%` : ''})</span>
+                    <span className="ajax-total-value">{formatEur(totaleInterno)}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="ajax-total-row">
+                  <span className="ajax-total-label">Totale {tabLabel}{ivaRate > 0 ? ` · IVA ${ivaRate}% inclusa` : ''}</span>
+                  <span className="ajax-total-value">{formatEur(grand)}</span>
+                </div>
+              )}
               {laborMissing && <div className="ajax-total-warning">⚠️ Manodopera non inserita</div>}
             </div>
           </div>
