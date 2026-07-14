@@ -1,24 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
-  BRANDS, FAMILIES, PASSERELLA_ACC, CANALE_ACC, BEND_TYPES, codeForWidth,
+  BRANDS, FAMILIES, PASSERELLA_ACC, CANALE_ACC, BEND_TYPES,
 } from './utils/catalog';
-import type { BrandId, Family, ChannelSize } from './utils/catalog';
+import type { BrandId, Family } from './utils/catalog';
 import './CanalePage.css';
 
-const VERSION = 'v0.1.0';
-
-type Step = 'brand' | 'family' | 'size' | 'compose' | 'result';
-
-interface Line {
-  key: string;
-  label: string;
-  code: string | null;
-}
-
-interface LineGroup {
-  title: string;
-  lines: Line[];
-}
+const VERSION = 'v0.2.0';
 
 // icone stilizzate per le famiglie
 function MeshIcon() {
@@ -38,12 +25,9 @@ function ChannelIcon({ perforated }: { perforated?: boolean }) {
       <path d="M6 8h8M50 8h8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
       {perforated && (
         <>
-          <circle cx="20" cy="24" r="2" fill="currentColor" opacity="0.6" />
-          <circle cx="32" cy="24" r="2" fill="currentColor" opacity="0.6" />
-          <circle cx="44" cy="24" r="2" fill="currentColor" opacity="0.6" />
-          <circle cx="20" cy="34" r="2" fill="currentColor" opacity="0.6" />
-          <circle cx="32" cy="34" r="2" fill="currentColor" opacity="0.6" />
-          <circle cx="44" cy="34" r="2" fill="currentColor" opacity="0.6" />
+          {[20, 32, 44].map(cx => [24, 34].map(cy => (
+            <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="2" fill="currentColor" opacity="0.6" />
+          )))}
         </>
       )}
     </svg>
@@ -56,244 +40,131 @@ function familyIcon(id: string) {
   return <ChannelIcon />;
 }
 
-function StepHeader({ title, sub }: { title: string; sub?: string }) {
-  return (
-    <div className="cn-step-header">
-      <div className="cn-step-title">{title}</div>
-      {sub && <div className="cn-step-sub">{sub}</div>}
-    </div>
-  );
-}
-
-// costruisce i gruppi di righe (con codici risolti per la misura scelta)
-function buildGroups(family: Family, size: ChannelSize): LineGroup[] {
-  const w = size.width;
-  const groups: LineGroup[] = [];
-
-  groups.push({
-    title: 'Canale e coperchio',
-    lines: [
-      { key: 'canale', label: `Canale ${size.label}`, code: size.channel },
-      { key: 'coperchio', label: 'Coperchio', code: size.cover ?? null },
-    ],
-  });
-
-  if (family.kind === 'passerella') {
-    groups.push({
-      title: 'Giunzioni e fissaggi',
-      lines: [
-        { key: 'kitGiunti', label: 'Kit giunti passerella (dado + bullone + piastre)', code: PASSERELLA_ACC.kitGiunti },
-        { key: 'fissCoperchio', label: 'Fissaggio coperchio', code: PASSERELLA_ACC.fissaggioCoperchio },
-        { key: 'fissVerticale', label: 'Fissaggio a parete in verticale', code: PASSERELLA_ACC.fissaggioVerticale },
-      ],
-    });
-    groups.push({
-      title: 'Staffe',
-      lines: [
-        { key: 'staffaParete', label: 'Staffa a parete', code: codeForWidth(PASSERELLA_ACC.staffaParete, w) },
-        { key: 'staffaSoffitto', label: 'Staffa a soffitto', code: codeForWidth(PASSERELLA_ACC.staffaSoffitto, w) },
-      ],
-    });
-  } else {
-    groups.push({
-      title: 'Giunzioni e fissaggi',
-      lines: [
-        { key: 'giuntiFissaggio', label: 'Giunti di fissaggio', code: CANALE_ACC.giuntiFissaggio },
-        { key: 'dadiBulloni', label: 'Dadi + bulloni', code: CANALE_ACC.dadiBulloni },
-      ],
-    });
-    groups.push({
-      title: 'Staffe',
-      lines: [
-        { key: 'staffaParete', label: 'Staffa a parete', code: codeForWidth(CANALE_ACC.staffaParete, w) },
-        { key: 'staffaSoffittoSupp', label: 'Staffa a soffitto (supporto)', code: codeForWidth(CANALE_ACC.staffaSoffittoSupp, w) },
-        { key: 'staffaSoffittoCulla', label: 'Staffa a soffitto (culla)', code: codeForWidth(CANALE_ACC.staffaSoffittoCulla, w) },
-      ],
-    });
-    groups.push({
-      title: 'Curve e accessori',
-      lines: BEND_TYPES.map(b => ({ key: `bend_${b.id}`, label: b.label, code: codeForWidth(b.codes, w) })),
-    });
-  }
-
-  return groups;
+function sortedWidths(...maps: Record<number, string>[]): number[] {
+  const set = new Set<number>();
+  maps.forEach(m => Object.keys(m).forEach(k => set.add(Number(k))));
+  return [...set].sort((a, b) => a - b);
 }
 
 export default function CanalePage() {
-  const [step, setStep] = useState<Step>('brand');
-  const [history, setHistory] = useState<Step[]>([]);
   const [brand, setBrand] = useState<BrandId | null>(null);
   const [flying, setFlying] = useState(false);
-  const [family, setFamily] = useState<Family | null>(null);
-  const [size, setSize] = useState<ChannelSize | null>(null);
-  const [qty, setQty] = useState<Record<string, number>>({});
+  const [copied, setCopied] = useState<string | null>(null);
 
   const selectedBrand = BRANDS.find(b => b.id === brand) ?? null;
 
-  const groups = useMemo(
-    () => (family && size ? buildGroups(family, size) : []),
-    [family, size],
-  );
-
-  const goTo = (next: Step) => { setHistory(h => [...h, step]); setStep(next); };
-  const goBack = () => {
-    setHistory(h => {
-      if (h.length === 0) return h;
-      setStep(h[h.length - 1]);
-      return h.slice(0, -1);
-    });
-  };
-
-  const resetAll = () => {
-    setStep('brand'); setHistory([]); setBrand(null); setFlying(false);
-    setFamily(null); setSize(null); setQty({});
-  };
-
   const handlePickBrand = (id: BrandId) => {
-    setBrand(id); setFlying(true);
-    setTimeout(() => { setFlying(false); goTo('family'); }, 550);
+    setBrand(id);
+    setFlying(true);
+    setTimeout(() => setFlying(false), 550);
   };
 
-  const handlePickFamily = (f: Family) => { setFamily(f); setSize(null); goTo('size'); };
-
-  const handlePickSize = (s: ChannelSize) => {
-    setSize(s);
-    setQty({ canale: 1 }); // il canale base parte da 1
-    goTo('compose');
+  const copyCode = (code: string) => {
+    if (!code) return;
+    navigator.clipboard?.writeText(code).catch(() => {});
+    setCopied(code);
+    setTimeout(() => setCopied(c => (c === code ? null : c)), 1300);
   };
 
-  const setLineQty = (key: string, v: number) => setQty(prev => ({ ...prev, [key]: Math.max(0, v) }));
-
-  const bomLines = useMemo(() => {
-    const out: { label: string; code: string; qty: number }[] = [];
-    for (const g of groups) {
-      for (const l of g.lines) {
-        const q = qty[l.key] ?? 0;
-        if (q > 0 && l.code) out.push({ label: l.label, code: l.code, qty: q });
-      }
-    }
-    return out;
-  }, [groups, qty]);
-
-  const totalPieces = bomLines.reduce((s, l) => s + l.qty, 0);
-
-  let content: React.ReactNode = null;
-
-  if (step === 'brand') {
-    content = (
-      <>
-        <StepHeader title="Configuratore Canale in Metallo" sub="Seleziona la marca per iniziare" />
-        <div className="cn-brand-grid">
-          {BRANDS.map(b => (
-            <button
-              key={b.id}
-              className={`cn-brand-btn${flying ? (b.id === brand ? ' cn-fly-up' : ' cn-fly-out') : ''}`}
-              style={{ '--bc': b.color } as React.CSSProperties}
-              onClick={() => !flying && handlePickBrand(b.id)}
-              disabled={flying}
-            >
-              {b.label}
-              {!b.ready && <span className="cn-brand-soon">catalogo in arrivo</span>}
-            </button>
-          ))}
-        </div>
-      </>
+  const Code = ({ value }: { value?: string | null }) => {
+    if (!value) return <span className="cn-code cn-code-na">—</span>;
+    return (
+      <button className={`cn-code${copied === value ? ' cn-code-copied' : ''}`} onClick={() => copyCode(value)} title="Clicca per copiare">
+        {value}
+      </button>
     );
-  } else if (step === 'family') {
-    content = (
-      <>
-        <StepHeader title="Tipo di canale" />
-        <div className="cn-family-grid">
-          {FAMILIES.map(f => (
-            <button key={f.id} className="cn-family-card" onClick={() => handlePickFamily(f)}>
-              <div className="cn-family-icon">{familyIcon(f.id)}</div>
-              <div className="cn-family-title">{f.label}</div>
-              <div className="cn-family-sub">{f.sub}</div>
-            </button>
-          ))}
+  };
+
+  const passerellaWidths = sortedWidths(PASSERELLA_ACC.staffaParete, PASSERELLA_ACC.staffaSoffitto);
+  const canaleWidths = sortedWidths(CANALE_ACC.staffaParete, CANALE_ACC.staffaSoffittoSupp, CANALE_ACC.staffaSoffittoCulla);
+  const bendWidths = sortedWidths(...BEND_TYPES.map(b => b.codes));
+
+  const renderFamily = (f: Family) => (
+    <section key={f.id} className="cn-cat-section" id={`sec-${f.id}`}>
+      <div className="cn-cat-head">
+        <span className="cn-cat-icon">{familyIcon(f.id)}</span>
+        <div>
+          <div className="cn-cat-title">{f.label}</div>
+          <div className="cn-cat-sub">{f.sub}</div>
         </div>
-      </>
-    );
-  } else if (step === 'size' && family) {
-    content = (
-      <>
-        <StepHeader title="Misura" sub={family.label} />
-        <div className="cn-choice-row">
-          {family.sizes.map(s => (
-            <button key={s.label} className="cn-choice-btn" onClick={() => handlePickSize(s)}>
-              {s.label}
-            </button>
-          ))}
-        </div>
-      </>
-    );
-  } else if (step === 'compose' && family && size) {
-    content = (
-      <>
-        <StepHeader title="Composizione" sub={`${family.label} · ${size.label}`} />
-        <div className="cn-compose">
-          {groups.map(g => (
-            <div key={g.title} className="cn-group">
-              <div className="cn-group-title">{g.title}</div>
-              {g.lines.map(l => (
-                <div key={l.key} className={`cn-line${!l.code ? ' cn-line-na' : ''}`}>
-                  <div className="cn-line-info">
-                    <span className="cn-line-label">{l.label}</span>
-                    <span className="cn-line-code">{l.code ?? 'non disponibile per questa misura'}</span>
-                  </div>
-                  {l.code ? (
-                    <div className="cn-stepper">
-                      <button onClick={() => setLineQty(l.key, (qty[l.key] ?? 0) - 1)}>−</button>
-                      <input
-                        type="number" min={0} value={qty[l.key] ?? 0}
-                        onChange={e => setLineQty(l.key, parseInt(e.target.value, 10) || 0)}
-                      />
-                      <button onClick={() => setLineQty(l.key, (qty[l.key] ?? 0) + 1)}>+</button>
-                    </div>
-                  ) : (
-                    <span className="cn-line-na-tag">n.d.</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-        <div className="cn-cta-row">
-          <button className="btn btn-primary" disabled={totalPieces === 0} onClick={() => goTo('result')}>
-            Vedi distinta materiale →
-          </button>
-        </div>
-      </>
-    );
-  } else if (step === 'result' && family && size) {
-    content = (
-      <>
-        <StepHeader title="Distinta materiale" sub={`${family.label} · ${size.label}`} />
-        {bomLines.length === 0 ? (
-          <div className="cn-empty">Nessun articolo selezionato.</div>
-        ) : (
-          <div className="cn-bom">
-            <div className="cn-bom-head">
-              <span className="cn-bom-code">Codice</span>
-              <span className="cn-bom-desc">Descrizione</span>
-              <span className="cn-bom-qty">Qtà</span>
-            </div>
-            {bomLines.map((l, i) => (
-              <div key={i} className="cn-bom-row">
-                <span className="cn-bom-code">{l.code}</span>
-                <span className="cn-bom-desc">{l.label}</span>
-                <span className="cn-bom-qty">{l.qty}</span>
-              </div>
+      </div>
+
+      <div className="cn-table-wrap">
+        <table className="cn-table">
+          <thead>
+            <tr><th>Misura</th><th>Codice canale</th><th>Codice coperchio</th></tr>
+          </thead>
+          <tbody>
+            {f.sizes.map(s => (
+              <tr key={s.label}>
+                <td className="cn-mis">{s.label}</td>
+                <td><Code value={s.channel} /></td>
+                <td><Code value={s.cover} /></td>
+              </tr>
             ))}
-            <div className="cn-bom-foot">Totale: <strong>{totalPieces} pz</strong></div>
+          </tbody>
+        </table>
+      </div>
+
+      {f.kind === 'passerella' ? (
+        <div className="cn-acc-wrap">
+          <div className="cn-acc-block">
+            <div className="cn-acc-title">Accessori</div>
+            <div className="cn-acc-chips">
+              <div className="cn-acc-chip"><span>Fissaggio coperchio</span><Code value={PASSERELLA_ACC.fissaggioCoperchio} /></div>
+              <div className="cn-acc-chip"><span>Kit giunti passerella</span><Code value={PASSERELLA_ACC.kitGiunti} /></div>
+              <div className="cn-acc-chip"><span>Fissaggio a parete verticale</span><Code value={PASSERELLA_ACC.fissaggioVerticale} /></div>
+            </div>
           </div>
-        )}
-        <div className="cn-cta-row">
-          <button className="btn btn-secondary" onClick={resetAll}>↺ Nuova configurazione</button>
+          <div className="cn-acc-block">
+            <div className="cn-acc-title">Staffe (per larghezza)</div>
+            <div className="cn-table-wrap">
+              <table className="cn-table cn-table-sm">
+                <thead><tr><th>Larghezza</th><th>A parete</th><th>A soffitto</th></tr></thead>
+                <tbody>
+                  {passerellaWidths.map(w => (
+                    <tr key={w}>
+                      <td className="cn-mis">{w}</td>
+                      <td><Code value={PASSERELLA_ACC.staffaParete[w]} /></td>
+                      <td><Code value={PASSERELLA_ACC.staffaSoffitto[w]} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </>
-    );
-  }
+      ) : (
+        <div className="cn-acc-wrap">
+          <div className="cn-acc-block">
+            <div className="cn-acc-title">Giunzioni e fissaggi</div>
+            <div className="cn-acc-chips">
+              <div className="cn-acc-chip"><span>Giunti di fissaggio</span><Code value={CANALE_ACC.giuntiFissaggio} /></div>
+              <div className="cn-acc-chip"><span>Dadi + bulloni</span><Code value={CANALE_ACC.dadiBulloni} /></div>
+            </div>
+          </div>
+          <div className="cn-acc-block">
+            <div className="cn-acc-title">Staffe (per larghezza)</div>
+            <div className="cn-table-wrap">
+              <table className="cn-table cn-table-sm">
+                <thead><tr><th>Larghezza</th><th>A parete</th><th>Soffitto supporto</th><th>Soffitto culla</th></tr></thead>
+                <tbody>
+                  {canaleWidths.map(w => (
+                    <tr key={w}>
+                      <td className="cn-mis">{w}</td>
+                      <td><Code value={CANALE_ACC.staffaParete[w]} /></td>
+                      <td><Code value={CANALE_ACC.staffaSoffittoSupp[w]} /></td>
+                      <td><Code value={CANALE_ACC.staffaSoffittoCulla[w]} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
 
   return (
     <div className="cn-page">
@@ -310,25 +181,82 @@ export default function CanalePage() {
                 Canale in Metallo
                 <span className="ftv-version">{VERSION}</span>
               </div>
-              <div className="tool-page-header-sub">Configuratore guidato per canaline e passerelle metalliche</div>
+              <div className="tool-page-header-sub">Catalogo canaline e passerelle metalliche — clicca un codice per copiarlo</div>
             </div>
           </div>
-          {selectedBrand && step !== 'brand' && (
+          {selectedBrand && (
             <div className="cn-brand-pin">
               <span className="cn-brand-pin-dot" style={{ background: selectedBrand.color }} />
               {selectedBrand.label}
-              <button className="cn-brand-pin-change" onClick={resetAll}>cambia marca</button>
+              <button className="cn-brand-pin-change" onClick={() => setBrand(null)}>cambia marca</button>
             </div>
           )}
         </div>
 
-        <div className="card cn-wizard-card">
-          {history.length > 0 && step !== 'brand' && (
-            <button className="cn-back-btn" onClick={goBack}>← Indietro</button>
-          )}
-          {content}
-        </div>
+        {!brand ? (
+          <div className="card cn-wizard-card">
+            <div className="cn-step-header">
+              <div className="cn-step-title">Configuratore Canale in Metallo</div>
+              <div className="cn-step-sub">Seleziona la marca per consultare il catalogo</div>
+            </div>
+            <div className="cn-brand-grid">
+              {BRANDS.map(b => (
+                <button
+                  key={b.id}
+                  className={`cn-brand-btn${flying ? (b.id === brand ? ' cn-fly-up' : ' cn-fly-out') : ''}`}
+                  style={{ '--bc': b.color } as React.CSSProperties}
+                  onClick={() => !flying && handlePickBrand(b.id)}
+                  disabled={flying}
+                >
+                  {b.label}
+                  {!b.ready && <span className="cn-brand-soon">catalogo in arrivo</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="cn-jump">
+              {FAMILIES.map(f => (
+                <a key={f.id} href={`#sec-${f.id}`} className="cn-jump-link">{f.label}</a>
+              ))}
+              <a href="#sec-curve" className="cn-jump-link">Curve e accessori</a>
+            </div>
+
+            {FAMILIES.map(renderFamily)}
+
+            <section className="cn-cat-section" id="sec-curve">
+              <div className="cn-cat-head">
+                <span className="cn-cat-icon"><ChannelIcon /></span>
+                <div>
+                  <div className="cn-cat-title">Curve e accessori</div>
+                  <div className="cn-cat-sub">Per canali lisci (chiuso / forato), per larghezza</div>
+                </div>
+              </div>
+              <div className="cn-table-wrap">
+                <table className="cn-table cn-table-bends">
+                  <thead>
+                    <tr>
+                      <th>Misura</th>
+                      {BEND_TYPES.map(b => <th key={b.id}>{b.label}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bendWidths.map(w => (
+                      <tr key={w}>
+                        <td className="cn-mis">{w}</td>
+                        {BEND_TYPES.map(b => <td key={b.id}><Code value={b.codes[w]} /></td>)}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </>
+        )}
       </div>
+
+      {copied && <div className="cn-toast">✓ Copiato: {copied}</div>}
     </div>
   );
 }
