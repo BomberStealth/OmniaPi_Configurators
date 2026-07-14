@@ -34,6 +34,7 @@ const TOOL_CRUMBS: Record<string, string> = {
   '/western': 'Western Energy',
   '/prese-interbloccate': 'Prese Interbloccate',
   '/ajax': 'Preventivi AJAX',
+  '/canale': 'Canale in Metallo',
 };
 
 export default function Navbar() {

@@ -42,6 +42,12 @@ const TOOLS: Tool[] = [
     category: 'Sicurezza', color: '#e11d2a', status: 'active',
   },
   {
+    id: 'canale', path: '/canale', icon: '🪜',
+    title: 'Canale in Metallo',
+    desc: 'Configuratore per canaline e passerelle metalliche: canale, coperchi, staffe, giunti e curve con distinta.',
+    category: 'Impianti', color: '#64748b', status: 'active',
+  },
+  {
     id: 'elettrico', path: null, icon: '⚡',
     title: 'Preventivatore Elettrico',
     desc: 'Calcolo materiale per impianti elettrici civili e industriali, quadri e dorsali.',

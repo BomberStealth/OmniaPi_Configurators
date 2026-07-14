@@ -6,6 +6,7 @@ import FotovoltaicoPage from './pages/fotovoltaico/FotovoltaicoPage';
 import WesternPage from './pages/western/WesternPage';
 import PreseInterbloccatePage from './pages/preseinterbloccate/PreseInterbloccatePage';
 import AjaxPage from './pages/ajax/AjaxPage';
+import CanalePage from './pages/canale/CanalePage';
 import InfoPage from './pages/InfoPage';
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/western" element={<WesternPage />} />
           <Route path="/prese-interbloccate" element={<PreseInterbloccatePage />} />
           <Route path="/ajax" element={<AjaxPage />} />
+          <Route path="/canale" element={<CanalePage />} />
           <Route path="/info" element={<InfoPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
