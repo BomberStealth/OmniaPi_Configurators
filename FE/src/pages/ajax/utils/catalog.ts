@@ -14,7 +14,8 @@ import curtainOut from '../assets/curtain_out.jpg';
 import dualcurtainOut from '../assets/dualcurtain_out.jpg';
 import keypadTouch from '../assets/keypad_touch.jpg';
 import tag from '../assets/tag.jpg';
-import placeholder from '../assets/placeholder.jpg';
+import keypadOut from '../assets/keypad_out.jpg';
+import motioncamIn from '../assets/motioncam_in.jpg';
 
 export const LOGO = logo;
 
@@ -57,7 +58,7 @@ export const DEVICES: Device[] = [
   { id: 'keypad_touch', codice: '58455.148.WH1', img: keypadTouch, nome: 'KeyPad TouchScreen', tag: 'Tastiera touch screen',
     desc: 'Tastiera wireless con schermo touch per accendere e spegnere l’impianto. Ci si identifica in più modi: con il codice, con una tessera o portachiavi (Pass e Tag) oppure direttamente con lo smartphone. Elegante e semplicissima da usare a parete.',
     specs: ['Touch screen', 'Codice / Pass / Tag', 'Autenticazione via smartphone'], listino: 467 },
-  { id: 'keypad_out', codice: '99969.286.GP1', img: placeholder, nome: 'KeyPad Outdoor', tag: 'Tastiera da esterno',
+  { id: 'keypad_out', codice: '99969.286.GP1', img: keypadOut, nome: 'KeyPad Outdoor', tag: 'Tastiera da esterno',
     desc: 'Tastiera con lettore RFID da montare all’esterno: accendi e spegni l’impianto dall’ingresso, con codice o tessera/portachiavi di prossimità. Robusta e resistente a pioggia e polvere (IP66).',
     specs: ['Da esterno (IP66)', 'Codice / Tag RFID', 'Antimanomissione'], listino: 203 },
   { id: 'tag', codice: '38232.90.WH', img: tag, nome: 'Tag (3 pz)', tag: 'Chiave senza contatto',
@@ -72,7 +73,7 @@ export const DEVICES: Device[] = [
   { id: 'pir', codice: '38193.09.WH1', img: pir, nome: 'MotionProtect', tag: 'Sorveglia le stanze',
     desc: 'Il sensore che “vede” i movimenti all’interno di una stanza. Se qualcuno si muove ad allarme inserito, fa scattare l’allarme. Non si attiva per cani e gatti.',
     specs: ['Pet-immune', 'Filtro anti falsi allarmi'], listino: 96 },
-  { id: 'motioncam_in', codice: '119282.310.WH1', img: placeholder, nome: 'MotionCam', tag: 'Movimento interno con foto',
+  { id: 'motioncam_in', codice: '119282.310.WH1', img: motioncamIn, nome: 'MotionCam', tag: 'Movimento interno con foto',
     desc: 'Rilevatore di movimento da interno che, quando scatta l’allarme, scatta anche una serie di foto: così vedi subito sul telefono cosa lo ha fatto scattare. Pet-immune, ottimo per avere conferma visiva degli allarmi.',
     specs: ['Da interno', 'Foto-verifica (PhOD)', 'Pet-immune'], listino: 249 },
   { id: 'motioncam_out', codice: '', img: motioncamOut, nome: 'MotionCam Outdoor', tag: 'Movimento esterno con foto-verifica',
