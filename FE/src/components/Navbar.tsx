@@ -35,6 +35,7 @@ const TOOL_CRUMBS: Record<string, string> = {
   '/prese-interbloccate': 'Prese Interbloccate',
   '/ajax': 'Preventivi AJAX',
   '/canale': 'Canale in Metallo',
+  '/bticino': 'BTicino Connessa',
 };
 
 export default function Navbar() {

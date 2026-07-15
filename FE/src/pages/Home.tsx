@@ -48,6 +48,12 @@ const TOOLS: Tool[] = [
     category: 'Impianti', color: '#64748b', status: 'active',
   },
   {
+    id: 'bticino', path: '/bticino', icon: '🏠',
+    title: 'Preventivi BTicino Connessa',
+    desc: 'Costruttore preventivi per impianti smart BTicino (Living Now, Matix Go) con copritasti collegati ed export PDF.',
+    category: 'Sicurezza', color: '#005ca9', status: 'active',
+  },
+  {
     id: 'elettrico', path: null, icon: '⚡',
     title: 'Preventivatore Elettrico',
     desc: 'Calcolo materiale per impianti elettrici civili e industriali, quadri e dorsali.',
