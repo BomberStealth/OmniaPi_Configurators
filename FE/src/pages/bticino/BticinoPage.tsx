@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import {
-  DEVICES, ACCESSORIES, SERIES, DEFAULT_INTRO,
+  DEVICES, ACCESSORIES, SERIES, CATEGORIES, DEFAULT_INTRO,
   netPrice, unitPrice, formatEur,
 } from './utils/catalog';
 import type { PriceMode } from './utils/catalog';
@@ -211,28 +211,34 @@ export default function BticinoPage() {
                 <tr><th>Codice</th><th>Dispositivo</th><th>Prezzo interno</th><th>Scontato</th></tr>
               </thead>
               <tbody>
-                {DEVICES.map(d => (
-                  <tr key={d.id}>
-                    <td className="blc-cod">{d.code}</td>
-                    <td className="blc-name">{d.nome}</td>
-                    <td className="blc-list"><span>€</span>
-                      <input type="number" min={0} step={0.01} value={catalogState[d.id]?.listino ?? d.listino}
-                        onChange={e => setDeviceListino(d.id, e.target.value)} />
-                    </td>
-                    <td className="blc-net">{formatEur(net(catalogState[d.id]?.listino ?? d.listino))}</td>
-                  </tr>
-                ))}
-                {Object.values(ACCESSORIES).map(a => (
-                  <tr key={a.code} className="blc-acc">
-                    <td className="blc-cod">{a.code}</td>
-                    <td className="blc-name">{a.nome} <span className="blc-acc-tag">copritasto</span></td>
-                    <td className="blc-list"><span>€</span>
-                      <input type="number" min={0} step={0.01} value={accState[a.code] ?? a.listino}
-                        onChange={e => setAccListino(a.code, e.target.value)} />
-                    </td>
-                    <td className="blc-net">{formatEur(net(accState[a.code] ?? a.listino))}</td>
-                  </tr>
-                ))}
+                {DEVICES.map(d => {
+                  const lst = catalogState[d.id]?.listino ?? d.listino;
+                  return (
+                    <tr key={d.id} className={lst <= 0 ? 'blc-missing' : ''}>
+                      <td className="blc-cod">{d.code}</td>
+                      <td className="blc-name">{d.nome}</td>
+                      <td className="blc-list"><span>€</span>
+                        <input type="number" min={0} step={0.01} value={lst}
+                          onChange={e => setDeviceListino(d.id, e.target.value)} />
+                      </td>
+                      <td className="blc-net">{lst > 0 ? formatEur(net(lst)) : 'da definire'}</td>
+                    </tr>
+                  );
+                })}
+                {Object.values(ACCESSORIES).map(a => {
+                  const lst = accState[a.code] ?? a.listino;
+                  return (
+                    <tr key={a.code} className={`blc-acc${lst <= 0 ? ' blc-missing' : ''}`}>
+                      <td className="blc-cod">{a.code}</td>
+                      <td className="blc-name">{a.nome} <span className="blc-acc-tag">copritasto</span></td>
+                      <td className="blc-list"><span>€</span>
+                        <input type="number" min={0} step={0.01} value={lst}
+                          onChange={e => setAccListino(a.code, e.target.value)} />
+                      </td>
+                      <td className="blc-net">{lst > 0 ? formatEur(net(lst)) : 'da definire'}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -260,37 +266,47 @@ export default function BticinoPage() {
 
           <div className="bt-section-title">Articoli — seleziona quantità</div>
           {SERIES.map(serie => {
-            const devs = DEVICES.filter(d => d.series === serie.id);
-            if (devs.length === 0) return null;
+            const serieDevs = DEVICES.filter(d => d.series === serie.id);
+            if (serieDevs.length === 0) return null;
             return (
               <div key={serie.id} className="bt-serie">
                 <div className="bt-serie-title">{serie.label}</div>
-                <div className="bt-catalog">
-                  {devs.map(d => {
-                    const st = catalogState[d.id] ?? { qty: 0, listino: d.listino };
-                    const acc = d.linkedCode ? ACCESSORIES[d.linkedCode] : null;
-                    return (
-                      <div key={d.id} className={`bt-dev${st.qty > 0 ? ' active' : ''}`}>
-                        <div className="bt-dev-code">{d.code}</div>
-                        <div className="bt-dev-meta">
-                          <h4>{d.nome}</h4>
-                          <div className="bt-dev-desc">{d.desc}</div>
-                          {acc && (
-                            <div className="bt-dev-linked">+ {acc.code} · {acc.nome} <span>(automatico)</span></div>
-                          )}
-                        </div>
-                        <div className="bt-pricebox">
-                          <div className="ps">{formatEur(unit(st.listino))}</div>
-                        </div>
-                        <div className="bt-stepper">
-                          <button onClick={() => bumpQty(d.id, -1)}>−</button>
-                          <input type="number" min={0} value={st.qty} onChange={e => setQty(d.id, e.target.value)} />
-                          <button onClick={() => bumpQty(d.id, 1)}>+</button>
-                        </div>
+                {CATEGORIES.map(cat => {
+                  const devs = serieDevs.filter(d => d.category === cat.id);
+                  if (devs.length === 0) return null;
+                  return (
+                    <div key={cat.id} className="bt-cat">
+                      <div className="bt-cat-title">{cat.label}</div>
+                      <div className="bt-catalog">
+                        {devs.map(d => {
+                          const st = catalogState[d.id] ?? { qty: 0, listino: d.listino };
+                          const acc = d.linkedCode ? ACCESSORIES[d.linkedCode] : null;
+                          const priceMissing = (st.listino ?? 0) <= 0;
+                          return (
+                            <div key={d.id} className={`bt-dev${st.qty > 0 ? ' active' : ''}`}>
+                              <div className="bt-dev-code">{d.code}</div>
+                              <div className="bt-dev-meta">
+                                <h4>{d.nome}{d.shared && <span className="bt-dev-shared">sistema</span>}</h4>
+                                <div className="bt-dev-desc">{d.desc}</div>
+                                {acc && (
+                                  <div className="bt-dev-linked">+ {acc.code} · {acc.nome} <span>(automatico)</span></div>
+                                )}
+                              </div>
+                              <div className="bt-pricebox">
+                                {priceMissing ? <div className="ps missing">da definire</div> : <div className="ps">{formatEur(unit(st.listino))}</div>}
+                              </div>
+                              <div className="bt-stepper">
+                                <button onClick={() => bumpQty(d.id, -1)}>−</button>
+                                <input type="number" min={0} value={st.qty} onChange={e => setQty(d.id, e.target.value)} />
+                                <button onClick={() => bumpQty(d.id, 1)}>+</button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
             );
           })}
