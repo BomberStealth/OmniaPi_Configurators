@@ -26,7 +26,7 @@ export const ACCESSORIES: Record<string, Accessory> = {
   KW01:   { code: 'KW01',   nome: 'Copritasto comando 1M', listino: 2.29121 },
   KW30M2: { code: 'KW30M2', nome: 'Copritasto gateway 2M', listino: 3.51361 },
   KW41:   { code: 'KW41',   nome: 'Copritasto notte-giorno wireless', listino: 3.46241 },
-  KW32:   { code: 'KW32',   nome: 'Copritasto comando tapparella connesso', listino: 0 }, // prezzo da definire
+  KW32:   { code: 'KW32',   nome: 'Copritasto comando tapparella connesso', listino: 2.34881 },
 };
 
 export interface Device {
@@ -54,7 +54,7 @@ export const DEVICES: Device[] = [
   { id: 'ln-k4411c', series: 'living-now', category: 'comandi', code: 'K4411C', nome: 'Dimmer connesso',
     desc: 'Regolatore di luminosità connesso 1 modulo.', listino: 47.32088, linkedCode: 'KW01' },
   { id: 'ln-k4027c', series: 'living-now', category: 'comandi', code: 'K4027C', nome: 'Comando tapparella connesso',
-    desc: 'Comando tapparelle/tende connesso 1 modulo.', listino: 0, linkedCode: 'KW32' },
+    desc: 'Comando tapparelle/tende connesso 1 modulo.', listino: 22.48329, linkedCode: 'KW32' },
   { id: 'ln-k4574cwi', series: 'living-now', category: 'comandi', code: 'K4574CWI', nome: 'Notte&Giorno wireless 1M',
     desc: 'Comando scenario notte/giorno wireless.', listino: 57.73950, linkedCode: 'KW41' },
   // Termostati
@@ -75,19 +75,19 @@ export const DEVICES: Device[] = [
   // ══════════ MATIX GO ══════════
   // Gateway
   { id: 'mg-jw4510c', series: 'matix-go', category: 'gateway', code: 'JW4510C', nome: 'Gateway + Entra&Esci 2M',
-    desc: 'Gateway di sistema con funzione entra&esci.', listino: 0 },
+    desc: 'Gateway di sistema con funzione entra&esci.', listino: 113.66775 },
   // Comandi
   { id: 'mg-jw4003c', series: 'matix-go', category: 'comandi', code: 'JW4003C', nome: 'Deviatore connesso',
-    desc: 'Comando luci connesso 1 modulo.', listino: 0 },
+    desc: 'Comando luci connesso 1 modulo.', listino: 34.22475 },
   { id: 'mg-jw4411c', series: 'matix-go', category: 'comandi', code: 'JW4411C', nome: 'Dimmer connesso',
-    desc: 'Regolatore di luminosità connesso 1 modulo.', listino: 0 },
+    desc: 'Regolatore di luminosità connesso 1 modulo.', listino: 40.99725 },
   { id: 'mg-jw4027c', series: 'matix-go', category: 'comandi', code: 'JW4027C', nome: 'Comando tapparella connesso',
     desc: 'Comando tapparelle/tende connesso 1 modulo.', listino: 57.71588 },
   { id: 'mg-jw4574cwi', series: 'matix-go', category: 'comandi', code: 'JW4574CWI', nome: 'Notte&Giorno wireless',
-    desc: 'Comando scenario notte/giorno wireless.', listino: 0 },
+    desc: 'Comando scenario notte/giorno wireless.', listino: 54.38475 },
   // Relè / Accessori
   { id: 'mg-jw4531c', series: 'matix-go', category: 'rele-accessori', code: 'JW4531C', nome: 'Modulo per presa connesso',
-    desc: 'Modulo di misura/comando dietro presa.', listino: 0 },
+    desc: 'Modulo di misura/comando dietro presa.', listino: 36.13838 },
 ];
 
 export const DEFAULT_INTRO = 'Sistema BTicino connesso per il controllo intelligente dell’impianto: luci, tapparelle, prese e clima gestibili da app e da comando locale. Soluzione integrabile sull’impianto esistente, compatibile con l’ecosistema Netatmo.';

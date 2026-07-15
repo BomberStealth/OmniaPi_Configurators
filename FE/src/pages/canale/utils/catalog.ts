@@ -39,7 +39,7 @@ export const FAMILIES: Family[] = [
   {
     id: 'filo-h50', label: 'Passerella a Filo H50', sub: 'A filo, altezza 50 mm', kind: 'passerella',
     sizes: [
-      { label: '50x54',  width: 54,  channel: '000061', cover: '646010' },
+      { label: '54x50',  width: 54,  channel: '000061', cover: '646010' },
       { label: '54x100', width: 100, channel: '000071', cover: '646020' },
       { label: '54x150', width: 150, channel: '000081', cover: '646030' },
       { label: '54x200', width: 200, channel: '000091', cover: '646040' },
