@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import {
   DEVICES, ACCESSORIES, SERIES, CATEGORIES, DEFAULT_INTRO,
-  netPrice, unitPrice, formatEur,
+  DEFAULT_RICARICA, unitPrice, formatEur,
 } from './utils/catalog';
 import type { PriceMode } from './utils/catalog';
 import './BticinoPage.css';
@@ -32,7 +32,7 @@ function todayIT(): string {
 
 export default function BticinoPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('finale');
-  const [sconto, setSconto] = useState(0);
+  const [ricarica, setRicarica] = useState(DEFAULT_RICARICA);
   const [catalogState, setCatalogState] = useState<CatalogState>(initialCatalogState);
   const [accState, setAccState] = useState<AccState>(initialAccState);
   const [customItems, setCustomItems] = useState<CustomItem[]>([]);
@@ -49,8 +49,7 @@ export default function BticinoPage() {
 
   const effectiveMode: PriceMode = activeTab === 'interno' ? 'interno' : 'finale';
 
-  const unit = (listino: number) => unitPrice(listino, sconto, effectiveMode);
-  const net = (listino: number) => netPrice(listino, sconto);
+  const unit = (listino: number) => unitPrice(listino, ricarica, effectiveMode);
 
   const bumpQty = (id: string, delta: number) => {
     setCatalogState(prev => ({ ...prev, [id]: { ...prev[id], qty: Math.max(0, (prev[id]?.qty ?? 0) + delta) } }));
@@ -97,10 +96,10 @@ export default function BticinoPage() {
     for (const d of DEVICES) {
       const st = catalogState[d.id];
       if (!st || st.qty <= 0) continue;
-      add(d.code, d.nome, d.desc, st.qty, unitPrice(st.listino, sconto, mode));
+      add(d.code, d.nome, d.desc, st.qty, unitPrice(st.listino, ricarica, mode));
       if (d.linkedCode) {
         const acc = ACCESSORIES[d.linkedCode];
-        add(acc.code, acc.nome, '', st.qty, unitPrice(accState[acc.code] ?? acc.listino, sconto, mode));
+        add(acc.code, acc.nome, '', st.qty, unitPrice(accState[acc.code] ?? acc.listino, ricarica, mode));
       }
     }
     return [...map.values()];
@@ -117,7 +116,7 @@ export default function BticinoPage() {
       .map(c => ({ code: '', nome: c.name, desc: c.desc, qty: c.qty, price: c.price }));
     return [...coded, ...customVisible];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [catalogState, accState, customItems, sconto, effectiveMode]);
+  }, [catalogState, accState, customItems, ricarica, effectiveMode]);
 
   const sub = items.reduce((s, it) => s + it.qty * it.price, 0);
   const imponibile = sub + labor - discEuro;
@@ -128,14 +127,14 @@ export default function BticinoPage() {
   const subClienteFinale = useMemo(() => (
     expandCoded('finale').reduce((s, l) => s + l.qty * l.price, 0) + customSubRaw
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [catalogState, accState, customSubRaw, sconto]);
+  ), [catalogState, accState, customSubRaw, ricarica]);
   const imponibileClienteFinale = subClienteFinale + labor - discEuro;
   const totaleCliente = imponibileClienteFinale + (ivaRate > 0 ? imponibileClienteFinale * (ivaRate / 100) : 0);
 
   const subMaterialeInterno = useMemo(() => (
     expandCoded('interno').reduce((s, l) => s + l.qty * l.price, 0) + customSubRaw
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [catalogState, accState, customSubRaw, sconto]);
+  ), [catalogState, accState, customSubRaw, ricarica]);
   const totaleInterno = subMaterialeInterno + (ivaRate > 0 ? subMaterialeInterno * (ivaRate / 100) : 0);
 
   const TAB_CYCLE: ActiveTab[] = ['finale', 'interno', 'totale'];
@@ -195,20 +194,20 @@ export default function BticinoPage() {
           <div className="bt-listino-head">
             <div>
               <div className="bt-listino-title">Listino prezzi</div>
-              <div className="bt-listino-sub">Prezzo interno (netto EDIF). Nel preventivo cliente finale viene applicata la maggiorazione; lo sconto qui sotto si applica prima.</div>
+              <div className="bt-listino-sub">Prezzo interno (netto EDIF). Il prezzo cliente finale si ottiene applicando la ricarica di base qui a fianco.</div>
             </div>
             <div className="bt-sconto-field">
-              <label>Sconto applicato al preventivo</label>
+              <label>Ricarica di base</label>
               <div>
-                <input type="number" min={0} max={100} value={sconto}
-                  onChange={e => setSconto(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))} /> %
+                <input type="number" min={0} max={500} value={ricarica}
+                  onChange={e => setRicarica(Math.min(500, Math.max(0, parseFloat(e.target.value) || 0)))} /> %
               </div>
             </div>
           </div>
           <div className="bt-listino-table-wrap">
             <table className="bt-listino-table">
               <thead>
-                <tr><th>Codice</th><th>Dispositivo</th><th>Prezzo interno</th><th>Scontato</th></tr>
+                <tr><th>Codice</th><th>Dispositivo</th><th>Prezzo interno</th><th>Cliente finale</th></tr>
               </thead>
               <tbody>
                 {DEVICES.map(d => {
@@ -221,7 +220,7 @@ export default function BticinoPage() {
                         <input type="number" min={0} step={0.01} value={lst}
                           onChange={e => setDeviceListino(d.id, e.target.value)} />
                       </td>
-                      <td className="blc-net">{lst > 0 ? formatEur(net(lst)) : 'da definire'}</td>
+                      <td className="blc-net">{lst > 0 ? formatEur(unitPrice(lst, ricarica, 'finale')) : 'da definire'}</td>
                     </tr>
                   );
                 })}
@@ -235,14 +234,14 @@ export default function BticinoPage() {
                         <input type="number" min={0} step={0.01} value={lst}
                           onChange={e => setAccListino(a.code, e.target.value)} />
                       </td>
-                      <td className="blc-net">{lst > 0 ? formatEur(net(lst)) : 'da definire'}</td>
+                      <td className="blc-net">{lst > 0 ? formatEur(unitPrice(lst, ricarica, 'finale')) : 'da definire'}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-          <p className="bt-listino-note">Modifica un prezzo per aggiornarlo ovunque. La colonna “Scontato” è il prezzo interno effettivo dopo lo sconto.</p>
+          <p className="bt-listino-note">Modifica un prezzo per aggiornarlo ovunque. La colonna “Cliente finale” è il prezzo interno con la ricarica di base applicata.</p>
         </div>
       ) : (
         <div className="bt-editor-full">
@@ -274,9 +273,10 @@ export default function BticinoPage() {
                 {CATEGORIES.map(cat => {
                   const devs = serieDevs.filter(d => d.category === cat.id);
                   if (devs.length === 0) return null;
+                  const catLabel = serie.id === 'connessa-din' && cat.id === 'gateway' ? 'Gateway DIN' : cat.label;
                   return (
                     <div key={cat.id} className="bt-cat">
-                      <div className="bt-cat-title">{cat.label}</div>
+                      <div className="bt-cat-title">{catLabel}</div>
                       <div className="bt-catalog">
                         {devs.map(d => {
                           const st = catalogState[d.id] ?? { qty: 0, listino: d.listino };
@@ -286,7 +286,7 @@ export default function BticinoPage() {
                             <div key={d.id} className={`bt-dev${st.qty > 0 ? ' active' : ''}`}>
                               <div className="bt-dev-code">{d.code}</div>
                               <div className="bt-dev-meta">
-                                <h4>{d.nome}{d.shared && <span className="bt-dev-shared">sistema</span>}</h4>
+                                <h4>{d.nome}</h4>
                                 <div className="bt-dev-desc">{d.desc}</div>
                                 {acc && (
                                   <div className="bt-dev-linked">+ {acc.code} · {acc.nome} <span>(automatico)</span></div>
