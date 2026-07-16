@@ -73,21 +73,21 @@ export const DEVICES: Device[] = [
   { id: 'ln-kw07', series: 'living-now', category: 'rele-accessori', code: 'KW07', nome: 'Copritasto RJ / A-V / spia 1M',
     desc: 'Copritasto per moduli RJ, audio/video o spia.', listino: 4.61523 },
 
-  // ══════════ LIVING LIGHT ══════════
+  // ══════════ LIVING LIGHT (serie N, bianca) ══════════
   // Gateway
-  { id: 'll-l4510c', series: 'living-light', category: 'gateway', code: 'L4510C', nome: 'Gateway + Entra&Esci',
+  { id: 'll-n4510c', series: 'living-light', category: 'gateway', code: 'N4510C', nome: 'Gateway + Entra&Esci',
     desc: 'Gateway di sistema con funzione entra&esci.', listino: 0 },
   // Comandi
-  { id: 'll-l4003c', series: 'living-light', category: 'comandi', code: 'L4003C', nome: 'Deviatore connesso',
+  { id: 'll-n4003c', series: 'living-light', category: 'comandi', code: 'N4003C', nome: 'Deviatore connesso',
     desc: 'Comando luci connesso 1 modulo.', listino: 0 },
-  { id: 'll-l4411c', series: 'living-light', category: 'comandi', code: 'L4411C', nome: 'Dimmer connesso',
+  { id: 'll-n4411c', series: 'living-light', category: 'comandi', code: 'N4411C', nome: 'Dimmer connesso',
     desc: 'Regolatore di luminosità connesso 1 modulo.', listino: 0 },
-  { id: 'll-l4027c', series: 'living-light', category: 'comandi', code: 'L4027C', nome: 'Comando tapparella connesso',
+  { id: 'll-n4027c', series: 'living-light', category: 'comandi', code: 'N4027C', nome: 'Comando tapparella connesso',
     desc: 'Comando tapparelle/tende connesso 1 modulo.', listino: 0 },
-  { id: 'll-l4574cwi', series: 'living-light', category: 'comandi', code: 'L4574CWI', nome: 'Notte&Giorno wireless',
+  { id: 'll-n4574cwi', series: 'living-light', category: 'comandi', code: 'N4574CWI', nome: 'Notte&Giorno wireless',
     desc: 'Comando scenario notte/giorno wireless.', listino: 0 },
   // Relè / Accessori
-  { id: 'll-l4531c', series: 'living-light', category: 'rele-accessori', code: 'L4531C', nome: 'Modulo per presa connesso',
+  { id: 'll-n4531c', series: 'living-light', category: 'rele-accessori', code: 'N4531C', nome: 'Modulo per presa connesso',
     desc: 'Modulo di misura/comando dietro presa.', listino: 0 },
 
   // ══════════ MATIX GO ══════════
