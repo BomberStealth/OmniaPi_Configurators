@@ -3,10 +3,11 @@
 // Prezzi a 0 = da definire (articoli aggiunti da verifica catalogo, prezzo mancante).
 // Copritasti Living Now collegati (auto 1:1). Matix Go: nessun copritasto separato.
 
-export type SeriesId = 'living-now' | 'matix-go';
+export type SeriesId = 'living-now' | 'living-light' | 'matix-go';
 export interface Series { id: SeriesId; label: string; }
 export const SERIES: Series[] = [
   { id: 'living-now', label: 'Living Now' },
+  { id: 'living-light', label: 'Living Light' },
   { id: 'matix-go', label: 'Matix Go' },
 ];
 
@@ -71,6 +72,23 @@ export const DEVICES: Device[] = [
     desc: 'Contatto ausiliario connesso da barra DIN.', listino: 125.21250, shared: true },
   { id: 'ln-kw07', series: 'living-now', category: 'rele-accessori', code: 'KW07', nome: 'Copritasto RJ / A-V / spia 1M',
     desc: 'Copritasto per moduli RJ, audio/video o spia.', listino: 4.61523 },
+
+  // ══════════ LIVING LIGHT ══════════
+  // Gateway
+  { id: 'll-l4510c', series: 'living-light', category: 'gateway', code: 'L4510C', nome: 'Gateway + Entra&Esci',
+    desc: 'Gateway di sistema con funzione entra&esci.', listino: 0 },
+  // Comandi
+  { id: 'll-l4003c', series: 'living-light', category: 'comandi', code: 'L4003C', nome: 'Deviatore connesso',
+    desc: 'Comando luci connesso 1 modulo.', listino: 0 },
+  { id: 'll-l4411c', series: 'living-light', category: 'comandi', code: 'L4411C', nome: 'Dimmer connesso',
+    desc: 'Regolatore di luminosità connesso 1 modulo.', listino: 0 },
+  { id: 'll-l4027c', series: 'living-light', category: 'comandi', code: 'L4027C', nome: 'Comando tapparella connesso',
+    desc: 'Comando tapparelle/tende connesso 1 modulo.', listino: 0 },
+  { id: 'll-l4574cwi', series: 'living-light', category: 'comandi', code: 'L4574CWI', nome: 'Notte&Giorno wireless',
+    desc: 'Comando scenario notte/giorno wireless.', listino: 0 },
+  // Relè / Accessori
+  { id: 'll-l4531c', series: 'living-light', category: 'rele-accessori', code: 'L4531C', nome: 'Modulo per presa connesso',
+    desc: 'Modulo di misura/comando dietro presa.', listino: 0 },
 
   // ══════════ MATIX GO ══════════
   // Gateway
