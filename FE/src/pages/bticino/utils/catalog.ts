@@ -76,19 +76,19 @@ export const DEVICES: Device[] = [
   // ══════════ LIVING LIGHT (serie N, bianca) ══════════
   // Gateway
   { id: 'll-n4510c', series: 'living-light', category: 'gateway', code: 'N4510C', nome: 'Gateway + Entra&Esci',
-    desc: 'Gateway di sistema con funzione entra&esci.', listino: 0 },
+    desc: 'Gateway di sistema con funzione entra&esci.', listino: 161.02013 },
   // Comandi
   { id: 'll-n4003c', series: 'living-light', category: 'comandi', code: 'N4003C', nome: 'Deviatore connesso',
-    desc: 'Comando luci connesso 1 modulo.', listino: 0 },
+    desc: 'Comando luci connesso 1 modulo.', listino: 47.05313 },
   { id: 'll-n4411c', series: 'living-light', category: 'comandi', code: 'N4411C', nome: 'Dimmer connesso',
-    desc: 'Regolatore di luminosità connesso 1 modulo.', listino: 0 },
+    desc: 'Regolatore di luminosità connesso 1 modulo.', listino: 56.78663 },
   { id: 'll-n4027c', series: 'living-light', category: 'comandi', code: 'N4027C', nome: 'Comando tapparella connesso',
-    desc: 'Comando tapparelle/tende connesso 1 modulo.', listino: 0 },
-  { id: 'll-n4574cwi', series: 'living-light', category: 'comandi', code: 'N4574CWI', nome: 'Notte&Giorno wireless',
-    desc: 'Comando scenario notte/giorno wireless.', listino: 0 },
+    desc: 'Comando tapparelle/tende connesso 1 modulo.', listino: 69.35513 },
+  { id: 'll-n4574cwi', series: 'living-light', category: 'comandi', code: 'LN4574CWI', nome: 'Notte&Giorno wireless',
+    desc: 'Comando scenario notte/giorno wireless.', listino: 65.79563 },
   // Relè / Accessori
   { id: 'll-n4531c', series: 'living-light', category: 'rele-accessori', code: 'N4531C', nome: 'Modulo per presa connesso',
-    desc: 'Modulo di misura/comando dietro presa.', listino: 0 },
+    desc: 'Modulo di misura/comando dietro presa.', listino: 45.99788 },
 
   // ══════════ MATIX GO ══════════
   // Gateway
