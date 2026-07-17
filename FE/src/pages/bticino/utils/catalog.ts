@@ -52,8 +52,10 @@ export const DEVICES: Device[] = [
   { id: 'din-xw8003', series: 'connessa-din', category: 'termostati', code: 'XW8003', nome: 'Smarther AC incasso bianco',
     desc: 'Cronotermostato Smarther AC da incasso, bianco.', listino: 166.68225 },
   // Relè / Accessori DIN
-  { id: 'din-fc80cc', series: 'connessa-din', category: 'rele-accessori', code: 'FC80CC', nome: 'Contatto AUX DIN connesso Netatmo',
-    desc: 'Contatto ausiliario connesso da barra DIN.', listino: 125.21250 },
+  { id: 'din-fc80cc', series: 'connessa-din', category: 'rele-accessori', code: 'FC80CC', nome: 'Contatto modulare smart DIN 20A',
+    desc: 'Contatto modulare connesso da barra DIN, 20A.', listino: 125.21250 },
+  { id: 'din-fc80rc', series: 'connessa-din', category: 'rele-accessori', code: 'FC80RC', nome: 'Relè DIN smart luci 16A',
+    desc: 'Relè connesso da barra DIN per luci, 16A.', listino: 85.63275 },
 
   // ══════════ LIVING NOW ══════════
   { id: 'ln-k4510c', series: 'living-now', category: 'gateway', code: 'K4510C', nome: 'Gateway + Entra&Esci 1M',
