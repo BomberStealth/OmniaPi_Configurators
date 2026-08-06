@@ -16,6 +16,7 @@ import keypadTouch from '../assets/keypad_touch.jpg';
 import tag from '../assets/tag.jpg';
 import keypadOut from '../assets/keypad_out.jpg';
 import motioncamIn from '../assets/motioncam_in.jpg';
+import relay from '../assets/relay.png';
 
 export const LOGO = logo;
 
@@ -91,6 +92,12 @@ export const DEVICES: Device[] = [
   { id: 'dualcurtain_out', codice: '39055.81.WH1', img: dualcurtainOut, nome: 'DualCurtain Outdoor', tag: 'Tenda doppio fascio',
     desc: 'Crea due “tende” invisibili contrapposte, una per lato: protegge il perimetro in entrambe le direzioni lungo la parete. Perfetto tra due edifici o lungo una recinzione, riconosce anche la direzione del movimento.',
     specs: ['Da esterno', 'Doppio fascio', 'Copertura bidirezionale', 'Anti falsi allarmi'], listino: 327 },
+  { id: 'relay_7_24', codice: 'RELAY 7-24V', img: relay, nome: 'Relay 7-24V', tag: 'Comando a contatto pulito',
+    desc: 'Piccolo relè wireless con contatto pulito per comandare a distanza dispositivi a bassa tensione: cancelli, serrande, luci o altri carichi. Si comanda dall’APP o in automatico con gli scenari, e sta comodamente in una scatola di derivazione.',
+    specs: ['Contatto pulito', 'Alimentazione 7–24 V⎓', 'Modalità bistabile o a impulso', 'Wireless'], listino: 59 },
+  { id: 'relay_230', codice: 'RELAY 230V', img: relay, nome: 'Relay 230V', tag: 'Comando carichi 230V',
+    desc: 'Relè wireless per comandare direttamente apparecchi a 230V (luci, prese, elettrodomestici). Si installa dietro l’interruttore o nella scatola e permette di accendere e spegnere da APP o con gli scenari automatici del sistema.',
+    specs: ['Uscita 230 V~', 'Fino a 3 kW', 'Modalità bistabile o a impulso', 'Wireless'], listino: 59 },
 ];
 
 export const DEFAULT_INTRO = 'AJAX è un sistema di sicurezza intelligente, affidabile e velocissimo: reagisce solo a pericoli reali evitando i falsi allarmi. In caso di intrusione ti avvisa in un istante sul telefono e attiva le sirene. La comunicazione avviene contemporaneamente via Ethernet, WiFi e rete GSM, con notifiche in tempo reale sull’APP e chiamata in caso di allarme. Tutto senza fili, con batterie che durano fino a 7 anni.';
