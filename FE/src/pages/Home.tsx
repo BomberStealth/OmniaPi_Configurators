@@ -54,6 +54,12 @@ const TOOLS: Tool[] = [
     category: 'Sicurezza', color: '#005ca9', status: 'active',
   },
   {
+    id: 'bolle', path: '/bolle', icon: '🧾',
+    title: 'Bolle Maioli',
+    desc: 'Compilazione e stampa dei rapporti di intervento Maioli Idrotermica: dati, manodopera, materiali e foglio A4 pronto da stampare.',
+    category: 'Gestione', color: '#ea580c', status: 'active',
+  },
+  {
     id: 'elettrico', path: null, icon: '⚡',
     title: 'Preventivatore Elettrico',
     desc: 'Calcolo materiale per impianti elettrici civili e industriali, quadri e dorsali.',

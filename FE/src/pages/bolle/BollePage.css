@@ -1,0 +1,123 @@
+/* ===== Bolle Maioli — pagina (tema chiaro OmniaPi) ===== */
+.bolle-page { min-height: 100vh; }
+.bolle-page .container { max-width: 1400px; }
+
+/* header */
+.bolle-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  padding: 20px 0 14px;
+}
+.bolle-head-title { font-size: 20px; font-weight: 800; color: var(--text); }
+.bolle-head-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.bolle-toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* tabs (solo mobile) */
+.bolle-tabs { display: none; gap: 6px; margin-bottom: 14px; }
+.bolle-tabs button {
+  flex: 1; padding: 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--glass);
+  color: var(--text-muted); font-weight: 700; font-size: 13px; cursor: pointer;
+}
+.bolle-tabs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* split */
+.bolle-split {
+  display: grid;
+  grid-template-columns: minmax(420px, 1fr) minmax(360px, 1.05fr);
+  gap: 18px;
+  align-items: start;
+  padding-bottom: 48px;
+}
+
+/* card form */
+.bolle-card { padding: 18px; margin-bottom: 16px; }
+.bolle-sec-title {
+  font-size: 14px; font-weight: 800; color: var(--text);
+  margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;
+}
+
+.bolle-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; margin-bottom: 10px; }
+.bolle-col2 { grid-column: 1 / -1; }
+.bolle-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.bolle-field .form-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.bolle-field input,
+.bolle-field textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: #fff; color: var(--text);
+  font-size: 14px; font-family: inherit;
+}
+.bolle-field input:focus,
+.bolle-field textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.bolle-field input.err { border-color: #e11d2a; }
+.bolle-field textarea { resize: vertical; }
+
+/* materiali */
+.bolle-mat-head,
+.bolle-mat-row {
+  display: grid;
+  grid-template-columns: 64px 90px 1fr 92px 86px;
+  gap: 8px; align-items: center;
+}
+.bolle-mat-head { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 0 2px 6px; }
+.bolle-mat-row { margin-bottom: 8px; }
+.bolle-mat-row input {
+  width: 100%; padding: 8px 9px;
+  border: 1px solid var(--border); border-radius: var(--radius-xs);
+  background: #fff; color: var(--text); font-size: 13px;
+}
+.bolle-mat-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.bolle-mat-actions { display: flex; gap: 3px; }
+.bolle-mat-actions button {
+  width: 26px; height: 32px; border: 1px solid var(--border);
+  background: var(--glass); border-radius: var(--radius-xs);
+  color: var(--text-muted); cursor: pointer; font-size: 13px; line-height: 1;
+}
+.bolle-mat-actions button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.bolle-mat-actions button:disabled { opacity: 0.35; cursor: default; }
+.bolle-mat-actions button.del:hover { border-color: #e11d2a; color: #e11d2a; }
+
+.bolle-tot {
+  display: flex; flex-wrap: wrap; gap: 16px; justify-content: flex-end;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border);
+  font-size: 13px; color: var(--text-muted);
+}
+.bolle-tot b { color: var(--text); }
+.bolle-tot-grand { font-size: 15px; }
+.bolle-tot-grand b { color: var(--accent); }
+
+/* anteprima */
+.bolle-preview-col {
+  position: sticky; top: 16px;
+  background: #e9edf6;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  overflow: hidden;
+}
+.bolle-preview-sizer { position: relative; }
+.bolle-preview-scaler { transform-origin: top left; }
+.bolle-preview-inner .sheet { box-shadow: 0 2px 14px rgba(0,0,0,0.18); }
+
+/* ===== responsive ===== */
+@media (max-width: 980px) {
+  .bolle-split { grid-template-columns: 1fr; }
+  .bolle-preview-col { position: static; }
+  .bolle-tabs { display: flex; }
+  .bolle-split.tab-compila .bolle-preview-col { display: none; }
+  .bolle-split.tab-anteprima .bolle-form-col { display: none; }
+}
+
+@media (max-width: 520px) {
+  .bolle-grid2 { grid-template-columns: 1fr; }
+  .bolle-mat-head { display: none; }
+  .bolle-mat-row { grid-template-columns: 56px 1fr 80px; grid-template-areas: 'qta desc prezzo' 'cod cod act'; }
+  .bolle-mat-row .qta { grid-area: qta; }
+  .bolle-mat-row input:nth-child(2) { grid-area: cod; }
+  .bolle-mat-row input:nth-child(3) { grid-area: desc; }
+  .bolle-mat-row .prezzo { grid-area: prezzo; }
+  .bolle-mat-actions { grid-area: act; justify-content: flex-end; }
+}

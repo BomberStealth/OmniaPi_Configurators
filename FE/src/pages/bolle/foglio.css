@@ -1,0 +1,121 @@
+/* ===================================================================
+   FOGLIO RAPPORTO DI INTERVENTO — Maioli Idrotermica
+   Tutto scoped sotto .foglio-root per non toccare il resto dell'app.
+   Dimensionato in mm: a schermo = ciò che esce in stampa (A4 verticale).
+   =================================================================== */
+.foglio-root {
+  --ink: #000;
+  --line: 1px solid #000;
+  --line-strong: 1.4px solid #000;
+  --muted: #444;
+}
+
+/* ---------- foglio ---------- */
+.foglio-root .sheet {
+  width: 210mm;
+  height: 297mm;
+  padding: 10mm 11mm 8mm 13mm;
+  background: #fff;
+  color: #000;
+  font-family: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.foglio-root .sheet * { box-sizing: border-box; }
+.foglio-root .sheet + .sheet { margin-top: 8mm; }
+
+/* ---------- intestazione ---------- */
+.foglio-root .fg-logo { display: flex; align-items: flex-end; gap: 1.5mm; line-height: 1; }
+.foglio-root .fg-logo-m { font-size: 12mm; font-weight: 800; letter-spacing: -0.5mm; }
+.foglio-root .fg-logo-t { font-size: 3.2mm; letter-spacing: 0.9mm; font-weight: 600; padding-bottom: 1mm; white-space: nowrap; }
+.foglio-root .fg-logo-sm .fg-logo-m { font-size: 9mm; }
+.foglio-root .fg-logo-sm .fg-logo-t { font-size: 2.4mm; letter-spacing: 0.6mm; }
+
+.foglio-root .head { display: grid; grid-template-columns: 62mm 1fr 32mm; align-items: end; margin-bottom: 4mm; }
+.foglio-root .head h1 { margin: 0; text-align: center; font-size: 5.2mm; font-weight: 800; letter-spacing: 0.2mm; }
+.foglio-root .head .num { text-align: right; font-size: 2.8mm; }
+.foglio-root .head .num b { display: block; font-size: 3.6mm; }
+
+/* ---------- riquadro dati ---------- */
+.foglio-root .box { border: var(--line-strong); }
+.foglio-root .row { display: grid; border-bottom: var(--line); }
+.foglio-root .row:last-child { border-bottom: none; }
+.foglio-root .row.split { grid-template-columns: 1.25fr 1fr; }
+.foglio-root .row.split > .cell:first-child { border-right: var(--line); }
+.foglio-root .cell { padding: 1.2mm 2mm; min-height: 8mm; }
+.foglio-root .cell.tall { min-height: 13mm; }
+.foglio-root .cell.area-l { min-height: 27mm; }
+.foglio-root .cell.area-m { min-height: 21mm; }
+.foglio-root .lbl { font-size: 2.7mm; font-weight: 800; letter-spacing: 0.1mm; }
+.foglio-root .val { font-size: 3.3mm; padding-top: 0.6mm; white-space: pre-wrap; word-break: break-word; }
+.foglio-root .inline { display: flex; gap: 2mm; align-items: baseline; }
+.foglio-root .inline .val { padding-top: 0; }
+
+/* ---------- tabella prodotti ---------- */
+.foglio-root table.items { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 3mm; border: var(--line-strong); }
+.foglio-root table.items th,
+.foglio-root table.items td { border: var(--line); height: 7.6mm; padding: 0 1.6mm; font-size: 3.1mm; }
+.foglio-root table.items th { font-size: 3.3mm; font-weight: 800; text-align: center; }
+.foglio-root table.items col.n { width: 14mm; }
+.foglio-root table.items col.eur { width: 27mm; }
+.foglio-root td.c { text-align: center; }
+.foglio-root td.r { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.foglio-root td.desc { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.foglio-root td.desc .cod { font-size: 2.6mm; color: var(--muted); margin-right: 1.5mm; }
+.foglio-root tr.fixed td { font-weight: 700; }
+.foglio-root tr.fixed td.desc .x { display: inline-block; margin-left: 12mm; font-weight: 700; }
+.foglio-root tr.tot td { font-weight: 800; border-top: var(--line-strong); }
+
+/* ---------- dichiarazione e firme ---------- */
+.foglio-root .sign { border: var(--line-strong); border-top: none; }
+.foglio-root .sign .decl { font-size: 2.55mm; font-weight: 700; padding: 1mm 2mm; border-bottom: var(--line); }
+.foglio-root .sign .who { display: grid; grid-template-columns: 1fr 1fr; }
+.foglio-root .sign .who > div { padding: 1.2mm 2mm; height: 17mm; position: relative; }
+
+/* ---------- piè di pagina ---------- */
+.foglio-root .foot { margin-top: auto; padding-top: 4mm; border-top: var(--line); display: grid; grid-template-columns: 1fr 1fr 34mm; gap: 4mm; align-items: end; font-size: 2.7mm; font-weight: 700; line-height: 1.35; }
+
+/* ===================================================================
+   STAMPA — solo il foglio, niente chrome dell'app
+   =================================================================== */
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+
+  /* nascondi tutta l'app */
+  .cfg-navbar,
+  .cfg-footer,
+  .bolle-form-col,
+  .bolle-toolbar,
+  .bolle-head,
+  .bolle-tabs { display: none !important; }
+
+  html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+
+  /* azzera il layout attorno al foglio */
+  .cfg-layout,
+  .cfg-main,
+  .cfg-page-fade,
+  .page,
+  .container,
+  .bolle-page,
+  .bolle-split,
+  .bolle-preview-col { display: block !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; max-width: none !important; width: auto !important; background: #fff !important; border: none !important; box-shadow: none !important; }
+
+  .bolle-preview-col { overflow: visible !important; }
+  .bolle-preview-sizer { height: auto !important; }
+
+  /* niente scala in stampa: 1:1 */
+  .bolle-preview-scaler { transform: none !important; width: auto !important; height: auto !important; }
+  .bolle-preview-inner { position: static !important; width: auto !important; }
+
+  .foglio-root .sheet {
+    margin: 0 !important;
+    box-shadow: none !important;
+    page-break-after: always;
+    break-after: page;
+  }
+  .foglio-root .sheet:last-child { page-break-after: auto; break-after: auto; }
+  .foglio-root .sheet + .sheet { margin-top: 0 !important; }
+}
