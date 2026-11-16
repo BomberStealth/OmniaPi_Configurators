@@ -9,6 +9,15 @@ import type { Cliente } from '../store';
 
 const SHEET_W_PX = (210 * 96) / 25.4;
 
+// Nome del file PDF: "Nome cliente - gg-mm-aaaa"
+function nomeFileStampa(d: RapportoData): string {
+  const nome = (d.cliente || '').replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, ' ').trim() || 'Bolla';
+  const iso = d.dataIntervento || d.dataChiamata || '';
+  const parts = iso.split('-');
+  const data = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : iso;
+  return data ? `${nome} - ${data}` : nome;
+}
+
 interface Props {
   data: RapportoData;
   setData: React.Dispatch<React.SetStateAction<RapportoData>>;
@@ -44,9 +53,12 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
   // stampa dopo che il numero salvato è nello stato (il render con il numero è già avvenuto)
   useEffect(() => {
     if (!pendingPrint) return;
+    const prevTitle = document.title;
+    document.title = nomeFileStampa(data); // usato dal browser come nome del PDF
     window.print();
+    setTimeout(() => { document.title = prevTitle; }, 300);
     setPendingPrint(false);
-  }, [pendingPrint]);
+  }, [pendingPrint, data]);
 
   const set = <K extends keyof RapportoData>(k: K, v: RapportoData[K]) => setData(d => ({ ...d, [k]: v }));
   const setMat = (i: number, k: keyof RapportoData['materiali'][number], v: string) =>
