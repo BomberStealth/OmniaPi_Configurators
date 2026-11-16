@@ -97,8 +97,14 @@ export default function FoglioRapporto({ data }: { data: RapportoData }) {
               <tbody>
                 {prima && mano.map((m, idx) => <RigaMano m={m} key={'mano' + idx} />)}
                 {righe.map((m, idx) => <RigaMateriale m={m} key={idx} />)}
+                {ultima && tot.aliquota > 0 && (
+                  <>
+                    <tr className="subtot"><td colSpan={2} className="r">IMPONIBILE</td><td className="r">{eur(tot.imponibile)}</td></tr>
+                    <tr className="subtot"><td colSpan={2} className="r">IVA {numFmt(tot.aliquota)}%</td><td className="r">{eur(tot.iva)}</td></tr>
+                  </>
+                )}
                 {ultima && (
-                  <tr className="tot"><td colSpan={2} className="r">TOTALE</td><td className="r">{eur(tot.totale)}</td></tr>
+                  <tr className="tot"><td colSpan={2} className="r">TOTALE{tot.aliquota > 0 ? ' (IVA inclusa)' : ''}</td><td className="r">{eur(tot.totale)}</td></tr>
                 )}
               </tbody>
             </table>

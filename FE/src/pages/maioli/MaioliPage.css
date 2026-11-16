@@ -132,7 +132,15 @@
 .maioli-mat-actions button:disabled { opacity: 0.35; cursor: default; }
 .maioli-mat-actions button.del:hover { border-color: #e11d2a; color: #e11d2a; }
 
-.maioli-tot { display: flex; flex-wrap: wrap; gap: 16px; justify-content: flex-end; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
+.maioli-iva { display: flex; align-items: center; gap: 10px; justify-content: flex-end; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+.maioli-iva-lbl { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.maioli-iva-seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-xs); overflow: hidden; }
+.maioli-iva-seg button { padding: 6px 14px; border: none; background: #fff; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; border-left: 1px solid var(--border); }
+.maioli-iva-seg button:first-child { border-left: none; }
+.maioli-iva-seg button:hover { background: var(--glass-hover); }
+.maioli-iva-seg button.active { background: var(--accent); color: #fff; }
+
+.maioli-tot { display: flex; flex-wrap: wrap; gap: 16px; justify-content: flex-end; margin-top: 12px; font-size: 13px; color: var(--text-muted); }
 .maioli-tot b { color: var(--text); }
 .maioli-tot-grand { font-size: 15px; }
 .maioli-tot-grand b { color: var(--accent); }

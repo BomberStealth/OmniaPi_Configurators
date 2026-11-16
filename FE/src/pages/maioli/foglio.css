@@ -59,6 +59,8 @@
 .foglio-root td.desc .cod { font-size: 2.6mm; color: var(--muted); margin-right: 1.5mm; }
 .foglio-root tr.fixed td { font-weight: 700; }
 .foglio-root tr.fixed td.desc .x { display: inline-block; margin-left: 12mm; font-weight: 700; }
+.foglio-root tr.subtot td { font-weight: 700; }
+.foglio-root tr.subtot td:first-child { border-top: var(--line); }
 .foglio-root tr.tot td { font-weight: 800; border-top: var(--line-strong); }
 
 .foglio-root .sign { border: var(--line-strong); border-top: none; }

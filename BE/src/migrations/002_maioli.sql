@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS maioli_bolle (
   data_intervento DATE NULL,
   richiesta      TEXT NULL,
   difetti        TEXT NULL,
+  iva            DECIMAL(5,2)  NOT NULL DEFAULT 0,
+  imponibile     DECIMAL(10,2) NOT NULL DEFAULT 0,
   totale         DECIMAL(10,2) NOT NULL DEFAULT 0,
   created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

@@ -186,9 +186,25 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
                 </div>
               </div>
             ))}
+            <div className="maioli-iva">
+              <span className="maioli-iva-lbl">IVA</span>
+              <div className="maioli-iva-seg">
+                {[0, 10, 22].map(a => (
+                  <button
+                    key={a}
+                    type="button"
+                    className={data.iva === a ? 'active' : ''}
+                    onClick={() => set('iva', a)}
+                  >{a === 0 ? 'No IVA' : `${a}%`}</button>
+                ))}
+              </div>
+            </div>
+
             <div className="maioli-tot">
               <span>Manodopera: <b>{eur(tot.manodopera)}</b></span>
               <span>Materiali: <b>{eur(tot.materiali)}</b></span>
+              {tot.aliquota > 0 && <span>Imponibile: <b>{eur(tot.imponibile)}</b></span>}
+              {tot.aliquota > 0 && <span>IVA {tot.aliquota}%: <b>{eur(tot.iva)}</b></span>}
               <span className="maioli-tot-grand">Totale: <b>{eur(tot.totale)}</b></span>
             </div>
           </div>

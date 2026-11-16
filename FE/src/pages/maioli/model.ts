@@ -30,6 +30,7 @@ export interface RapportoData {
   indirizzo: string;
   richiesta: string;
   difetti: string;
+  iva: number;              // aliquota IVA: 0 (nessuna), 10 o 22
   manodopera: ManoRiga[];
   materiali: MaterialeRiga[];
 }
@@ -61,6 +62,7 @@ export function datiVuoti(): RapportoData {
     indirizzo: '',
     richiesta: '',
     difetti: '',
+    iva: 0,
     manodopera: [],
     materiali: [rigaVuota()],
   };
@@ -86,13 +88,19 @@ export const dt = (s: string): string =>
 export interface Totali {
   manodopera: number;
   materiali: number;
+  imponibile: number;
+  aliquota: number;
+  iva: number;
   totale: number;
 }
 
 export function calcola(d: RapportoData): Totali {
   const manodopera = (d.manodopera ?? []).reduce((s, m) => s + n2(m.ore) * n2(m.tariffa), 0);
   const materiali = d.materiali.reduce((s, m) => s + n2(m.qta) * n2(m.prezzo), 0);
-  return { manodopera, materiali, totale: manodopera + materiali };
+  const imponibile = manodopera + materiali;
+  const aliquota = n2(d.iva);
+  const iva = imponibile * (aliquota / 100);
+  return { manodopera, materiali, imponibile, aliquota, iva, totale: imponibile + iva };
 }
 
 export const nomeOperaio = (id: string): string => OPERAI.find(o => o.id === id)?.nome ?? id;

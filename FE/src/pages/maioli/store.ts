@@ -61,6 +61,8 @@ export function toPayload(d: RapportoData) {
     data_intervento: d.dataIntervento || null,
     richiesta: d.richiesta,
     difetti: d.difetti,
+    iva: n2(d.iva),
+    imponibile: tot.imponibile,
     totale: tot.totale,
     materiali: d.materiali
       .filter(m => (m.descrizione && m.descrizione.trim()) || m.qta || m.prezzo)
@@ -87,6 +89,7 @@ export function fromBolla(row: Record<string, any>): RapportoData {
     indirizzo: row.indirizzo ?? '',
     richiesta: row.richiesta ?? '',
     difetti: row.difetti ?? '',
+    iva: Number(row.iva ?? 0),
     manodopera: (row.manodopera ?? []).map((m: any) => ({ operaio: m.operaio, ore: String(m.ore ?? ''), tariffa: String(m.tariffa ?? '') })),
     materiali: (row.materiali ?? []).map((r: any) => ({ qta: String(r.qta ?? ''), codice: r.codice ?? '', descrizione: r.descrizione ?? '', prezzo: String(r.prezzo ?? ''), listino_id: r.listino_id ?? null })),
   };
