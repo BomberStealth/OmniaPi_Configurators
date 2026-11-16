@@ -8,7 +8,7 @@ import PreseInterbloccatePage from './pages/preseinterbloccate/PreseInterbloccat
 import AjaxPage from './pages/ajax/AjaxPage';
 import CanalePage from './pages/canale/CanalePage';
 import BticinoPage from './pages/bticino/BticinoPage';
-import BollePage from './pages/bolle/BollePage';
+import MaioliPage from './pages/maioli/MaioliPage';
 import InfoPage from './pages/InfoPage';
 
 export default function App() {
@@ -24,7 +24,7 @@ export default function App() {
           <Route path="/ajax" element={<AjaxPage />} />
           <Route path="/canale" element={<CanalePage />} />
           <Route path="/bticino" element={<BticinoPage />} />
-          <Route path="/bolle" element={<BollePage />} />
+          <Route path="/maioli" element={<MaioliPage />} />
           <Route path="/info" element={<InfoPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

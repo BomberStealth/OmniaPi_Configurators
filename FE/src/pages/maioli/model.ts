@@ -1,19 +1,28 @@
-import { DEFAULT_TARIFFA_ORARIA } from './azienda';
+import { DEFAULT_TARIFFA_ORARIA, OPERAI } from './azienda';
 
-// ── Modello dati (predisposto anche per una futura fase 2 con DB) ──
 export interface MaterialeRiga {
-  qta: string;          // quantità (decimali ammessi) — stringa per input libero
-  codice: string;       // codice articolo (piccolo e grigio prima della descrizione)
-  descrizione: string;  // dettaglio prodotto
-  prezzo: string;       // prezzo unitario (non stampato) — importo = qta * prezzo
+  qta: string;
+  codice: string;
+  descrizione: string;
+  prezzo: string;
+  listino_id?: number | null;
+}
+
+// manodopera: una voce per operaio selezionato
+export interface ManoRiga {
+  operaio: string; // id operaio
+  ore: string;
+  tariffa: string;
 }
 
 export interface RapportoData {
-  numero: string;
-  cliente: string;        // OBBLIGATORIO
-  dataChiamata: string;   // OBBLIGATORIO (YYYY-MM-DD) — default oggi, modificabile
+  id?: number | null;        // id DB (null = nuova bolla non ancora salvata)
+  numero: string;            // progressivo assegnato al salvataggio (sola lettura)
+  cliente_id?: number | null;
+  cliente: string;           // OBBLIGATORIO
+  dataChiamata: string;      // OBBLIGATORIO
   condominio: string;
-  dataIntervento: string; // default oggi, modificabile
+  dataIntervento: string;
   amministratore: string;
   preventivo: string;
   telefono: string;
@@ -21,8 +30,7 @@ export interface RapportoData {
   indirizzo: string;
   richiesta: string;
   difetti: string;
-  ore: string;            // ore totali manodopera
-  tariffaOraria: string;  // € / ora
+  manodopera: ManoRiga[];
   materiali: MaterialeRiga[];
 }
 
@@ -33,13 +41,15 @@ export function oggiISO(): string {
 }
 
 export function rigaVuota(): MaterialeRiga {
-  return { qta: '', codice: '', descrizione: '', prezzo: '' };
+  return { qta: '', codice: '', descrizione: '', prezzo: '', listino_id: null };
 }
 
 export function datiVuoti(): RapportoData {
   const oggi = oggiISO();
   return {
+    id: null,
     numero: '',
+    cliente_id: null,
     cliente: '',
     dataChiamata: oggi,
     condominio: '',
@@ -51,15 +61,15 @@ export function datiVuoti(): RapportoData {
     indirizzo: '',
     richiesta: '',
     difetti: '',
-    ore: '',
-    tariffaOraria: String(DEFAULT_TARIFFA_ORARIA),
+    manodopera: [],
     materiali: [rigaVuota()],
   };
 }
 
 // ── Helpers numerici / formattazione (it-IT) ──
-export const n2 = (s: string | number): number => {
+export const n2 = (s: string | number | null | undefined): number => {
   if (typeof s === 'number') return isFinite(s) ? s : 0;
+  if (s === null || s === undefined) return 0;
   const v = parseFloat(String(s).replace(',', '.'));
   return isFinite(v) ? v : 0;
 };
@@ -80,7 +90,13 @@ export interface Totali {
 }
 
 export function calcola(d: RapportoData): Totali {
-  const manodopera = n2(d.ore) * n2(d.tariffaOraria);
+  const manodopera = (d.manodopera ?? []).reduce((s, m) => s + n2(m.ore) * n2(m.tariffa), 0);
   const materiali = d.materiali.reduce((s, m) => s + n2(m.qta) * n2(m.prezzo), 0);
   return { manodopera, materiali, totale: manodopera + materiali };
+}
+
+export const nomeOperaio = (id: string): string => OPERAI.find(o => o.id === id)?.nome ?? id;
+
+export function defaultManoRiga(operaio: string): ManoRiga {
+  return { operaio, ore: '', tariffa: String(DEFAULT_TARIFFA_ORARIA) };
 }

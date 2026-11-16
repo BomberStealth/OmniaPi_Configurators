@@ -4,6 +4,7 @@ import cors from 'cors';
 import { testConnection } from './config/database';
 import authRoutes from './shared/auth.routes';
 import ftvRoutes from './modules/fotovoltaico/routes';
+import maioliRoutes from './modules/maioli/routes';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001');
@@ -15,6 +16,7 @@ app.get('/api/health', (_req, res) => res.json({ ok: true, ts: new Date().toISOS
 
 app.use('/api/auth', authRoutes);
 app.use('/api/fotovoltaico', ftvRoutes);
+app.use('/api/maioli', maioliRoutes);
 
 async function start() {
   try {

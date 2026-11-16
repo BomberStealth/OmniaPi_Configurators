@@ -1,0 +1,197 @@
+/* ===== Maioli Idrotermica — contenitore + viste (tema chiaro OmniaPi) ===== */
+.maioli-page { min-height: 100vh; }
+.maioli-page .container { max-width: 1400px; }
+
+/* ── header ── */
+.maioli-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; padding: 20px 0 14px;
+}
+.maioli-head-brand { display: flex; align-items: center; gap: 12px; }
+.maioli-logo { height: 40px; width: auto; }
+.maioli-head-title { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.1; }
+.maioli-head-sub { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+.maioli-mode {
+  font-size: 11px; font-weight: 700; padding: 5px 11px; border-radius: 99px;
+  border: 1px solid var(--border);
+}
+.maioli-mode.on { color: #10b981; background: rgba(16,185,129,0.10); border-color: rgba(16,185,129,0.28); }
+.maioli-mode.off { color: #b45309; background: rgba(234,88,12,0.08); border-color: rgba(234,88,12,0.25); }
+
+/* ── nav tabs ── */
+.maioli-nav {
+  display: flex; gap: 6px; border-bottom: 1px solid var(--border);
+  margin-bottom: 18px; flex-wrap: wrap;
+}
+.maioli-nav-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 11px 16px; border: none; background: none; cursor: pointer;
+  font-size: 14px; font-weight: 700; color: var(--text-muted);
+  border-bottom: 2.5px solid transparent; margin-bottom: -1px;
+}
+.maioli-nav-btn:hover { color: var(--text); }
+.maioli-nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.maioli-nav-ic { font-size: 15px; }
+
+/* ── subhead (toolbar nuova bolla) ── */
+.maioli-subhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.maioli-chip { font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 99px; background: var(--glass); border: 1px solid var(--border); color: var(--text-muted); }
+.maioli-chip-new { color: var(--accent); background: var(--accent-dim); border-color: rgba(37,99,235,0.22); }
+.maioli-toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── mobile tabs ── */
+.maioli-tabs { display: none; gap: 6px; margin-bottom: 14px; }
+.maioli-tabs button { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--glass); color: var(--text-muted); font-weight: 700; font-size: 13px; cursor: pointer; }
+.maioli-tabs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ── split ── */
+.maioli-split { display: grid; grid-template-columns: minmax(420px, 1fr) minmax(360px, 1.05fr); gap: 18px; align-items: start; padding-bottom: 48px; }
+
+/* ── card / form ── */
+.maioli-card { padding: 18px; margin-bottom: 16px; }
+.maioli-sec-title { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+
+.maioli-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; margin-bottom: 10px; }
+.maioli-col2 { grid-column: 1 / -1; }
+.maioli-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.maioli-field .form-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.maioli-field input, .maioli-field textarea {
+  width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius-xs);
+  background: #fff; color: var(--text); font-size: 14px; font-family: inherit;
+}
+.maioli-field input:focus, .maioli-field textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.maioli-field input.err { border-color: #e11d2a; }
+.maioli-field textarea { resize: vertical; }
+
+/* ── client picker ── */
+.cli-picker { position: relative; }
+.cli-input-wrap { position: relative; }
+.cli-input-wrap input {
+  width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius-xs);
+  background: #fff; color: var(--text); font-size: 14px;
+}
+.cli-input-wrap input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.cli-input-wrap input.err { border-color: #e11d2a; }
+.cli-badge { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10.5px; font-weight: 700; color: #10b981; }
+.cli-dropdown {
+  position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; right: 0;
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.14); max-height: 260px; overflow-y: auto;
+}
+.cli-opt { display: flex; flex-direction: column; gap: 1px; width: 100%; text-align: left; padding: 9px 12px; background: none; border: none; cursor: pointer; border-bottom: 1px solid var(--border); }
+.cli-opt:last-child { border-bottom: none; }
+.cli-opt:hover { background: var(--glass-hover); }
+.cli-opt-nome { font-size: 13.5px; font-weight: 600; color: var(--text); }
+.cli-opt-sub { font-size: 11.5px; color: var(--text-muted); }
+
+/* ── operai manodopera ── */
+.op-wrap { display: flex; flex-direction: column; gap: 10px; }
+.op-row { display: flex; gap: 18px; flex-wrap: wrap; }
+.op-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.op-avatar {
+  position: relative; width: 54px; height: 54px; border-radius: 50%;
+  border: 2px solid var(--border); background: var(--glass); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; padding: 0; overflow: visible;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.op-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.op-initials { font-size: 17px; font-weight: 800; color: var(--text-muted); }
+.op-avatar:hover { transform: translateY(-2px); }
+.op-item.op-active .op-avatar {
+  border-color: var(--opc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--opc) 22%, transparent);
+  background: color-mix(in srgb, var(--opc) 12%, #fff);
+}
+.op-item.op-active .op-initials { color: var(--opc); }
+.op-check {
+  position: absolute; right: -3px; bottom: -3px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--text-muted); color: #fff; font-size: 12px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; border: 2px solid #fff;
+}
+.op-item.op-active .op-check { background: var(--opc); }
+.op-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.op-fields { display: flex; gap: 6px; margin-top: 2px; }
+.op-fields label { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.op-fields span { font-size: 9.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.op-fields input {
+  width: 56px; padding: 5px 6px; text-align: center; font-size: 13px;
+  border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; color: var(--text);
+}
+.op-fields input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+.op-total { font-size: 13px; color: var(--text-muted); padding-top: 8px; border-top: 1px solid var(--border); }
+.op-total b { color: var(--text); }
+
+/* ── materiali ── */
+.maioli-mat-head, .maioli-mat-row { display: grid; grid-template-columns: 64px 90px 1fr 92px 86px; gap: 8px; align-items: center; }
+.maioli-mat-head { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 0 2px 6px; }
+.maioli-mat-row { margin-bottom: 8px; }
+.maioli-mat-row input { width: 100%; padding: 8px 9px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; color: var(--text); font-size: 13px; }
+.maioli-mat-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.maioli-mat-actions { display: flex; gap: 3px; }
+.maioli-mat-actions button { width: 26px; height: 32px; border: 1px solid var(--border); background: var(--glass); border-radius: var(--radius-xs); color: var(--text-muted); cursor: pointer; font-size: 13px; line-height: 1; }
+.maioli-mat-actions button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.maioli-mat-actions button:disabled { opacity: 0.35; cursor: default; }
+.maioli-mat-actions button.del:hover { border-color: #e11d2a; color: #e11d2a; }
+
+.maioli-tot { display: flex; flex-wrap: wrap; gap: 16px; justify-content: flex-end; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
+.maioli-tot b { color: var(--text); }
+.maioli-tot-grand { font-size: 15px; }
+.maioli-tot-grand b { color: var(--accent); }
+
+/* ── anteprima ── */
+.maioli-preview-col { position: sticky; top: 16px; background: #e9edf6; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; overflow: hidden; }
+.maioli-preview-sizer { position: relative; }
+.maioli-preview-scaler { transform-origin: top left; }
+.maioli-preview-inner .sheet { box-shadow: 0 2px 14px rgba(0,0,0,0.18); }
+
+/* ── archivio + listino comuni ── */
+.maioli-search { padding: 8px 11px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; color: var(--text); font-size: 13px; min-width: 230px; }
+.maioli-search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.maioli-empty { padding: 40px 16px; text-align: center; color: var(--text-muted); font-size: 13.5px; }
+.maioli-row-actions { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+.btn-trash { border: 1px solid var(--border); background: var(--glass); border-radius: var(--radius-xs); width: 32px; height: 30px; cursor: pointer; font-size: 13px; }
+.btn-trash:hover { border-color: #e11d2a; }
+
+/* ── archivio table ── */
+.maioli-table { display: flex; flex-direction: column; }
+.maioli-tr { display: grid; grid-template-columns: 92px 1.3fr 1.5fr 96px 96px 120px; gap: 10px; align-items: center; padding: 10px 6px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.maioli-th { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.maioli-tr .r { text-align: right; }
+.maioli-num { font-weight: 700; color: var(--accent); }
+.maioli-cli { font-weight: 600; color: var(--text); }
+.maioli-ind { color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── listino table ── */
+.maioli-listino-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.maioli-listino-hint { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+.maioli-ltable { display: flex; flex-direction: column; }
+.maioli-ltr { display: grid; grid-template-columns: 96px 110px 1fr 56px 86px 70px 90px 118px; gap: 7px; align-items: center; padding: 6px 4px; border-bottom: 1px solid var(--border); }
+.maioli-ltr.dirty { background: rgba(37,99,235,0.04); }
+.maioli-lth { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.maioli-lth .r, .maioli-ltr .r { text-align: right; }
+.maioli-ltr input { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; color: var(--text); font-size: 12.5px; }
+.maioli-ltr input.r { text-align: right; }
+.maioli-ltr input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+.maioli-finale { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+
+/* ── responsive ── */
+@media (max-width: 980px) {
+  .maioli-split { grid-template-columns: 1fr; }
+  .maioli-preview-col { position: static; }
+  .maioli-tabs { display: flex; }
+  .maioli-split.tab-compila .maioli-preview-col { display: none; }
+  .maioli-split.tab-anteprima .maioli-form-col { display: none; }
+  .maioli-tr, .maioli-th { grid-template-columns: 70px 1fr 90px 110px; }
+  .maioli-tr .maioli-ind, .maioli-th span:nth-child(3), .maioli-tr span:nth-child(4) { display: none; }
+  .maioli-ltr { grid-template-columns: 1fr 86px 70px 100px; }
+  .maioli-ltr > input:nth-child(1), .maioli-ltr > input:nth-child(4), .maioli-lth span:nth-child(1), .maioli-lth span:nth-child(4), .maioli-lth span:nth-child(7), .maioli-finale { display: none; }
+}
+@media (max-width: 520px) {
+  .maioli-grid2 { grid-template-columns: 1fr; }
+  .maioli-mat-head { display: none; }
+  .maioli-mat-row { grid-template-columns: 56px 1fr 80px; grid-template-areas: 'qta desc prezzo' 'cod cod act'; }
+  .maioli-mat-row .qta { grid-area: qta; }
+  .maioli-mat-row input:nth-child(2) { grid-area: cod; }
+  .maioli-mat-row input:nth-child(3) { grid-area: desc; }
+  .maioli-mat-row .prezzo { grid-area: prezzo; }
+  .maioli-mat-actions { grid-area: act; justify-content: flex-end; }
+}

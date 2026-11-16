@@ -54,9 +54,9 @@ const TOOLS: Tool[] = [
     category: 'Sicurezza', color: '#005ca9', status: 'active',
   },
   {
-    id: 'bolle', path: '/bolle', icon: '🧾',
-    title: 'Bolle Maioli',
-    desc: 'Compilazione e stampa dei rapporti di intervento Maioli Idrotermica: dati, manodopera, materiali e foglio A4 pronto da stampare.',
+    id: 'maioli', path: '/maioli', icon: '🧾',
+    title: 'Maioli Idrotermica',
+    desc: 'Rapporti di intervento: nuova bolla con anteprima e stampa, archivio bolle salvate con ricerca e listino prezzi.',
     category: 'Gestione', color: '#ea580c', status: 'active',
   },
   {

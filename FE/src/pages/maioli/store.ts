@@ -1,0 +1,284 @@
+import { calcola, n2, oggiISO } from './model';
+import type { RapportoData } from './model';
+
+const API = '/api/configuratori/maioli';
+const HEALTH = '/api/configuratori/health';
+
+export interface Cliente {
+  id: number;
+  nome: string;
+  telefono: string;
+  email: string;
+  indirizzo: string;
+  condominio: string;
+  amministratore: string;
+  note?: string | null;
+}
+export interface BollaSummary {
+  id: number;
+  numero: string | null;
+  cliente: string;
+  indirizzo: string;
+  data_intervento: string | null;
+  totale: number;
+  updated_at: string;
+}
+export interface ListinoItem {
+  id: number;
+  marca: string;
+  codice: string;
+  descrizione: string;
+  um: string;
+  prezzo: number;
+  ricarico: number;
+  attivo: number;
+}
+
+// ───────── mapping form <-> payload ─────────
+function isoDate(v: unknown): string {
+  if (!v) return '';
+  if (v instanceof Date) return oggiISOfrom(v);
+  const s = String(v);
+  return s.length >= 10 ? s.slice(0, 10) : s;
+}
+function oggiISOfrom(n: Date): string {
+  const p = (x: number) => String(x).padStart(2, '0');
+  return `${n.getFullYear()}-${p(n.getMonth() + 1)}-${p(n.getDate())}`;
+}
+
+export function toPayload(d: RapportoData) {
+  const tot = calcola(d);
+  return {
+    cliente_id: d.cliente_id ?? null,
+    cliente: d.cliente.trim(),
+    telefono: d.telefono,
+    email: d.email,
+    indirizzo: d.indirizzo,
+    condominio: d.condominio,
+    amministratore: d.amministratore,
+    preventivo: d.preventivo,
+    data_chiamata: d.dataChiamata || null,
+    data_intervento: d.dataIntervento || null,
+    richiesta: d.richiesta,
+    difetti: d.difetti,
+    totale: tot.totale,
+    materiali: d.materiali
+      .filter(m => (m.descrizione && m.descrizione.trim()) || m.qta || m.prezzo)
+      .map(m => ({ qta: n2(m.qta), codice: m.codice, descrizione: m.descrizione, prezzo: n2(m.prezzo), listino_id: m.listino_id ?? null })),
+    manodopera: d.manodopera
+      .filter(x => x.operaio)
+      .map(x => ({ operaio: x.operaio, ore: n2(x.ore), tariffa: n2(x.tariffa) })),
+  };
+}
+
+export function fromBolla(row: Record<string, any>): RapportoData {
+  return {
+    id: row.id ?? null,
+    numero: row.numero ?? '',
+    cliente_id: row.cliente_id ?? null,
+    cliente: row.cliente ?? '',
+    dataChiamata: isoDate(row.data_chiamata),
+    dataIntervento: isoDate(row.data_intervento),
+    condominio: row.condominio ?? '',
+    amministratore: row.amministratore ?? '',
+    preventivo: row.preventivo ?? '',
+    telefono: row.telefono ?? '',
+    email: row.email ?? '',
+    indirizzo: row.indirizzo ?? '',
+    richiesta: row.richiesta ?? '',
+    difetti: row.difetti ?? '',
+    manodopera: (row.manodopera ?? []).map((m: any) => ({ operaio: m.operaio, ore: String(m.ore ?? ''), tariffa: String(m.tariffa ?? '') })),
+    materiali: (row.materiali ?? []).map((r: any) => ({ qta: String(r.qta ?? ''), codice: r.codice ?? '', descrizione: r.descrizione ?? '', prezzo: String(r.prezzo ?? ''), listino_id: r.listino_id ?? null })),
+  };
+}
+
+export function clienteToData(c: Cliente, base: RapportoData): RapportoData {
+  return {
+    ...base,
+    cliente_id: c.id,
+    cliente: c.nome,
+    telefono: c.telefono ?? '',
+    email: c.email ?? '',
+    indirizzo: c.indirizzo ?? '',
+    condominio: c.condominio ?? '',
+    amministratore: c.amministratore ?? '',
+  };
+}
+
+// ───────── API layer ─────────
+async function jfetch(url: string, opts?: RequestInit) {
+  const res = await fetch(url, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', ...(opts?.headers ?? {}) },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+// ───────── localStorage layer (fallback demo) ─────────
+const LS = {
+  clienti: 'maioli_clienti_v1',
+  bolle: 'maioli_bolle_v1',
+  listino: 'maioli_listino_v1',
+  seq: 'maioli_seq_v1',
+};
+function lsGet<T>(k: string, def: T): T {
+  try { const r = localStorage.getItem(k); return r ? (JSON.parse(r) as T) : def; } catch { return def; }
+}
+function lsSet(k: string, v: unknown) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } }
+function nextId(kind: string): number {
+  const seq = lsGet<Record<string, number>>(LS.seq, {});
+  const id = (seq[kind] ?? 0) + 1;
+  seq[kind] = id; lsSet(LS.seq, seq);
+  return id;
+}
+
+// ───────── Store unificato ─────────
+export type StoreMode = 'api' | 'local';
+let MODE: StoreMode | null = null;
+
+export async function initStore(): Promise<StoreMode> {
+  if (MODE) return MODE;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 2500);
+    const res = await fetch(HEALTH, { signal: ctrl.signal });
+    clearTimeout(t);
+    // api valida solo se il DB risponde: provo una query reale
+    if (res.ok) {
+      const probe = await fetch(`${API}/clienti?q=`);
+      MODE = probe.ok ? 'api' : 'local';
+    } else {
+      MODE = 'local';
+    }
+  } catch {
+    MODE = 'local';
+  }
+  return MODE;
+}
+export function storeMode(): StoreMode { return MODE ?? 'local'; }
+
+// ── Clienti ──
+export async function searchClienti(q: string): Promise<Cliente[]> {
+  await initStore();
+  if (MODE === 'api') return jfetch(`${API}/clienti?q=${encodeURIComponent(q)}`);
+  const all = lsGet<Cliente[]>(LS.clienti, []);
+  const s = q.trim().toLowerCase();
+  const out = s ? all.filter(c => (c.nome + c.indirizzo + c.telefono).toLowerCase().includes(s)) : all;
+  return out.sort((a, b) => a.nome.localeCompare(b.nome)).slice(0, 20);
+}
+
+function upsertClienteLocal(d: RapportoData): number | null {
+  const all = lsGet<Cliente[]>(LS.clienti, []);
+  const dati = {
+    nome: d.cliente, telefono: d.telefono, email: d.email,
+    indirizzo: d.indirizzo, condominio: d.condominio, amministratore: d.amministratore,
+  };
+  if (d.cliente_id) {
+    const i = all.findIndex(c => c.id === d.cliente_id);
+    if (i >= 0) { all[i] = { ...all[i], ...dati }; lsSet(LS.clienti, all); return d.cliente_id; }
+  }
+  if (!dati.nome.trim()) return null;
+  const id = nextId('cliente');
+  all.push({ id, ...dati });
+  lsSet(LS.clienti, all);
+  return id;
+}
+
+// ── Bolle ──
+export async function listBolle(q: string): Promise<BollaSummary[]> {
+  await initStore();
+  if (MODE === 'api') return jfetch(`${API}/bolle?q=${encodeURIComponent(q)}`);
+  const all = lsGet<any[]>(LS.bolle, []);
+  const s = q.trim().toLowerCase();
+  const rows = (s ? all.filter(b => (String(b.cliente) + b.numero + b.indirizzo).toLowerCase().includes(s)) : all)
+    .sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
+  return rows.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at }));
+}
+
+export async function getBolla(id: number): Promise<RapportoData> {
+  await initStore();
+  if (MODE === 'api') return fromBolla(await jfetch(`${API}/bolle/${id}`));
+  const all = lsGet<any[]>(LS.bolle, []);
+  const b = all.find(x => x.id === id);
+  if (!b) throw new Error('Non trovata');
+  return fromBolla(b);
+}
+
+export async function saveBolla(d: RapportoData): Promise<{ id: number; numero: string }> {
+  await initStore();
+  const payload = toPayload(d);
+  if (MODE === 'api') {
+    if (d.id) { await jfetch(`${API}/bolle/${d.id}`, { method: 'PUT', body: JSON.stringify(payload) }); return { id: d.id, numero: d.numero }; }
+    const r = await jfetch(`${API}/bolle`, { method: 'POST', body: JSON.stringify(payload) });
+    return { id: r.id, numero: r.numero };
+  }
+  // local
+  const clienteId = upsertClienteLocal(d);
+  const all = lsGet<any[]>(LS.bolle, []);
+  const now = new Date().toISOString();
+  if (d.id) {
+    const i = all.findIndex(x => x.id === d.id);
+    const numero = i >= 0 ? all[i].numero : newNumeroLocal();
+    const rec = { ...payload, id: d.id, cliente_id: clienteId, numero, updated_at: now, created_at: i >= 0 ? all[i].created_at : now };
+    if (i >= 0) all[i] = rec; else all.push(rec);
+    lsSet(LS.bolle, all);
+    return { id: d.id, numero };
+  }
+  const id = nextId('bolla');
+  const numero = newNumeroLocal();
+  all.push({ ...payload, id, cliente_id: clienteId, numero, updated_at: now, created_at: now });
+  lsSet(LS.bolle, all);
+  return { id, numero };
+}
+
+function newNumeroLocal(): string {
+  const anno = new Date().getFullYear();
+  const seq = lsGet<Record<string, number>>(LS.seq, {});
+  const key = `num_${anno}`;
+  const prog = (seq[key] ?? 0) + 1;
+  seq[key] = prog; lsSet(LS.seq, seq);
+  return `${anno}/${String(prog).padStart(4, '0')}`;
+}
+
+export async function deleteBolla(id: number): Promise<void> {
+  await initStore();
+  if (MODE === 'api') { await jfetch(`${API}/bolle/${id}`, { method: 'DELETE' }); return; }
+  const all = lsGet<any[]>(LS.bolle, []).filter(x => x.id !== id);
+  lsSet(LS.bolle, all);
+}
+
+// ── Listino ──
+export async function listListino(q: string, marca = ''): Promise<ListinoItem[]> {
+  await initStore();
+  if (MODE === 'api') return jfetch(`${API}/listino?q=${encodeURIComponent(q)}&marca=${encodeURIComponent(marca)}`);
+  const all = lsGet<ListinoItem[]>(LS.listino, []);
+  const s = q.trim().toLowerCase();
+  return all
+    .filter(it => (!marca || it.marca === marca) && (!s || (it.codice + it.descrizione).toLowerCase().includes(s)))
+    .sort((a, b) => (a.marca + a.descrizione).localeCompare(b.marca + b.descrizione));
+}
+
+export async function saveListino(item: Partial<ListinoItem>): Promise<{ id: number }> {
+  await initStore();
+  if (MODE === 'api') {
+    if (item.id) { await jfetch(`${API}/listino/${item.id}`, { method: 'PUT', body: JSON.stringify(item) }); return { id: item.id }; }
+    return jfetch(`${API}/listino`, { method: 'POST', body: JSON.stringify(item) });
+  }
+  const all = lsGet<ListinoItem[]>(LS.listino, []);
+  if (item.id) {
+    const i = all.findIndex(x => x.id === item.id);
+    if (i >= 0) { all[i] = { ...all[i], ...item } as ListinoItem; lsSet(LS.listino, all); return { id: item.id }; }
+  }
+  const id = nextId('listino');
+  all.push({ id, marca: item.marca ?? 'Generico', codice: item.codice ?? '', descrizione: item.descrizione ?? '', um: item.um ?? '', prezzo: n2(item.prezzo), ricarico: n2(item.ricarico), attivo: item.attivo === 0 ? 0 : 1 });
+  lsSet(LS.listino, all);
+  return { id };
+}
+
+export async function deleteListino(id: number): Promise<void> {
+  await initStore();
+  if (MODE === 'api') { await jfetch(`${API}/listino/${id}`, { method: 'DELETE' }); return; }
+  lsSet(LS.listino, lsGet<ListinoItem[]>(LS.listino, []).filter(x => x.id !== id));
+}
