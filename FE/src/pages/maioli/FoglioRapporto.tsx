@@ -1,4 +1,4 @@
-import { AZIENDA, LOGO_BLACK } from './azienda';
+import { AZIENDA, LOGO } from './azienda';
 import { eur, numFmt, dt, calcola, n2, nomeOperaio } from './model';
 import type { RapportoData, MaterialeRiga, ManoRiga } from './model';
 import './foglio.css';
@@ -7,7 +7,7 @@ const RIGHE_P1 = 6;
 const RIGHE_PN = 21;
 
 function Logo({ small }: { small?: boolean }) {
-  return <img className={small ? 'fg-logo-img fg-logo-sm' : 'fg-logo-img'} src={LOGO_BLACK} alt="Maioli Idrotermica" />;
+  return <img className={small ? 'fg-logo-img fg-logo-sm' : 'fg-logo-img'} src={LOGO} alt="Maioli Idrotermica" />;
 }
 
 function RigaMateriale({ m }: { m: MaterialeRiga | null }) {
@@ -59,7 +59,6 @@ export default function FoglioRapporto({ data }: { data: RapportoData }) {
               <Logo />
               <h1>RAPPORTO DI INTERVENTO</h1>
               <div className="num">
-                {data.numero ? <>N° <b>{data.numero}</b></> : null}
                 {pagine > 1 ? `Pag. ${i + 1}/${pagine}` : null}
               </div>
             </div>

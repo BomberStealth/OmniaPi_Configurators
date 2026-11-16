@@ -1,5 +1,4 @@
 import logoMaioli from './assets/logo-maioli.png';
-import logoMaioliBlack from './assets/logo-maioli-black.png';
 
 // Dati fissi azienda — stampati in fondo a ogni foglio.
 export const AZIENDA = {
@@ -14,8 +13,7 @@ export const AZIENDA = {
   nCert: '3147',
 };
 
-export const LOGO = logoMaioli;          // a colori (schermo)
-export const LOGO_BLACK = logoMaioliBlack; // monocromatico (foglio stampato)
+export const LOGO = logoMaioli; // logo ufficiale intero (M! + wordmark)
 
 export const DEFAULT_TARIFFA_ORARIA = 35;
 

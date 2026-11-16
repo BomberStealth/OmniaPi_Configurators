@@ -24,9 +24,9 @@
 .foglio-root .sheet * { box-sizing: border-box; }
 .foglio-root .sheet + .sheet { margin-top: 8mm; }
 
-/* logo (immagine) */
-.foglio-root .fg-logo-img { height: 12mm; width: auto; display: block; }
-.foglio-root .fg-logo-img.fg-logo-sm { height: 9mm; }
+/* logo (immagine intera: M! + wordmark, ~4:1) */
+.foglio-root .fg-logo-img { height: 11mm; width: auto; max-width: 60mm; display: block; }
+.foglio-root .fg-logo-img.fg-logo-sm { height: 8mm; }
 
 .foglio-root .head { display: grid; grid-template-columns: 62mm 1fr 32mm; align-items: center; margin-bottom: 4mm; }
 .foglio-root .head h1 { margin: 0; text-align: center; font-size: 5.2mm; font-weight: 800; letter-spacing: 0.2mm; }
