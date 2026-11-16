@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { testConnection } from './config/database';
+import { runMigrations } from './migrate';
 import authRoutes from './shared/auth.routes';
 import ftvRoutes from './modules/fotovoltaico/routes';
 import maioliRoutes from './modules/maioli/routes';
@@ -22,6 +23,11 @@ async function start() {
   try {
     await testConnection();
     console.log('DB connesso');
+    try {
+      await runMigrations();
+    } catch (err) {
+      console.warn('Migrations non eseguite:', err instanceof Error ? err.message : err);
+    }
   } catch (err) {
     console.warn('DB non disponibile:', err instanceof Error ? err.message : err);
   }
