@@ -1,4 +1,7 @@
 import logoMaioli from './assets/logo-maioli.png';
+import fotoEdoardo from './assets/op-edoardo.jpg';
+import fotoSandro from './assets/op-sandro.jpg';
+import fotoDaniele from './assets/op-daniele.jpg';
 
 // Dati fissi azienda — stampati in fondo a ogni foglio.
 export const AZIENDA = {
@@ -26,7 +29,7 @@ export interface Operaio {
 }
 
 export const OPERAI: Operaio[] = [
-  { id: 'edoardo', nome: 'Edoardo', color: '#2563EB', foto: null },
-  { id: 'daniele', nome: 'Daniele', color: '#0891B2', foto: null },
-  { id: 'sandro',  nome: 'Sandro',  color: '#ea580c', foto: null },
+  { id: 'edoardo', nome: 'Edoardo', color: '#2563EB', foto: fotoEdoardo },
+  { id: 'daniele', nome: 'Daniele', color: '#0891B2', foto: fotoDaniele },
+  { id: 'sandro',  nome: 'Sandro',  color: '#ea580c', foto: fotoSandro },
 ];
