@@ -18,6 +18,12 @@ const HOME_VERSION = 'v1.1.0';
 
 const TOOLS: Tool[] = [
   {
+    id: 'maioli', path: '/maioli', icon: '🧾',
+    title: 'Maioli Idrotermica',
+    desc: 'Rapporti di intervento: nuova bolla con anteprima e stampa, archivio bolle salvate con ricerca e listino prezzi.',
+    category: 'Gestione', color: '#ea580c', status: 'active',
+  },
+  {
     id: 'fotovoltaico', path: '/fotovoltaico', icon: '☀',
     title: 'Preventivatore FTV',
     desc: 'Calcolo materiali struttura fotovoltaica, dimensionamento griglia pannelli e generazione macro AS400.',
@@ -52,12 +58,6 @@ const TOOLS: Tool[] = [
     title: 'Preventivi BTicino Connessa',
     desc: 'Costruttore preventivi per impianti smart BTicino (Living Now, Matix Go) con copritasti collegati ed export PDF.',
     category: 'Sicurezza', color: '#005ca9', status: 'active',
-  },
-  {
-    id: 'maioli', path: '/maioli', icon: '🧾',
-    title: 'Maioli Idrotermica',
-    desc: 'Rapporti di intervento: nuova bolla con anteprima e stampa, archivio bolle salvate con ricerca e listino prezzi.',
-    category: 'Gestione', color: '#ea580c', status: 'active',
   },
   {
     id: 'elettrico', path: null, icon: '⚡',

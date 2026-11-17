@@ -28,6 +28,7 @@ interface Props {
 export default function NuovaBolla({ data, setData, onSaved }: Props) {
   const [mobileTab, setMobileTab] = useState<'compila' | 'anteprima'>('compila');
   const [saving, setSaving] = useState(false);
+  const [savedFlash, setSavedFlash] = useState(false);
   const [pendingPrint, setPendingPrint] = useState(false);
 
   // anteprima scalata
@@ -61,10 +62,17 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
     setPendingPrint(false);
   }, [pendingPrint, data]);
 
+  // aggiunge da sola una riga materiale vuota in coda quando l'ultima è compilata
+  useEffect(() => {
+    const mats = data.materiali;
+    const last = mats[mats.length - 1];
+    const vuota = (m?: typeof mats[number]) => !m || (!m.qta && !m.codice && !m.descrizione && !m.prezzo);
+    if (!vuota(last)) setData(d => ({ ...d, materiali: [...d.materiali, rigaVuota()] }));
+  }, [data.materiali, setData]);
+
   const set = <K extends keyof RapportoData>(k: K, v: RapportoData[K]) => setData(d => ({ ...d, [k]: v }));
   const setMatPatch = (i: number, patch: Partial<RapportoData['materiali'][number]>) =>
     setData(d => { const materiali = d.materiali.slice(); materiali[i] = { ...materiali[i], ...patch }; return { ...d, materiali }; });
-  const addRiga = () => setData(d => ({ ...d, materiali: [...d.materiali, rigaVuota()] }));
   const delRiga = (i: number) => setData(d => { const m = d.materiali.filter((_, idx) => idx !== i); return { ...d, materiali: m.length ? m : [rigaVuota()] }; });
   const moveRiga = (i: number, dir: -1 | 1) => setData(d => {
     const j = i + dir; if (j < 0 || j >= d.materiali.length) return d;
@@ -86,14 +94,19 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
 
   const puoStampare = data.cliente.trim() !== '' && data.dataChiamata !== '';
 
-  const salvaEStampa = async () => {
-    if (!puoStampare) { alert('Per stampare servono almeno il CLIENTE e la DATA CHIAMATA.'); return; }
+  const salva = async (poiStampa: boolean) => {
+    if (!puoStampare) { alert('Per salvare servono almeno il CLIENTE e la DATA CHIAMATA.'); return; }
     setSaving(true);
     try {
       const { id, numero } = await saveBolla(data);
       setData(d => ({ ...d, id, numero }));
-      setPendingPrint(true);
       onSaved?.();
+      if (poiStampa) {
+        setPendingPrint(true);
+      } else {
+        setSavedFlash(true);
+        setTimeout(() => setSavedFlash(false), 2200);
+      }
     } catch {
       alert('Salvataggio non riuscito. Controlla la connessione al server.');
     } finally {
@@ -113,9 +126,6 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
         <div className="maioli-toolbar">
           <button className="btn btn-secondary btn-sm" onClick={duplica}>⧉ Duplica</button>
           <button className="btn btn-secondary btn-sm" onClick={nuovo}>✕ Nuovo</button>
-          <button className="btn btn-primary btn-sm" onClick={salvaEStampa} disabled={!puoStampare || saving}>
-            {saving ? 'Salvo…' : '🖨 Salva e Stampa'}
-          </button>
         </div>
       </div>
 
@@ -175,7 +185,7 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
           <div className="card maioli-card">
             <div className="maioli-sec-title">
               Materiali
-              <button className="btn btn-secondary btn-sm" onClick={addRiga}>+ Aggiungi riga</button>
+              <span className="maioli-sec-hint">le righe si aggiungono da sole</span>
             </div>
             <div className="maioli-mat-head"><span>Q.tà</span><span>Codice</span><span>Descrizione</span><span>Prezzo €</span><span /></div>
             {data.materiali.map((m, i) => (
@@ -213,8 +223,12 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
           </div>
 
           <div className="maioli-bottombar">
-            <button className="btn btn-primary maioli-bottom-print" onClick={salvaEStampa} disabled={!puoStampare || saving}>
-              {saving ? 'Salvo…' : '🖨 Salva e Stampa'}
+            {savedFlash && <span className="maioli-saved-flash">✓ Salvata</span>}
+            <button className="btn btn-secondary maioli-bottom-save" onClick={() => salva(false)} disabled={!puoStampare || saving}>
+              {saving ? 'Salvo…' : '💾 Salva'}
+            </button>
+            <button className="btn btn-primary maioli-bottom-print" onClick={() => salva(true)} disabled={!puoStampare || saving}>
+              🖨 Salva e Stampa
             </button>
           </div>
         </div>
