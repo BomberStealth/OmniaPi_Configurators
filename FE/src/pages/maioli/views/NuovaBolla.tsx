@@ -143,6 +143,8 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
                 <input type="date" value={data.dataChiamata} onChange={e => set('dataChiamata', e.target.value)} /></label>
               <label className="maioli-field"><span className="form-label">Data intervento</span>
                 <input type="date" value={data.dataIntervento} onChange={e => set('dataIntervento', e.target.value)} /></label>
+              <label className="maioli-field"><span className="form-label">Consegnato il</span>
+                <input type="date" value={data.dataConsegna} onChange={e => set('dataConsegna', e.target.value)} /></label>
               <label className="maioli-field"><span className="form-label">Condominio</span>
                 <input value={data.condominio} onChange={e => set('condominio', e.target.value)} /></label>
               <label className="maioli-field"><span className="form-label">Amministratore</span>

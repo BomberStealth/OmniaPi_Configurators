@@ -55,6 +55,7 @@ export interface BollaInput {
   preventivo?: string;
   data_chiamata?: string | null;
   data_intervento?: string | null;
+  data_consegna?: string | null;
   richiesta?: string;
   difetti?: string;
   iva?: number;
@@ -220,11 +221,11 @@ export async function createBolla(b: BollaInput): Promise<{ id: number; numero: 
     const { numero, anno, progressivo } = await nextNumero(conn);
     const [r] = (await conn.execute(
       `INSERT INTO maioli_bolle
-       (numero, anno, progressivo, cliente_id, cliente, telefono, email, indirizzo, condominio, amministratore, preventivo, data_chiamata, data_intervento, richiesta, difetti, iva, imponibile, totale)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (numero, anno, progressivo, cliente_id, cliente, telefono, email, indirizzo, condominio, amministratore, preventivo, data_chiamata, data_intervento, data_consegna, richiesta, difetti, iva, imponibile, totale)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [numero, anno, progressivo, clienteId, b.cliente, b.telefono ?? '', b.email ?? '', b.indirizzo ?? '',
        b.condominio ?? '', b.amministratore ?? '', b.preventivo ?? '', b.data_chiamata || null, b.data_intervento || null,
-       b.richiesta ?? '', b.difetti ?? '', b.iva ?? 0, b.imponibile ?? 0, b.totale ?? 0],
+       b.data_consegna || null, b.richiesta ?? '', b.difetti ?? '', b.iva ?? 0, b.imponibile ?? 0, b.totale ?? 0],
     )) as [{ insertId: number }, unknown];
     await writeRighe(conn, r.insertId, b);
     await conn.commit();
@@ -245,9 +246,9 @@ export async function updateBolla(id: number, b: BollaInput): Promise<boolean> {
     if (!exist[0]) { await conn.rollback(); return false; }
     const clienteId = await upsertClienteTx(conn, b);
     await conn.execute(
-      `UPDATE maioli_bolle SET cliente_id=?, cliente=?, telefono=?, email=?, indirizzo=?, condominio=?, amministratore=?, preventivo=?, data_chiamata=?, data_intervento=?, richiesta=?, difetti=?, iva=?, imponibile=?, totale=? WHERE id=?`,
+      `UPDATE maioli_bolle SET cliente_id=?, cliente=?, telefono=?, email=?, indirizzo=?, condominio=?, amministratore=?, preventivo=?, data_chiamata=?, data_intervento=?, data_consegna=?, richiesta=?, difetti=?, iva=?, imponibile=?, totale=? WHERE id=?`,
       [clienteId, b.cliente, b.telefono ?? '', b.email ?? '', b.indirizzo ?? '', b.condominio ?? '', b.amministratore ?? '',
-       b.preventivo ?? '', b.data_chiamata || null, b.data_intervento || null, b.richiesta ?? '', b.difetti ?? '', b.iva ?? 0, b.imponibile ?? 0, b.totale ?? 0, id],
+       b.preventivo ?? '', b.data_chiamata || null, b.data_intervento || null, b.data_consegna || null, b.richiesta ?? '', b.difetti ?? '', b.iva ?? 0, b.imponibile ?? 0, b.totale ?? 0, id],
     );
     await writeRighe(conn, id, b);
     await conn.commit();

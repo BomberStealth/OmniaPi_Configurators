@@ -59,7 +59,13 @@ export default function FoglioRapporto({ data }: { data: RapportoData }) {
               <Logo />
               <h1>RAPPORTO DI INTERVENTO</h1>
               <div className="num">
-                {pagine > 1 ? `Pag. ${i + 1}/${pagine}` : null}
+                {data.dataConsegna ? (
+                  <div className="consegna">
+                    <span className="consegna-lbl">CONSEGNATO IL</span>
+                    <span className="consegna-val">{dt(data.dataConsegna)}</span>
+                  </div>
+                ) : null}
+                {pagine > 1 ? <div className="pag">Pag. {i + 1}/{pagine}</div> : null}
               </div>
             </div>
 

@@ -23,6 +23,7 @@ export interface RapportoData {
   dataChiamata: string;      // OBBLIGATORIO
   condominio: string;
   dataIntervento: string;
+  dataConsegna: string;      // "Consegnato il" — default oggi, modificabile
   amministratore: string;
   preventivo: string;
   telefono: string;
@@ -55,6 +56,7 @@ export function datiVuoti(): RapportoData {
     dataChiamata: oggi,
     condominio: '',
     dataIntervento: oggi,
+    dataConsegna: oggi,
     amministratore: '',
     preventivo: '',
     telefono: '',

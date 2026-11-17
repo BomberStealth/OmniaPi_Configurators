@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS maioli_bolle (
   preventivo     VARCHAR(100) NOT NULL DEFAULT '',
   data_chiamata  DATE NULL,
   data_intervento DATE NULL,
+  data_consegna  DATE NULL,
   richiesta      TEXT NULL,
   difetti        TEXT NULL,
   iva            DECIMAL(5,2)  NOT NULL DEFAULT 0,

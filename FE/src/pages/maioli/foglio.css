@@ -30,8 +30,12 @@
 
 .foglio-root .head { display: grid; grid-template-columns: 62mm 1fr 32mm; align-items: center; margin-bottom: 4mm; }
 .foglio-root .head h1 { margin: 0; text-align: center; font-size: 5.2mm; font-weight: 800; letter-spacing: 0.2mm; }
-.foglio-root .head .num { text-align: right; font-size: 2.8mm; }
+.foglio-root .head .num { text-align: right; font-size: 2.8mm; display: flex; flex-direction: column; align-items: flex-end; gap: 1mm; }
 .foglio-root .head .num b { display: block; font-size: 3.6mm; }
+.foglio-root .consegna { display: inline-flex; flex-direction: column; align-items: center; border: var(--line); padding: 1mm 2.5mm; }
+.foglio-root .consegna-lbl { font-size: 2.3mm; font-weight: 800; letter-spacing: 0.1mm; white-space: nowrap; }
+.foglio-root .consegna-val { font-size: 3.4mm; font-weight: 700; padding-top: 0.4mm; }
+.foglio-root .head .pag { font-size: 2.8mm; }
 
 .foglio-root .box { border: var(--line-strong); }
 .foglio-root .row { display: grid; border-bottom: var(--line); }
