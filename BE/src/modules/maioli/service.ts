@@ -26,8 +26,17 @@ export interface ListinoItem {
   descrizione: string;
   um: string;
   prezzo: number;
-  ricarico: number;
+  ricarico: number;   // ricarico azienda % (livello marca, da JOIN)
+  sconto: number;     // sconto installatore % (livello marca, da JOIN)
+  categoria: string;
+  moduli: number;
   attivo: number;
+}
+
+export interface Marca {
+  marca: string;
+  sconto: number;
+  ricarico: number;
 }
 
 export interface RigaInput {
@@ -286,17 +295,36 @@ export async function listListino(q: string, marca: string, limit = 500): Promis
     const tokens = q.trim().split(/\s+/).slice(0, 6);
     for (const tok of tokens) {
       const like = `%${tok}%`;
-      where.push('(codice LIKE ? OR descrizione LIKE ? OR categoria LIKE ?)');
+      where.push('(l.codice LIKE ? OR l.descrizione LIKE ? OR l.categoria LIKE ?)');
       params.push(like, like, like);
     }
   }
   if (marca && marca.trim()) {
-    where.push('marca = ?');
+    where.push('l.marca = ?');
     params.push(marca.trim());
   }
-  const sql = `SELECT * FROM maioli_listino ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY marca ASC, descrizione ASC LIMIT ${lim(limit)}`;
+  const sql = `SELECT l.id, l.marca, l.codice, l.descrizione, l.um, l.prezzo, l.categoria, l.moduli, l.attivo,
+      COALESCE(m.sconto, 0) AS sconto, COALESCE(m.ricarico, 0) AS ricarico
+    FROM maioli_listino l
+    LEFT JOIN maioli_marche m ON m.marca = l.marca
+    ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+    ORDER BY l.marca ASC, l.descrizione ASC LIMIT ${lim(limit)}`;
   const [rows] = await pool.execute(sql, params);
   return rows as ListinoItem[];
+}
+
+// ─────────────── Marche (sconto installatore / ricarico azienda) ───────────────
+export async function listMarche(): Promise<Marca[]> {
+  const [rows] = await pool.execute('SELECT marca, sconto, ricarico FROM maioli_marche');
+  return rows as Marca[];
+}
+
+export async function upsertMarca(marca: string, sconto: number, ricarico: number): Promise<void> {
+  await pool.execute(
+    `INSERT INTO maioli_marche (marca, sconto, ricarico) VALUES (?, ?, ?)
+     ON DUPLICATE KEY UPDATE sconto = VALUES(sconto), ricarico = VALUES(ricarico)`,
+    [marca, sconto, ricarico],
+  );
 }
 
 export async function createListino(d: Partial<ListinoItem>): Promise<{ id: number }> {

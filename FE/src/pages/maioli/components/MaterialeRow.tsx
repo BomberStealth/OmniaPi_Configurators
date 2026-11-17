@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { listListino } from '../store';
 import type { ListinoItem } from '../store';
-import { n2, eur } from '../model';
+import { eur, finaleDa } from '../model';
 import type { MaterialeRiga } from '../model';
 
-const round2 = (x: number) => Math.round(x * 100) / 100;
-export const prezzoFinale = (it: Pick<ListinoItem, 'prezzo' | 'ricarico'>) =>
-  round2(n2(it.prezzo) * (1 + n2(it.ricarico) / 100));
+// prezzo finale (in bolla) = listino - sconto installatore + ricarico azienda (livello marca)
+export const prezzoFinale = (it: Pick<ListinoItem, 'prezzo' | 'sconto' | 'ricarico'>) =>
+  finaleDa(it.prezzo, it.sconto, it.ricarico);
 
 interface Props {
   m: MaterialeRiga;

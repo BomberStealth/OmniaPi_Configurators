@@ -29,11 +29,18 @@ export interface ListinoItem {
   codice: string;
   descrizione: string;
   um: string;
-  prezzo: number;
-  ricarico: number;
+  prezzo: number;      // prezzo di listino
+  ricarico: number;    // ricarico azienda % (livello marca)
+  sconto: number;      // sconto installatore % (livello marca)
   attivo: number;
   categoria?: string;
   moduli?: number;
+}
+
+export interface Marca {
+  marca: string;
+  sconto: number;
+  ricarico: number;
 }
 
 // ───────── mapping form <-> payload ─────────
@@ -130,6 +137,7 @@ const LS = {
   clienti: 'maioli_clienti_v1',
   bolle: 'maioli_bolle_v1',
   listino: 'maioli_listino_v1',
+  marche: 'maioli_marche_v1',
   seq: 'maioli_seq_v1',
 };
 function lsGet<T>(k: string, def: T): T {
@@ -263,6 +271,7 @@ export async function listListino(q: string, marca = ''): Promise<ListinoItem[]>
   await initStore();
   if (MODE === 'api') return jfetch(`${API}/listino?q=${encodeURIComponent(q)}&marca=${encodeURIComponent(marca)}`);
   const all = lsGet<ListinoItem[]>(LS.listino, []);
+  const marche = lsGet<Record<string, { sconto: number; ricarico: number }>>(LS.marche, {});
   const tokens = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
   return all
     .filter(it => {
@@ -271,6 +280,7 @@ export async function listListino(q: string, marca = ''): Promise<ListinoItem[]>
       const hay = `${it.codice} ${it.descrizione} ${it.categoria ?? ''}`.toLowerCase();
       return tokens.every(t => hay.includes(t));
     })
+    .map(it => ({ ...it, sconto: marche[it.marca]?.sconto ?? 0, ricarico: marche[it.marca]?.ricarico ?? 0 }))
     .sort((a, b) => (a.marca + a.descrizione).localeCompare(b.marca + b.descrizione));
 }
 
@@ -286,7 +296,7 @@ export async function saveListino(item: Partial<ListinoItem>): Promise<{ id: num
     if (i >= 0) { all[i] = { ...all[i], ...item } as ListinoItem; lsSet(LS.listino, all); return { id: item.id }; }
   }
   const id = nextId('listino');
-  all.push({ id, marca: item.marca ?? 'Generico', codice: item.codice ?? '', descrizione: item.descrizione ?? '', um: item.um ?? '', prezzo: n2(item.prezzo), ricarico: n2(item.ricarico), attivo: item.attivo === 0 ? 0 : 1 });
+  all.push({ id, marca: item.marca ?? 'Generico', codice: item.codice ?? '', descrizione: item.descrizione ?? '', um: item.um ?? '', prezzo: n2(item.prezzo), ricarico: n2(item.ricarico), sconto: n2(item.sconto), attivo: item.attivo === 0 ? 0 : 1 });
   lsSet(LS.listino, all);
   return { id };
 }
@@ -295,4 +305,23 @@ export async function deleteListino(id: number): Promise<void> {
   await initStore();
   if (MODE === 'api') { await jfetch(`${API}/listino/${id}`, { method: 'DELETE' }); return; }
   lsSet(LS.listino, lsGet<ListinoItem[]>(LS.listino, []).filter(x => x.id !== id));
+}
+
+// ── Marche: sconto installatore / ricarico azienda ──
+export async function listMarche(): Promise<Marca[]> {
+  await initStore();
+  if (MODE === 'api') return jfetch(`${API}/marche`);
+  const m = lsGet<Record<string, { sconto: number; ricarico: number }>>(LS.marche, {});
+  return Object.entries(m).map(([marca, v]) => ({ marca, sconto: v.sconto, ricarico: v.ricarico }));
+}
+
+export async function saveMarca(marca: string, sconto: number, ricarico: number): Promise<void> {
+  await initStore();
+  if (MODE === 'api') {
+    await jfetch(`${API}/marche/${encodeURIComponent(marca)}`, { method: 'PUT', body: JSON.stringify({ sconto, ricarico }) });
+    return;
+  }
+  const m = lsGet<Record<string, { sconto: number; ricarico: number }>>(LS.marche, {});
+  m[marca] = { sconto, ricarico };
+  lsSet(LS.marche, m);
 }

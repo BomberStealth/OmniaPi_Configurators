@@ -89,6 +89,14 @@ export const numFmt = (n: number): string =>
 export const dt = (s: string): string =>
   s ? new Date(s + 'T00:00:00').toLocaleDateString('it-IT') : '';
 
+export const round2 = (x: number): number => Math.round(x * 100) / 100;
+// prezzo scontato = listino - sconto installatore
+export const scontatoDa = (prezzo: number | string, sconto: number | string): number =>
+  round2(n2(prezzo) * (1 - n2(sconto) / 100));
+// prezzo finale (in bolla) = scontato + ricarico azienda
+export const finaleDa = (prezzo: number | string, sconto: number | string, ricarico: number | string): number =>
+  round2(scontatoDa(prezzo, sconto) * (1 + n2(ricarico) / 100));
+
 export interface Totali {
   manodopera: number;
   materiali: number;

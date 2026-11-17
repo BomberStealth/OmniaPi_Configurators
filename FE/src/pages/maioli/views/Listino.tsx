@@ -1,27 +1,33 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { listListino, saveListino, deleteListino } from '../store';
+import { listListino, saveListino, deleteListino, listMarche, saveMarca } from '../store';
 import type { ListinoItem } from '../store';
-import { eur, n2 } from '../model';
+import { eur, n2, scontatoDa, finaleDa } from '../model';
 
 type Row = ListinoItem & { _dirty?: boolean; _new?: boolean };
-
-const finale = (p: number | string, r: number | string) => n2(p) * (1 + n2(r) / 100);
+interface MarcaSet { sconto: string; ricarico: string; dirty?: boolean }
 
 export default function Listino() {
   const [q, setQ] = useState('');
   const [rows, setRows] = useState<Row[]>([]);
+  const [sett, setSett] = useState<Record<string, MarcaSet>>({});
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState<Set<string>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setRows(await listListino('')); } catch { setRows([]); } finally { setLoading(false); }
+    try {
+      const [items, marche] = await Promise.all([listListino(''), listMarche()]);
+      setRows(items);
+      const s: Record<string, MarcaSet> = {};
+      for (const it of items) s[it.marca] = { sconto: String(it.sconto ?? 0), ricarico: String(it.ricarico ?? 0) };
+      for (const m of marche) s[m.marca] = { sconto: String(m.sconto), ricarico: String(m.ricarico) };
+      setSett(s);
+    } catch { setRows([]); } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  // raggruppa per marca, filtrando per ricerca
   const groups = useMemo(() => {
     const s = q.trim().toLowerCase();
     const map = new Map<string, Row[]>();
@@ -36,31 +42,35 @@ export default function Listino() {
 
   const searching = q.trim().length > 0;
   const isOpen = (marca: string) => searching || open.has(marca);
-  const toggle = (marca: string) => setOpen(prev => {
-    const n = new Set(prev); n.has(marca) ? n.delete(marca) : n.add(marca); return n;
-  });
+  const toggle = (marca: string) => setOpen(prev => { const n = new Set(prev); n.has(marca) ? n.delete(marca) : n.add(marca); return n; });
+
+  const getSet = (marca: string): MarcaSet => sett[marca] ?? { sconto: '0', ricarico: '0' };
+  const editSet = (marca: string, k: 'sconto' | 'ricarico', v: string) =>
+    setSett(s => ({ ...s, [marca]: { ...getSet(marca), [k]: v, dirty: true } }));
+  const saveSet = async (marca: string) => {
+    const s = getSet(marca);
+    try {
+      await saveMarca(marca, n2(s.sconto), n2(s.ricarico));
+      setSett(prev => ({ ...prev, [marca]: { ...s, dirty: false } }));
+      setRows(rs => rs.map(r => (r.marca === marca ? { ...r, sconto: n2(s.sconto), ricarico: n2(s.ricarico) } : r)));
+    } catch { alert('Salvataggio marca non riuscito.'); }
+  };
 
   const edit = (id: number, patch: Partial<ListinoItem>) =>
     setRows(rs => rs.map(r => (r.id === id ? { ...r, ...patch, _dirty: true } : r)));
-
   const addRow = () => {
     const id = -Date.now();
-    setRows(rs => [{ id, marca: 'Generico', codice: '', descrizione: '', um: '', prezzo: 0, ricarico: 0, attivo: 1, _new: true, _dirty: true }, ...rs]);
+    setRows(rs => [{ id, marca: 'Generico', codice: '', descrizione: '', um: '', prezzo: 0, ricarico: n2(getSet('Generico').ricarico), sconto: n2(getSet('Generico').sconto), attivo: 1, _new: true, _dirty: true }, ...rs]);
     setOpen(prev => new Set(prev).add('Generico'));
   };
-
   const save = async (id: number) => {
     const r = rows.find(x => x.id === id); if (!r) return;
     if (!r.descrizione.trim()) { alert('La descrizione è obbligatoria.'); return; }
     try {
-      const res = await saveListino({
-        id: r._new ? undefined : r.id, marca: r.marca || 'Generico', codice: r.codice,
-        descrizione: r.descrizione, um: r.um, prezzo: n2(r.prezzo), ricarico: n2(r.ricarico), attivo: r.attivo,
-      });
+      const res = await saveListino({ id: r._new ? undefined : r.id, marca: r.marca || 'Generico', codice: r.codice, descrizione: r.descrizione, um: r.um, prezzo: n2(r.prezzo), attivo: r.attivo });
       setRows(rs => rs.map(x => (x.id === id ? { ...x, id: res.id ?? x.id, _dirty: false, _new: false } : x)));
     } catch { alert('Salvataggio non riuscito.'); }
   };
-
   const del = async (id: number) => {
     const r = rows.find(x => x.id === id); if (!r) return;
     if (r._new) { setRows(rs => rs.filter(x => x.id !== id)); return; }
@@ -97,7 +107,10 @@ export default function Listino() {
           <input ref={fileRef} type="file" accept=".csv,.txt,.tsv" hidden onChange={onCsv} />
         </div>
       </div>
-      <div className="maioli-listino-hint">Il <b>ricarico</b> è la % aggiunta al prezzo di listino. Prezzo finale = prezzo × (1 + ricarico/100).</div>
+      <div className="maioli-listino-hint">
+        <b>Listino</b> = prezzo di listino · <b>Scontato</b> = listino − sconto installatore (quello che paghi) ·
+        <b> Finale</b> = scontato + ricarico azienda (quello che va in bolla). Sconto e ricarico si impostano per marca.
+      </div>
 
       {loading ? (
         <div className="maioli-empty">Caricamento…</div>
@@ -105,36 +118,48 @@ export default function Listino() {
         <div className="maioli-empty">{searching ? 'Nessun articolo trovato.' : 'Listino vuoto. Aggiungi un articolo o importa un CSV.'}</div>
       ) : (
         <div className="maioli-acc">
-          {groups.map(([marca, items]) => (
-            <div className="maioli-acc-group" key={marca}>
-              <button type="button" className={`maioli-acc-head${isOpen(marca) ? ' open' : ''}`} onClick={() => toggle(marca)}>
-                <span className="maioli-acc-chevron">▸</span>
-                <span className="maioli-acc-marca">{marca}</span>
-                <span className="maioli-acc-count">{items.length}</span>
-              </button>
-              {isOpen(marca) && (
-                <div className="maioli-acc-body">
-                  <div className="maioli-ltr maioli-lth">
-                    <span>Codice</span><span>Descrizione</span><span>UM</span><span className="r">Prezzo</span><span className="r">Ric.%</span><span className="r">Finale</span><span />
-                  </div>
-                  {items.map(r => (
-                    <div className={`maioli-ltr${r._dirty ? ' dirty' : ''}`} key={r.id}>
-                      <input className="cod" value={r.codice} onChange={e => edit(r.id, { codice: e.target.value })} placeholder="Codice" />
-                      <input className="descr" value={r.descrizione} onChange={e => edit(r.id, { descrizione: e.target.value })} placeholder="Descrizione" />
-                      <input className="um" value={r.um} onChange={e => edit(r.id, { um: e.target.value })} placeholder="um" />
-                      <input className="r prezzo" inputMode="decimal" value={String(r.prezzo)} onChange={e => edit(r.id, { prezzo: e.target.value as unknown as number })} placeholder="Prezzo €" />
-                      <input className="r ric" inputMode="decimal" value={String(r.ricarico)} onChange={e => edit(r.id, { ricarico: e.target.value as unknown as number })} placeholder="Ric. %" />
-                      <span className="r maioli-finale">{eur(finale(r.prezzo, r.ricarico))}</span>
-                      <span className="maioli-row-actions">
-                        <button className="btn btn-primary btn-sm" disabled={!r._dirty} onClick={() => save(r.id)}>Salva</button>
-                        <button className="btn-trash" title="Elimina" onClick={() => del(r.id)}>🗑</button>
-                      </span>
+          {groups.map(([marca, items]) => {
+            const ms = getSet(marca);
+            return (
+              <div className="maioli-acc-group" key={marca}>
+                <button type="button" className={`maioli-acc-head${isOpen(marca) ? ' open' : ''}`} onClick={() => toggle(marca)}>
+                  <span className="maioli-acc-chevron">▸</span>
+                  <span className="maioli-acc-marca">{marca}</span>
+                  <span className="maioli-acc-count">{items.length}</span>
+                </button>
+                {isOpen(marca) && (
+                  <div className="maioli-acc-body">
+                    {/* impostazioni marca */}
+                    <div className="maioli-marca-set">
+                      <label><span>Sconto installatore %</span>
+                        <input inputMode="decimal" value={ms.sconto} onChange={e => editSet(marca, 'sconto', e.target.value)} /></label>
+                      <label><span>Ricarico azienda %</span>
+                        <input inputMode="decimal" value={ms.ricarico} onChange={e => editSet(marca, 'ricarico', e.target.value)} /></label>
+                      <button className="btn btn-primary btn-sm" disabled={!ms.dirty} onClick={() => saveSet(marca)}>Salva marca</button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+
+                    <div className="maioli-ltr maioli-lth">
+                      <span>Codice</span><span>Descrizione</span><span>UM</span><span className="r">Listino</span><span className="r">Scontato</span><span className="r">Finale</span><span />
+                    </div>
+                    {items.map(r => (
+                      <div className={`maioli-ltr${r._dirty ? ' dirty' : ''}`} key={r.id}>
+                        <input className="cod" value={r.codice} onChange={e => edit(r.id, { codice: e.target.value })} placeholder="Codice" />
+                        <input className="descr" value={r.descrizione} onChange={e => edit(r.id, { descrizione: e.target.value })} placeholder="Descrizione" />
+                        <input className="um" value={r.um} onChange={e => edit(r.id, { um: e.target.value })} placeholder="um" />
+                        <input className="r prezzo" inputMode="decimal" value={String(r.prezzo)} onChange={e => edit(r.id, { prezzo: e.target.value as unknown as number })} placeholder="Listino €" />
+                        <span className="r maioli-scontato">{eur(scontatoDa(r.prezzo, ms.sconto))}</span>
+                        <span className="r maioli-finale">{eur(finaleDa(r.prezzo, ms.sconto, ms.ricarico))}</span>
+                        <span className="maioli-row-actions">
+                          <button className="btn btn-primary btn-sm" disabled={!r._dirty} onClick={() => save(r.id)}>Salva</button>
+                          <button className="btn-trash" title="Elimina" onClick={() => del(r.id)}>🗑</button>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

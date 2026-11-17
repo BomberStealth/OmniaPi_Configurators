@@ -222,7 +222,7 @@
 .maioli-acc-count { font-size: 11px; font-weight: 700; color: var(--text-muted); background: #fff; border: 1px solid var(--border); border-radius: 99px; padding: 2px 9px; }
 .maioli-acc-body { padding: 6px 10px 10px; border-top: 1px solid var(--border); }
 
-.maioli-ltr { display: grid; grid-template-columns: 100px minmax(0, 1fr) 46px 84px 62px 86px auto; gap: 7px; align-items: center; padding: 5px 2px; border-bottom: 1px solid var(--border); }
+.maioli-ltr { display: grid; grid-template-columns: 100px minmax(0, 1fr) 44px 84px 84px 90px auto; gap: 7px; align-items: center; padding: 5px 2px; border-bottom: 1px solid var(--border); }
 .maioli-ltr:last-child { border-bottom: none; }
 .maioli-ltr.dirty { background: rgba(37,99,235,0.05); border-radius: 8px; }
 .maioli-lth { font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
@@ -231,6 +231,14 @@
 .maioli-ltr input.r { text-align: right; }
 .maioli-ltr input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
 .maioli-finale { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.maioli-scontato { font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+/* impostazioni per marca (sconto installatore / ricarico azienda) */
+.maioli-marca-set { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; padding: 2px 2px 12px; border-bottom: 1px dashed var(--border); margin-bottom: 10px; }
+.maioli-marca-set label { display: flex; flex-direction: column; gap: 3px; }
+.maioli-marca-set label span { font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.maioli-marca-set input { width: 92px; padding: 7px 9px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; color: var(--text); font-size: 13px; text-align: right; }
+.maioli-marca-set input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
 
 /* ── responsive ── */
 @media (max-width: 980px) {
@@ -246,13 +254,15 @@
   .maioli-tr .maioli-ind, .maioli-th span:nth-child(3), .maioli-tr span:nth-child(4) { display: none; }
   /* righe listino a scheda su schermi stretti */
   .maioli-lth { display: none; }
-  .maioli-ltr { grid-template-columns: 1fr 1fr; grid-template-areas: 'cod cod' 'descr descr' 'prezzo ric' 'finale act'; gap: 6px; padding: 9px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
+  .maioli-ltr { grid-template-columns: 1fr 1fr; grid-template-areas: 'cod cod' 'descr descr' 'prezzo prezzo' 'scontato finale' 'act act'; gap: 7px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
   .maioli-ltr .cod { grid-area: cod; }
   .maioli-ltr .descr { grid-area: descr; }
   .maioli-ltr .um { display: none; }
-  .maioli-ltr .prezzo { grid-area: prezzo; }
-  .maioli-ltr .ric { grid-area: ric; }
-  .maioli-ltr .maioli-finale { grid-area: finale; align-self: center; font-size: 14px; }
+  .maioli-ltr .prezzo { grid-area: prezzo; text-align: left; }
+  .maioli-ltr .maioli-scontato { grid-area: scontato; }
+  .maioli-ltr .maioli-finale { grid-area: finale; text-align: right; font-size: 14px; }
+  .maioli-ltr .maioli-scontato::before { content: 'Scontato '; font-size: 9.5px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-right: 3px; }
+  .maioli-ltr .maioli-finale::before { content: 'Finale '; font-size: 9.5px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-right: 3px; }
   .maioli-ltr .maioli-row-actions { grid-area: act; justify-content: flex-end; }
 }
 @media (max-width: 520px) {

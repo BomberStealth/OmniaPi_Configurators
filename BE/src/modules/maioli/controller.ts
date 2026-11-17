@@ -67,6 +67,19 @@ export async function listinoDelete(req: Request, res: Response): Promise<void> 
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
   try { const ok = await s.deleteListino(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.status(204).end(); } catch { err(res); }
 }
+// ── Marche (sconto installatore / ricarico azienda) ──
+export async function marcheList(_req: Request, res: Response): Promise<void> {
+  try { res.json(await s.listMarche()); } catch { err(res); }
+}
+export async function marcaUpdate(req: Request, res: Response): Promise<void> {
+  const raw = req.params.marca;
+  const marca = (Array.isArray(raw) ? raw[0] : raw) ?? '';
+  if (!marca.trim()) { res.status(400).json({ message: 'Marca non valida' }); return; }
+  const sconto = Number(req.body?.sconto) || 0;
+  const ricarico = Number(req.body?.ricarico) || 0;
+  try { await s.upsertMarca(marca, sconto, ricarico); res.json({ ok: true }); } catch { err(res); }
+}
+
 export async function listinoImport(req: Request, res: Response): Promise<void> {
   const { marca, items } = req.body ?? {};
   if (!Array.isArray(items)) { res.status(400).json({ message: 'items mancanti' }); return; }

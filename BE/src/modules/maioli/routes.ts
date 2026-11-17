@@ -18,6 +18,10 @@ router.post('/bolle', c.bolleCreate as never);
 router.put('/bolle/:id', c.bolleUpdate as never);
 router.delete('/bolle/:id', c.bolleDelete as never);
 
+// Marche (sconto installatore / ricarico azienda)
+router.get('/marche', c.marcheList as never);
+router.put('/marche/:marca', c.marcaUpdate as never);
+
 // Listino
 router.get('/listino', c.listinoList as never);
 router.post('/listino', c.listinoCreate as never);
