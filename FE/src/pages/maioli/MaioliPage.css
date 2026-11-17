@@ -136,7 +136,10 @@
 .maioli-mat-head, .maioli-mat-row { display: grid; grid-template-columns: 64px 92px minmax(0, 1fr) 96px auto; gap: 8px; align-items: center; }
 .maioli-mat-head { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 0 2px 6px; }
 .maioli-mat-row { margin-bottom: 8px; position: relative; }
+.mf { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.mf-l { display: none; }
 .maioli-mat-row input { width: 100%; padding: 8px 9px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; color: var(--text); font-size: 13px; }
+.maioli-mat-row .cod input { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .maioli-mat-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
 .maioli-mat-actions { display: flex; gap: 3px; }
 .maioli-mat-actions button { width: 26px; height: 32px; border: 1px solid var(--border); background: var(--glass); border-radius: var(--radius-xs); color: var(--text-muted); cursor: pointer; font-size: 13px; line-height: 1; }
@@ -145,13 +148,15 @@
 .maioli-mat-actions button.del:hover { border-color: #e11d2a; color: #e11d2a; }
 
 /* tendina ricerca articoli dal listino */
-.maioli-art-dropdown { position: absolute; z-index: 30; top: calc(100% + 2px); left: 0; right: 0; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 10px 30px rgba(0,0,0,0.16); max-height: 300px; overflow-y: auto; }
-.maioli-art-opt { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; text-align: left; padding: 9px 11px; background: none; border: none; border-bottom: 1px solid var(--border); cursor: pointer; }
+.maioli-art-dropdown { position: absolute; z-index: 30; top: calc(100% + 2px); left: 0; right: 0; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 10px 30px rgba(0,0,0,0.18); max-height: 330px; overflow-y: auto; }
+.maioli-art-opt { display: flex; flex-direction: column; gap: 3px; width: 100%; text-align: left; padding: 10px 12px; background: none; border: none; border-bottom: 1px solid var(--border); cursor: pointer; }
 .maioli-art-opt:last-child { border-bottom: none; }
 .maioli-art-opt:hover { background: var(--glass-hover); }
-.maioli-art-cod { font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; }
-.maioli-art-descr { font-size: 12.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.maioli-art-prezzo { font-size: 12.5px; font-weight: 700; color: var(--text); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.maioli-art-top { display: flex; align-items: center; gap: 8px; }
+.maioli-art-cod { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(37,99,235,0.22); border-radius: 6px; padding: 2px 7px; white-space: nowrap; }
+.maioli-art-marca { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); background: rgba(0,0,0,0.05); border-radius: 5px; padding: 2px 6px; white-space: nowrap; }
+.maioli-art-prezzo { margin-left: auto; font-size: 13.5px; font-weight: 800; color: var(--text); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.maioli-art-descr { font-size: 12.5px; color: var(--text-secondary); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .maioli-iva { display: flex; align-items: center; gap: 10px; justify-content: flex-end; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
 .maioli-iva-lbl { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
@@ -247,5 +252,6 @@
   .maioli-mat-row .qta { grid-area: qta; }
   .maioli-mat-row .prezzo { grid-area: prezzo; }
   .maioli-mat-row .cod { grid-area: cod; }
-  .maioli-mat-actions { grid-area: act; justify-content: flex-end; }
+  .maioli-mat-actions { grid-area: act; justify-content: flex-end; align-self: end; padding-bottom: 1px; }
+  .mf-l { display: block; font-size: 9.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; padding-left: 2px; }
 }
