@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { listListino, saveListino, deleteListino, listMarche, saveMarca } from '../store';
 import type { ListinoItem } from '../store';
 import { eur, n2, scontatoDa, finaleDa } from '../model';
+import { siglaMarca } from '../azienda';
 
 type Row = ListinoItem & { _dirty?: boolean; _new?: boolean };
 interface MarcaSet { sconto: string; ricarico: string; dirty?: boolean }
@@ -128,6 +129,7 @@ export default function Listino() {
               <div className="maioli-acc-group" key={marca}>
                 <button type="button" className={`maioli-acc-head${isOpen(marca) ? ' open' : ''}`} onClick={() => toggle(marca)}>
                   <span className="maioli-acc-chevron">▸</span>
+                  <span className="maioli-acc-sigla">{siglaMarca(marca)}</span>
                   <span className="maioli-acc-marca">{marca}</span>
                   <span className="maioli-acc-count">{items.length}</span>
                 </button>

@@ -20,6 +20,18 @@ export const LOGO = logoMaioli; // logo ufficiale intero (M! + wordmark)
 
 export const DEFAULT_TARIFFA_ORARIA = 30;
 
+// Sigle 3 lettere per marca (per la tendina articoli e il listino)
+export const MARCA_SIGLE: Record<string, string> = {
+  Vimar: 'VIM',
+  BTicino: 'BTI',
+  Cavi: 'CAV',
+  Hager: 'HAG',
+  'Tubi e Corrugati': 'TUB',
+  Generico: 'GEN',
+};
+export const siglaMarca = (marca: string): string =>
+  MARCA_SIGLE[marca] ?? ((marca || '').replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase() || '—');
+
 // ── Operai (siamo solo in 3) ──
 export interface Operaio {
   id: string;

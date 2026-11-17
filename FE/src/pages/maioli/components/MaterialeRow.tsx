@@ -3,6 +3,7 @@ import { listListino } from '../store';
 import type { ListinoItem } from '../store';
 import { eur, finaleDa } from '../model';
 import type { MaterialeRiga } from '../model';
+import { siglaMarca } from '../azienda';
 
 // prezzo finale (in bolla) = listino - sconto installatore + ricarico azienda (livello marca)
 export const prezzoFinale = (it: Pick<ListinoItem, 'prezzo' | 'sconto' | 'ricarico'>) =>
@@ -80,8 +81,8 @@ export default function MaterialeRow({ m, index, onChange, onDelete }: Props) {
             <button type="button" key={it.id} className="maioli-art-opt"
               onMouseDown={e => { e.preventDefault(); pick(it); }}>
               <div className="maioli-art-top">
+                <span className="maioli-art-sigla">{siglaMarca(it.marca)}</span>
                 <span className="maioli-art-cod">{it.codice || '—'}</span>
-                {it.marca ? <span className="maioli-art-marca">{it.marca}</span> : null}
                 <span className="maioli-art-prezzo">{eur(prezzoFinale(it))}</span>
               </div>
               <div className="maioli-art-descr">{it.descrizione}</div>
