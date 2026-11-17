@@ -108,8 +108,13 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
         setSavedFlash(true);
         setTimeout(() => setSavedFlash(false), 2200);
       }
-    } catch {
-      alert('Salvataggio non riuscito. Controlla la connessione al server.');
+    } catch (e) {
+      const msg = String((e as Error)?.message || '');
+      if (data.foto.length > 0 && /413|500|payload|large/i.test(msg)) {
+        alert('Salvataggio non riuscito: le foto potrebbero essere troppo pesanti per il server. Prova con meno foto. (Se continua, va alzato il limite di upload sul server/nginx.)');
+      } else {
+        alert('Salvataggio non riuscito. Controlla la connessione al server.');
+      }
     } finally {
       setSaving(false);
     }

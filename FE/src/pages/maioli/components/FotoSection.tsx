@@ -16,7 +16,7 @@ function loadImage(file: File): Promise<HTMLImageElement> {
 }
 
 // ridimensiona e comprime in JPEG per non salvare file enormi
-async function fileToDataURL(file: File, maxDim = 1400, quality = 0.7): Promise<string | null> {
+async function fileToDataURL(file: File, maxDim = 1200, quality = 0.6): Promise<string | null> {
   try {
     const img = await loadImage(file);
     const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
