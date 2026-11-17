@@ -18,7 +18,7 @@ export const AZIENDA = {
 
 export const LOGO = logoMaioli; // logo ufficiale intero (M! + wordmark)
 
-export const DEFAULT_TARIFFA_ORARIA = 35;
+export const DEFAULT_TARIFFA_ORARIA = 30;
 
 // ── Operai (siamo solo in 3) ──
 export interface Operaio {

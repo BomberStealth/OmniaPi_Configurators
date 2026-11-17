@@ -11,14 +11,11 @@ export const prezzoFinale = (it: Pick<ListinoItem, 'prezzo' | 'sconto' | 'ricari
 interface Props {
   m: MaterialeRiga;
   index: number;
-  isFirst: boolean;
-  isLast: boolean;
   onChange: (patch: Partial<MaterialeRiga>) => void;
-  onMove: (dir: -1 | 1) => void;
   onDelete: () => void;
 }
 
-export default function MaterialeRow({ m, index, isFirst, isLast, onChange, onMove, onDelete }: Props) {
+export default function MaterialeRow({ m, index, onChange, onDelete }: Props) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const [results, setResults] = useState<ListinoItem[]>([]);
@@ -57,18 +54,10 @@ export default function MaterialeRow({ m, index, isFirst, isLast, onChange, onMo
 
   return (
     <div className="maioli-mat-row" ref={boxRef}>
-      <span className="maioli-mat-num">{index}</span>
-      <label className="mf qta">
-        <span className="mf-l">Q.tà</span>
-        <input inputMode="decimal" value={m.qta} onChange={e => onChange({ qta: e.target.value })} placeholder="1" />
-      </label>
-      <label className="mf cod">
-        <span className="mf-l">Codice</span>
-        <input value={m.codice}
-          onChange={e => typeSearch('codice', e.target.value)}
-          onFocus={() => { setQ(m.codice); setOpen(true); }}
-          placeholder="codice" autoComplete="off" />
-      </label>
+      <div className="maioli-mat-corner">
+        <span className="maioli-mat-num">{index}</span>
+        <button type="button" className="maioli-mat-del" title="Elimina articolo" onClick={onDelete}>✕</button>
+      </div>
       <label className="mf descr">
         <span className="mf-l">Descrizione</span>
         <input value={m.descrizione}
@@ -80,11 +69,17 @@ export default function MaterialeRow({ m, index, isFirst, isLast, onChange, onMo
         <span className="mf-l">Prezzo €</span>
         <input inputMode="decimal" value={m.prezzo} onChange={e => onChange({ prezzo: e.target.value, listino_id: null })} placeholder="0,00" />
       </label>
-      <div className="maioli-mat-actions">
-        <button type="button" title="Su" onClick={() => onMove(-1)} disabled={isFirst}>↑</button>
-        <button type="button" title="Giù" onClick={() => onMove(1)} disabled={isLast}>↓</button>
-        <button type="button" title="Elimina" className="del" onClick={onDelete}>✕</button>
-      </div>
+      <label className="mf cod">
+        <span className="mf-l">Codice</span>
+        <input value={m.codice}
+          onChange={e => typeSearch('codice', e.target.value)}
+          onFocus={() => { setQ(m.codice); setOpen(true); }}
+          placeholder="codice" autoComplete="off" />
+      </label>
+      <label className="mf qta">
+        <span className="mf-l">Q.tà</span>
+        <input inputMode="decimal" value={m.qta} onChange={e => onChange({ qta: e.target.value })} placeholder="1" />
+      </label>
 
       {open && results.length > 0 && (
         <div className="maioli-art-dropdown">

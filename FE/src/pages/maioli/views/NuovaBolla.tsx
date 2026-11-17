@@ -75,10 +75,6 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
   const setMatPatch = (i: number, patch: Partial<RapportoData['materiali'][number]>) =>
     setData(d => { const materiali = d.materiali.slice(); materiali[i] = { ...materiali[i], ...patch }; return { ...d, materiali }; });
   const delRiga = (i: number) => setData(d => { const m = d.materiali.filter((_, idx) => idx !== i); return { ...d, materiali: m.length ? m : [rigaVuota()] }; });
-  const moveRiga = (i: number, dir: -1 | 1) => setData(d => {
-    const j = i + dir; if (j < 0 || j >= d.materiali.length) return d;
-    const m = d.materiali.slice(); [m[i], m[j]] = [m[j], m[i]]; return { ...d, materiali: m };
-  });
 
   const nuovo = useCallback(() => {
     if (confirm('Creare una nuova bolla? I dati non salvati andranno persi.')) setData(datiVuoti());
@@ -199,10 +195,7 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
                 key={i}
                 m={m}
                 index={i + 1}
-                isFirst={i === 0}
-                isLast={i === data.materiali.length - 1}
                 onChange={(patch) => setMatPatch(i, patch)}
-                onMove={(dir) => moveRiga(i, dir)}
                 onDelete={() => delRiga(i)}
               />
             ))}
