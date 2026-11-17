@@ -41,8 +41,9 @@ export default function MaterialeRow({ m, index, onChange, onDelete }: Props) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, []);
 
-  const typeSearch = (field: 'codice' | 'descrizione', val: string) => {
-    onChange({ [field]: val, listino_id: null } as Partial<MaterialeRiga>);
+  // digitazione libera nell'unico campo "Articolo": cerca e azzera il codice (testo libero)
+  const typeSearch = (val: string) => {
+    onChange({ descrizione: val, codice: '', listino_id: null });
     setQ(val);
     setOpen(true);
   };
@@ -58,27 +59,21 @@ export default function MaterialeRow({ m, index, onChange, onDelete }: Props) {
         <span className="maioli-mat-num">{index}</span>
         <button type="button" className="maioli-mat-del" title="Elimina articolo" onClick={onDelete}>✕</button>
       </div>
-      <label className="mf descr">
-        <span className="mf-l">Descrizione</span>
+      <label className="mf articolo">
+        <span className="mf-l">Articolo</span>
         <input value={m.descrizione}
-          onChange={e => typeSearch('descrizione', e.target.value)}
-          onFocus={() => { setQ(m.descrizione); setOpen(true); }}
-          placeholder="Cerca o scrivi descrizione…" autoComplete="off" />
-      </label>
-      <label className="mf prezzo">
-        <span className="mf-l">Prezzo €</span>
-        <input inputMode="decimal" value={m.prezzo} onChange={e => onChange({ prezzo: e.target.value, listino_id: null })} placeholder="0,00" />
-      </label>
-      <label className="mf cod">
-        <span className="mf-l">Codice</span>
-        <input value={m.codice}
-          onChange={e => typeSearch('codice', e.target.value)}
-          onFocus={() => { setQ(m.codice); setOpen(true); }}
-          placeholder="codice" autoComplete="off" />
+          onChange={e => typeSearch(e.target.value)}
+          onFocus={() => { setQ(m.descrizione || m.codice); setOpen(true); }}
+          placeholder="Cerca articolo (codice o descrizione)…" autoComplete="off" />
+        {m.codice ? <span className="mf-cod">{m.codice}</span> : null}
       </label>
       <label className="mf qta">
         <span className="mf-l">Q.tà</span>
         <input inputMode="decimal" value={m.qta} onChange={e => onChange({ qta: e.target.value })} placeholder="1" />
+      </label>
+      <label className="mf prezzo">
+        <span className="mf-l">Prezzo €</span>
+        <input inputMode="decimal" value={m.prezzo} onChange={e => onChange({ prezzo: e.target.value, listino_id: null })} placeholder="0,00" />
       </label>
 
       {open && results.length > 0 && (

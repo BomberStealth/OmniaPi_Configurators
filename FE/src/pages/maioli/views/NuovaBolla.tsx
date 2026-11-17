@@ -189,7 +189,7 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
               Materiali
               <span className="maioli-sec-hint">le righe si aggiungono da sole</span>
             </div>
-            <div className="maioli-mat-head"><span>Q.tà</span><span>Codice</span><span>Descrizione</span><span>Prezzo €</span><span /></div>
+            <div className="maioli-mat-head"><span>Articolo</span><span>Q.tà</span><span>Prezzo €</span><span /></div>
             {data.materiali.map((m, i) => (
               <MaterialeRow
                 key={i}

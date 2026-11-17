@@ -1,5 +1,5 @@
 import { AZIENDA, LOGO } from './azienda';
-import { eur, numFmt, dt, calcola, n2, nomeOperaio } from './model';
+import { eur, numFmt, dt, calcola, n2, nomeOperaio, qtaEff, rigaHaContenuto } from './model';
 import type { RapportoData, MaterialeRiga, ManoRiga } from './model';
 import './foglio.css';
 
@@ -11,16 +11,17 @@ function Logo({ small }: { small?: boolean }) {
 }
 
 function RigaMateriale({ m }: { m: MaterialeRiga | null }) {
-  if (!m) return <tr><td /><td /><td /></tr>;
-  const imp = n2(m.qta) * n2(m.prezzo);
+  if (!m || !rigaHaContenuto(m)) return <tr><td /><td /><td /></tr>;
+  const qe = qtaEff(m);
+  const imp = qe * n2(m.prezzo);
   return (
     <tr>
-      <td className="c">{m.qta ? numFmt(n2(m.qta)) : ''}</td>
+      <td className="c">{numFmt(qe)}</td>
       <td className="desc">
         {m.codice ? <span className="cod">{m.codice}</span> : null}
         {m.descrizione}
       </td>
-      <td className="r">{m.descrizione || m.qta || m.prezzo ? eur(imp) : ''}</td>
+      <td className="r">{eur(imp)}</td>
     </tr>
   );
 }

@@ -1,4 +1,4 @@
-import { calcola, n2, oggiISO } from './model';
+import { calcola, n2, oggiISO, rigaHaContenuto, qtaEff } from './model';
 import type { RapportoData } from './model';
 
 const API = '/api/configuratori/maioli';
@@ -76,8 +76,8 @@ export function toPayload(d: RapportoData) {
     imponibile: tot.imponibile,
     totale: tot.totale,
     materiali: d.materiali
-      .filter(m => (m.descrizione && m.descrizione.trim()) || m.qta || m.prezzo)
-      .map(m => ({ qta: n2(m.qta), codice: m.codice, descrizione: m.descrizione, prezzo: n2(m.prezzo), listino_id: m.listino_id ?? null })),
+      .filter(rigaHaContenuto)
+      .map(m => ({ qta: qtaEff(m), codice: m.codice, descrizione: m.descrizione, prezzo: n2(m.prezzo), listino_id: m.listino_id ?? null })),
     manodopera: d.manodopera
       .filter(x => x.operaio)
       .map(x => ({ operaio: x.operaio, ore: n2(x.ore), tariffa: n2(x.tariffa) })),

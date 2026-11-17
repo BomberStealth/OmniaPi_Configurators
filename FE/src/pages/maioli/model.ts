@@ -106,9 +106,19 @@ export interface Totali {
   totale: number;
 }
 
+// una riga conta se ha un articolo (descrizione o codice) o un prezzo
+export const rigaHaContenuto = (m: MaterialeRiga): boolean =>
+  !!((m.descrizione && m.descrizione.trim()) || (m.codice && m.codice.trim()) || n2(m.prezzo));
+// quantità effettiva: se vuota ma la riga ha contenuto, vale 1
+export const qtaEff = (m: MaterialeRiga): number => {
+  const q = n2(m.qta);
+  if (q) return q;
+  return rigaHaContenuto(m) ? 1 : 0;
+};
+
 export function calcola(d: RapportoData): Totali {
   const manodopera = (d.manodopera ?? []).reduce((s, m) => s + n2(m.ore) * n2(m.tariffa), 0);
-  const materiali = d.materiali.reduce((s, m) => s + n2(m.qta) * n2(m.prezzo), 0);
+  const materiali = d.materiali.reduce((s, m) => s + qtaEff(m) * n2(m.prezzo), 0);
   const imponibile = manodopera + materiali;
   const aliquota = n2(d.iva);
   const iva = imponibile * (aliquota / 100);

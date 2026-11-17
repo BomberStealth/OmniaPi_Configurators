@@ -135,13 +135,13 @@
 .op-total b { color: var(--text); }
 
 /* ── materiali ── */
-.maioli-mat-head, .maioli-mat-row { display: grid; grid-template-columns: 64px 92px minmax(0, 1fr) 96px auto; gap: 8px; align-items: center; }
+.maioli-mat-head, .maioli-mat-row { display: grid; grid-template-columns: minmax(0, 1fr) 72px 92px auto; gap: 8px; align-items: center; }
 .maioli-mat-head { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 0 2px 6px; }
-.maioli-mat-row { margin-bottom: 8px; position: relative; grid-template-areas: 'qta cod descr prezzo corner'; }
+.maioli-mat-row { margin-bottom: 8px; position: relative; grid-template-areas: 'articolo qta prezzo corner'; }
+.maioli-mat-row .articolo { grid-area: articolo; }
 .maioli-mat-row .qta { grid-area: qta; }
-.maioli-mat-row .cod { grid-area: cod; }
-.maioli-mat-row .descr { grid-area: descr; }
 .maioli-mat-row .prezzo { grid-area: prezzo; }
+.mf-cod { font-size: 10px; color: var(--text-muted); font-family: ui-monospace, Menlo, monospace; padding-left: 2px; margin-top: 1px; }
 .maioli-mat-corner { grid-area: corner; display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
 .maioli-mat-del { width: 28px; height: 30px; border: 1px solid var(--border); background: var(--glass); border-radius: var(--radius-xs); color: var(--text-muted); cursor: pointer; font-size: 13px; line-height: 1; }
 .maioli-mat-del:hover { border-color: #e11d2a; color: #e11d2a; }
@@ -149,7 +149,7 @@
 .mf-l { display: none; }
 .maioli-mat-num { display: none; }
 .maioli-mat-row input { width: 100%; padding: 8px 9px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; color: var(--text); font-size: 13px; }
-.maioli-mat-row .cod input { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.maioli-mat-row .qta input, .maioli-mat-row .prezzo input { text-align: center; padding: 8px 6px; }
 .maioli-mat-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
 
 /* tendina ricerca articoli dal listino */
@@ -288,13 +288,12 @@
   .maioli-dates .form-label { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .maioli-dates input { padding: 7px 4px; font-size: 12px; }
   .maioli-mat-head { display: none; }
-  .maioli-mat-row { grid-template-columns: minmax(0, 1fr) 96px; grid-template-areas: 'corner corner' 'descr prezzo' 'cod qta'; gap: 8px; border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 12px; }
+  .maioli-mat-row { grid-template-columns: 92px 110px 1fr; grid-template-areas: 'corner corner corner' 'articolo articolo articolo' 'qta prezzo .'; gap: 8px; border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 12px; }
   .maioli-mat-corner { grid-area: corner; justify-content: flex-end; }
   .maioli-mat-num { display: flex; width: 22px; height: 22px; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(37,99,235,0.25); border-radius: 50%; }
   .maioli-mat-del { height: 28px; }
-  .maioli-mat-row .descr { grid-area: descr; }
-  .maioli-mat-row .prezzo { grid-area: prezzo; }
-  .maioli-mat-row .cod { grid-area: cod; }
+  .maioli-mat-row .articolo { grid-area: articolo; }
   .maioli-mat-row .qta { grid-area: qta; }
+  .maioli-mat-row .prezzo { grid-area: prezzo; }
   .mf-l { display: block; font-size: 9.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; padding-left: 2px; }
 }
