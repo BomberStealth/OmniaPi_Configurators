@@ -162,10 +162,11 @@ export interface BollaSummary {
   totale: number;
   updated_at: string;
   deleted_at?: string | null;
+  consegnata_at?: string | null;
   n_foto?: number;
 }
 
-const SUMMARY_COLS = 'id, numero, cliente, indirizzo, data_intervento, totale, updated_at, deleted_at, (SELECT COUNT(*) FROM maioli_bolle_foto f WHERE f.bolla_id = maioli_bolle.id) AS n_foto';
+const SUMMARY_COLS = 'id, numero, cliente, indirizzo, data_intervento, totale, updated_at, deleted_at, consegnata_at, (SELECT COUNT(*) FROM maioli_bolle_foto f WHERE f.bolla_id = maioli_bolle.id) AS n_foto';
 
 export async function listBolle(q: string, limit = 50): Promise<BollaSummary[]> {
   const cond: string[] = ['deleted_at IS NULL'];
@@ -309,6 +310,13 @@ export async function restoreBolla(id: number): Promise<boolean> {
 }
 export async function purgeBolla(id: number): Promise<boolean> {
   const [r] = (await pool.execute('DELETE FROM maioli_bolle WHERE id=? AND deleted_at IS NOT NULL', [id])) as [{ affectedRows: number }, unknown];
+  return r.affectedRows > 0;
+}
+// contrassegna/annulla "consegnata"
+export async function setConsegnata(id: number, consegnata: boolean): Promise<boolean> {
+  const [r] = (await pool.execute(
+    `UPDATE maioli_bolle SET consegnata_at = ${consegnata ? 'NOW()' : 'NULL'} WHERE id=?`, [id],
+  )) as [{ affectedRows: number }, unknown];
   return r.affectedRows > 0;
 }
 

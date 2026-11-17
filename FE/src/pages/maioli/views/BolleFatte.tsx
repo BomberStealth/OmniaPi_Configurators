@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { listBolle, listBolleCancellate, deleteBolla, restoreBolla, deleteBollaPermanent } from '../store';
+import { listBolle, listBolleCancellate, deleteBolla, restoreBolla, deleteBollaPermanent, markConsegnata } from '../store';
 import type { BollaSummary } from '../store';
 import { eur, n2 } from '../model';
 import { useConfirm } from '../components/ConfirmDialog';
+import SwipeCard from '../components/SwipeCard';
 
 const eurFromNumber = (v: number | string) => eur(n2(v));
 
@@ -46,6 +47,16 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
     if (!ok) return;
     try { await deleteBollaPermanent(b.id); load(q, tab); } catch { alert('Eliminazione non riuscita.'); }
   };
+  const consegna = async (b: BollaSummary) => {
+    const isCons = !!b.consegnata_at;
+    const ok = await confirm({
+      title: isCons ? 'Rimuovere "consegnata"?' : 'Contrassegnare come consegnata?',
+      message: isCons ? `Togli il contrassegno di consegna dalla bolla di "${b.cliente}".` : `La bolla di "${b.cliente}" verrà segnata come consegnata, con la data di oggi.`,
+      confirmLabel: isCons ? 'Rimuovi' : 'Sì, consegnata',
+    });
+    if (!ok) return;
+    try { await markConsegnata(b.id, !isCons); load(q, tab); } catch { alert('Operazione non riuscita.'); }
+  };
 
   return (
     <div className="card maioli-card maioli-archivio">
@@ -71,9 +82,10 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
         <div className="maioli-bcards">
           {rows.map(b => {
             const np = (b.numero || '').split('/');
-            const foto = b.n_foto || 0;
-            return (
-              <div className="maioli-bcard" key={b.id}>
+            const foto = Number(b.n_foto) || 0;
+            const consegnata = !!b.consegnata_at;
+            const card = (
+              <div className={`maioli-bcard${consegnata ? ' consegnata' : ''}`}>
                 <div className="maioli-bcard-top">
                   <span className="maioli-bcard-num">{b.numero && np[1] ? <>{np[0]}/<br />{np[1]}</> : (b.numero || `#${b.id}`)}</span>
                   <div className="maioli-bcard-main">
@@ -86,6 +98,7 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
                   <span className="maioli-bcard-meta">
                     <span className="maioli-chip-info">📅 {fmtData(b.data_intervento)}</span>
                     <span className={`maioli-chip-foto${foto > 0 ? ' has' : ''}`}>{foto > 0 ? `📷 ${foto} foto` : '📷 nessuna'}</span>
+                    {consegnata && <span className="maioli-chip-consegnata">🚚 Consegnata {fmtData(b.consegnata_at ?? null)}</span>}
                     {tab === 'cancellate' && <span className="maioli-chip-scade">⏳ {giorniRimasti(b.deleted_at)} gg</span>}
                   </span>
                   <span className="maioli-row-actions">
@@ -103,6 +116,13 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
                   </span>
                 </div>
               </div>
+            );
+            return tab === 'attive' ? (
+              <SwipeCard key={b.id} onRight={() => cestina(b)} onLeft={() => consegna(b)} rightLabel="🗑 Cancella" leftLabel={consegnata ? '↩ Annulla' : '✅ Consegnata'}>
+                {card}
+              </SwipeCard>
+            ) : (
+              <div key={b.id}>{card}</div>
             );
           })}
         </div>

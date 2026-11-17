@@ -61,6 +61,11 @@ export async function bollePurge(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
   try { const ok = await s.purgeBolla(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.status(204).end(); } catch { err(res); }
 }
+export async function bolleConsegna(req: Request, res: Response): Promise<void> {
+  const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
+  const consegnata = req.body?.consegnata !== false;
+  try { const ok = await s.setConsegnata(id, consegnata); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true }); } catch { err(res); }
+}
 
 // ── Listino ──
 export async function listinoList(req: Request, res: Response): Promise<void> {

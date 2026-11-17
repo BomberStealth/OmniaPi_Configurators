@@ -23,6 +23,7 @@ export interface BollaSummary {
   totale: number;
   updated_at: string;
   deleted_at?: string | null;
+  consegnata_at?: string | null;
   n_foto?: number;
 }
 export interface ListinoItem {
@@ -213,7 +214,7 @@ export async function listBolle(q: string): Promise<BollaSummary[]> {
   const s = q.trim().toLowerCase();
   const rows = (s ? all.filter(b => (String(b.cliente) + b.numero + b.indirizzo).toLowerCase().includes(s)) : all)
     .sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
-  return rows.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at, n_foto: (b.foto || []).length }));
+  return rows.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at, consegnata_at: b.consegnata_at ?? null, n_foto: (b.foto || []).length }));
 }
 
 export async function getBolla(id: number): Promise<RapportoData> {
@@ -296,6 +297,14 @@ export async function deleteBollaPermanent(id: number): Promise<void> {
   await initStore();
   if (MODE === 'api') { await jfetch(`${API}/bolle/${id}/permanent`, { method: 'DELETE' }); return; }
   lsSet(LS.bolle, lsGet<any[]>(LS.bolle, []).filter(x => x.id !== id));
+}
+
+export async function markConsegnata(id: number, consegnata: boolean): Promise<void> {
+  await initStore();
+  if (MODE === 'api') { await jfetch(`${API}/bolle/${id}/consegna`, { method: 'POST', body: JSON.stringify({ consegnata }) }); return; }
+  const all = lsGet<any[]>(LS.bolle, []);
+  const i = all.findIndex(x => x.id === id);
+  if (i >= 0) { all[i].consegnata_at = consegnata ? new Date().toISOString() : null; lsSet(LS.bolle, all); }
 }
 
 // ── Listino ──

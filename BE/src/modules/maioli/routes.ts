@@ -18,6 +18,7 @@ router.get('/bolle/:id', c.bolleGet as never);
 router.post('/bolle', c.bolleCreate as never);
 router.put('/bolle/:id', c.bolleUpdate as never);
 router.post('/bolle/:id/restore', c.bolleRestore as never);
+router.post('/bolle/:id/consegna', c.bolleConsegna as never);
 router.delete('/bolle/:id/permanent', c.bollePurge as never);
 router.delete('/bolle/:id', c.bolleDelete as never);
 

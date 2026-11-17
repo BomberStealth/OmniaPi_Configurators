@@ -205,6 +205,15 @@
 .maioli-chip-foto { background: rgba(0,0,0,0.05); color: var(--text-muted); }
 .maioli-chip-foto.has { background: rgba(16,185,129,0.12); color: #0a9d6e; }
 .maioli-chip-scade { background: rgba(234,88,12,0.1); color: #b45309; }
+.maioli-chip-consegnata { font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 99px; white-space: nowrap; background: rgba(16,185,129,0.15); color: #0a9d6e; }
+.maioli-bcard.consegnata { background: rgba(16,185,129,0.09); border-color: rgba(16,185,129,0.35); }
+
+/* swipe-to-action */
+.swipe { position: relative; overflow: hidden; border-radius: var(--radius-sm); touch-action: pan-y; }
+.swipe-bg { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 22px; border-radius: var(--radius-sm); }
+.swipe-bg-lbl { color: #fff; font-weight: 800; font-size: 14px; transition: transform 0.12s; }
+.swipe-bg-lbl.past { transform: scale(1.18); }
+.swipe-fg { position: relative; }
 
 /* ── tasti foto quadrati ── */
 .maioli-foto-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 96px; height: 96px; border: 1.5px dashed var(--border-hover); border-radius: 14px; background: var(--glass); color: var(--accent); cursor: pointer; }
