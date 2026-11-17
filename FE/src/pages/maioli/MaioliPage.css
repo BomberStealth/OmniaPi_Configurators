@@ -215,6 +215,14 @@
 .swipe-bg-lbl.past { transform: scale(1.18); }
 .swipe-fg { position: relative; }
 
+.maioli-btn-cons { width: 32px; height: 30px; border: 1px solid var(--border); background: var(--glass); border-radius: var(--radius-xs); cursor: pointer; font-size: 14px; font-weight: 800; color: #0a9d6e; }
+.maioli-btn-cons:hover { border-color: #10b981; background: rgba(16,185,129,0.1); }
+.maioli-btn-cons.on { background: #10b981; color: #fff; border-color: #10b981; }
+.maioli-swipe-hint { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11.5px; color: var(--text-muted); margin-bottom: 12px; }
+.maioli-swipe-ar { font-weight: 800; }
+.maioli-swipe-ar.left { color: #10b981; }
+.maioli-swipe-ar.right { color: #e11d2a; }
+
 /* ── tasti foto quadrati ── */
 .maioli-foto-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 96px; height: 96px; border: 1.5px dashed var(--border-hover); border-radius: 14px; background: var(--glass); color: var(--accent); cursor: pointer; }
 .maioli-foto-tile:hover:not(:disabled) { background: var(--glass-hover); border-color: var(--accent); }

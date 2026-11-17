@@ -42,7 +42,14 @@ Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: v1.3.2.
 
 ## In sospeso / idee
-- Dare un po' di colore alla pagina (icone colorate ai titoli di sezione, totale
-  evidenziato) — proposto, in attesa di scelta.
-- Sotto-gruppi per tipo dentro la marca Hager nel Listino (63 articoli).
+- **MATERIALI (richiesto da Edoardo, da fare prossima volta):**
+  - Nella tendina di ricerca articoli mostrare **"SIGLA · Codice · Descrizione"**
+    (ora manca la marca e non si capisce di che prodotto è).
+  - Definire **sigle 3 lettere per marca** e usarle nella tendina (e nel listino):
+    Vimar=VIM, BTicino=BTI, Cavi=CAV, Hager=HAG, Tubi e Corrugati=TUB,
+    Generico=GEN (il resto a scelta). Metterle in una mappa in `azienda.ts` o
+    derivarle dalla marca.
+- Sotto-gruppi per **serie/tipo** dentro una marca nel Listino (BTicino 144 art.,
+  Hager tanti): usare `categoria` (già popolata, es. serie BTicino) come
+  sotto-accordion.
 - Login/ruoli (se mai servisse): in BE c'è già auth JWT non usata dalla FE.

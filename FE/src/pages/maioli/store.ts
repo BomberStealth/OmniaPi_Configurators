@@ -213,7 +213,7 @@ export async function listBolle(q: string): Promise<BollaSummary[]> {
   const all = lsGet<any[]>(LS.bolle, []).filter(b => !b.deleted_at);
   const s = q.trim().toLowerCase();
   const rows = (s ? all.filter(b => (String(b.cliente) + b.numero + b.indirizzo).toLowerCase().includes(s)) : all)
-    .sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
+    .sort((a, b) => (a.numero || '').localeCompare(b.numero || '', undefined, { numeric: true }));
   return rows.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at, consegnata_at: b.consegnata_at ?? null, n_foto: (b.foto || []).length }));
 }
 

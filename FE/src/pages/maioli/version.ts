@@ -1,2 +1,2 @@
 // Versione della sezione Maioli. INCREMENTARE ad ogni modifica + deploy.
-export const MAIOLI_VERSION = 'v1.6.0';
+export const MAIOLI_VERSION = 'v1.6.1';

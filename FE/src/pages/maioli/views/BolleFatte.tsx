@@ -70,6 +70,9 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
         <button className={tab === 'cancellate' ? 'active' : ''} onClick={() => setTab('cancellate')}>🗑 Cancellate</button>
       </div>
 
+      {tab === 'attive' && (
+        <div className="maioli-swipe-hint"><span className="maioli-swipe-ar left">←</span> scorri per <b>consegnata</b> · <b>cancella</b> scorrendo <span className="maioli-swipe-ar right">→</span></div>
+      )}
       {tab === 'cancellate' && (
         <div className="maioli-listino-hint">Le bolle cancellate restano qui 30 giorni, poi si eliminano da sole. Puoi ripristinarle o eliminarle subito.</div>
       )}
@@ -105,6 +108,7 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
                     {tab === 'attive' ? (
                       <>
                         <button className="btn btn-secondary btn-sm" onClick={() => onOpen(b.id)}>Apri</button>
+                        <button className={`maioli-btn-cons${consegnata ? ' on' : ''}`} title={consegnata ? 'Annulla consegna' : 'Segna consegnata'} onClick={() => consegna(b)}>✓</button>
                         <button className="btn-trash" title="Cancella" onClick={() => cestina(b)}>🗑</button>
                       </>
                     ) : (

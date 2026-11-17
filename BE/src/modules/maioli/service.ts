@@ -177,7 +177,7 @@ export async function listBolle(q: string, limit = 50): Promise<BollaSummary[]> 
     params.push(like, like, like);
   }
   const [rows] = await pool.execute(
-    `SELECT ${SUMMARY_COLS} FROM maioli_bolle WHERE ${cond.join(' AND ')} ORDER BY updated_at DESC LIMIT ${lim(limit)}`,
+    `SELECT ${SUMMARY_COLS} FROM maioli_bolle WHERE ${cond.join(' AND ')} ORDER BY anno ASC, progressivo ASC, id ASC LIMIT ${lim(limit)}`,
     params,
   );
   return rows as BollaSummary[];
