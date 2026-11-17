@@ -2,6 +2,7 @@ import { useState, useLayoutEffect, useRef, useEffect, useCallback } from 'react
 import FoglioRapporto from '../FoglioRapporto';
 import ClientePicker from '../components/ClientePicker';
 import OperaiManodopera from '../components/OperaiManodopera';
+import MaterialeRow from '../components/MaterialeRow';
 import { datiVuoti, rigaVuota, calcola, eur } from '../model';
 import type { RapportoData } from '../model';
 import { saveBolla, clienteToData } from '../store';
@@ -61,8 +62,8 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
   }, [pendingPrint, data]);
 
   const set = <K extends keyof RapportoData>(k: K, v: RapportoData[K]) => setData(d => ({ ...d, [k]: v }));
-  const setMat = (i: number, k: keyof RapportoData['materiali'][number], v: string) =>
-    setData(d => { const materiali = d.materiali.slice(); materiali[i] = { ...materiali[i], [k]: v }; return { ...d, materiali }; });
+  const setMatPatch = (i: number, patch: Partial<RapportoData['materiali'][number]>) =>
+    setData(d => { const materiali = d.materiali.slice(); materiali[i] = { ...materiali[i], ...patch }; return { ...d, materiali }; });
   const addRiga = () => setData(d => ({ ...d, materiali: [...d.materiali, rigaVuota()] }));
   const delRiga = (i: number) => setData(d => { const m = d.materiali.filter((_, idx) => idx !== i); return { ...d, materiali: m.length ? m : [rigaVuota()] }; });
   const moveRiga = (i: number, dir: -1 | 1) => setData(d => {
@@ -178,17 +179,15 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
             </div>
             <div className="maioli-mat-head"><span>Q.tà</span><span>Codice</span><span>Descrizione</span><span>Prezzo €</span><span /></div>
             {data.materiali.map((m, i) => (
-              <div className="maioli-mat-row" key={i}>
-                <input className="qta" value={m.qta} onChange={e => setMat(i, 'qta', e.target.value)} placeholder="1" />
-                <input value={m.codice} onChange={e => setMat(i, 'codice', e.target.value)} placeholder="cod." />
-                <input value={m.descrizione} onChange={e => setMat(i, 'descrizione', e.target.value)} placeholder="Descrizione articolo" />
-                <input className="prezzo" value={m.prezzo} onChange={e => setMat(i, 'prezzo', e.target.value)} placeholder="0,00" />
-                <div className="maioli-mat-actions">
-                  <button title="Su" onClick={() => moveRiga(i, -1)} disabled={i === 0}>↑</button>
-                  <button title="Giù" onClick={() => moveRiga(i, 1)} disabled={i === data.materiali.length - 1}>↓</button>
-                  <button title="Elimina" className="del" onClick={() => delRiga(i)}>✕</button>
-                </div>
-              </div>
+              <MaterialeRow
+                key={i}
+                m={m}
+                isFirst={i === 0}
+                isLast={i === data.materiali.length - 1}
+                onChange={(patch) => setMatPatch(i, patch)}
+                onMove={(dir) => moveRiga(i, dir)}
+                onDelete={() => delRiga(i)}
+              />
             ))}
             <div className="maioli-iva">
               <span className="maioli-iva-lbl">IVA</span>

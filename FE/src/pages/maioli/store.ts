@@ -32,6 +32,8 @@ export interface ListinoItem {
   prezzo: number;
   ricarico: number;
   attivo: number;
+  categoria?: string;
+  moduli?: number;
 }
 
 // ───────── mapping form <-> payload ─────────
