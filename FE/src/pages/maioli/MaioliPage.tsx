@@ -7,6 +7,7 @@ import { MAIOLI_VERSION } from './version';
 import { datiVuoti } from './model';
 import type { RapportoData } from './model';
 import { initStore, storeMode, getBolla } from './store';
+import { ConfirmProvider } from './components/ConfirmDialog';
 import './MaioliPage.css';
 
 type Tab = 'nuova' | 'archivio' | 'listino';
@@ -34,6 +35,7 @@ export default function MaioliPage() {
   };
 
   return (
+    <ConfirmProvider>
     <div className="page maioli-page">
       <div className="container">
         <div className="maioli-head">
@@ -69,5 +71,6 @@ export default function MaioliPage() {
         {tab === 'listino' && <Listino />}
       </div>
     </div>
+    </ConfirmProvider>
   );
 }

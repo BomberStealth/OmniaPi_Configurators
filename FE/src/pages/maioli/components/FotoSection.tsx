@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useConfirm } from './ConfirmDialog';
 
 interface Props {
   value: string[];
@@ -32,6 +33,7 @@ async function fileToDataURL(file: File, maxDim = 1200, quality = 0.6): Promise<
 }
 
 export default function FotoSection({ value, onChange }: Props) {
+  const confirm = useConfirm();
   const camRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -51,7 +53,10 @@ export default function FotoSection({ value, onChange }: Props) {
     if (fileRef.current) fileRef.current.value = '';
   };
 
-  const remove = (i: number) => onChange(value.filter((_, idx) => idx !== i));
+  const remove = async (i: number) => {
+    const ok = await confirm({ title: 'Rimuovere la foto?', message: 'La foto verrà rimossa dalla bolla.', confirmLabel: 'Rimuovi', danger: true });
+    if (ok) onChange(value.filter((_, idx) => idx !== i));
+  };
 
   return (
     <div className="maioli-foto">

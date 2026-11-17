@@ -22,6 +22,7 @@ export interface BollaSummary {
   data_intervento: string | null;
   totale: number;
   updated_at: string;
+  deleted_at?: string | null;
 }
 export interface ListinoItem {
   id: number;
@@ -207,7 +208,7 @@ function upsertClienteLocal(d: RapportoData): number | null {
 export async function listBolle(q: string): Promise<BollaSummary[]> {
   await initStore();
   if (MODE === 'api') return jfetch(`${API}/bolle?q=${encodeURIComponent(q)}`);
-  const all = lsGet<any[]>(LS.bolle, []);
+  const all = lsGet<any[]>(LS.bolle, []).filter(b => !b.deleted_at);
   const s = q.trim().toLowerCase();
   const rows = (s ? all.filter(b => (String(b.cliente) + b.numero + b.indirizzo).toLowerCase().includes(s)) : all)
     .sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
@@ -259,11 +260,41 @@ function newNumeroLocal(): string {
   return `${anno}/${String(prog).padStart(4, '0')}`;
 }
 
+// soft-delete: sposta nel cestino
 export async function deleteBolla(id: number): Promise<void> {
   await initStore();
   if (MODE === 'api') { await jfetch(`${API}/bolle/${id}`, { method: 'DELETE' }); return; }
-  const all = lsGet<any[]>(LS.bolle, []).filter(x => x.id !== id);
-  lsSet(LS.bolle, all);
+  const all = lsGet<any[]>(LS.bolle, []);
+  const i = all.findIndex(x => x.id === id);
+  if (i >= 0) { all[i].deleted_at = new Date().toISOString(); lsSet(LS.bolle, all); }
+}
+
+export async function listBolleCancellate(q: string): Promise<BollaSummary[]> {
+  await initStore();
+  if (MODE === 'api') return jfetch(`${API}/bolle/cancellate?q=${encodeURIComponent(q)}`);
+  const all = lsGet<any[]>(LS.bolle, []);
+  const cutoff = Date.now() - 30 * 86400000;
+  const kept = all.filter(b => !b.deleted_at || Date.parse(b.deleted_at) >= cutoff);
+  if (kept.length !== all.length) lsSet(LS.bolle, kept);
+  const s = q.trim().toLowerCase();
+  const trashed = kept.filter(b => b.deleted_at)
+    .filter(b => !s || (String(b.cliente) + b.numero + b.indirizzo).toLowerCase().includes(s))
+    .sort((a, b) => (b.deleted_at || '').localeCompare(a.deleted_at || ''));
+  return trashed.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at, deleted_at: b.deleted_at }));
+}
+
+export async function restoreBolla(id: number): Promise<void> {
+  await initStore();
+  if (MODE === 'api') { await jfetch(`${API}/bolle/${id}/restore`, { method: 'POST' }); return; }
+  const all = lsGet<any[]>(LS.bolle, []);
+  const i = all.findIndex(x => x.id === id);
+  if (i >= 0) { delete all[i].deleted_at; lsSet(LS.bolle, all); }
+}
+
+export async function deleteBollaPermanent(id: number): Promise<void> {
+  await initStore();
+  if (MODE === 'api') { await jfetch(`${API}/bolle/${id}/permanent`, { method: 'DELETE' }); return; }
+  lsSet(LS.bolle, lsGet<any[]>(LS.bolle, []).filter(x => x.id !== id));
 }
 
 // ── Listino ──

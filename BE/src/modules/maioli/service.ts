@@ -161,23 +161,39 @@ export interface BollaSummary {
   data_intervento: string | null;
   totale: number;
   updated_at: string;
+  deleted_at?: string | null;
 }
 
+const SUMMARY_COLS = 'id, numero, cliente, indirizzo, data_intervento, totale, updated_at, deleted_at';
+
 export async function listBolle(q: string, limit = 50): Promise<BollaSummary[]> {
+  const cond: string[] = ['deleted_at IS NULL'];
+  const params: string[] = [];
   if (q && q.trim()) {
     const like = `%${q.trim()}%`;
-    const [rows] = await pool.execute(
-      `SELECT id, numero, cliente, indirizzo, data_intervento, totale, updated_at
-       FROM maioli_bolle
-       WHERE cliente LIKE ? OR numero LIKE ? OR indirizzo LIKE ?
-       ORDER BY updated_at DESC LIMIT ${lim(limit)}`,
-      [like, like, like],
-    );
-    return rows as BollaSummary[];
+    cond.push('(cliente LIKE ? OR numero LIKE ? OR indirizzo LIKE ?)');
+    params.push(like, like, like);
   }
   const [rows] = await pool.execute(
-    `SELECT id, numero, cliente, indirizzo, data_intervento, totale, updated_at
-     FROM maioli_bolle ORDER BY updated_at DESC LIMIT ${lim(limit)}`,
+    `SELECT ${SUMMARY_COLS} FROM maioli_bolle WHERE ${cond.join(' AND ')} ORDER BY updated_at DESC LIMIT ${lim(limit)}`,
+    params,
+  );
+  return rows as BollaSummary[];
+}
+
+// bolle nel cestino (soft-deleted); purga prima quelle oltre i 30 giorni
+export async function listBolleCancellate(q: string, limit = 100): Promise<BollaSummary[]> {
+  await pool.execute('DELETE FROM maioli_bolle WHERE deleted_at IS NOT NULL AND deleted_at < (NOW() - INTERVAL 30 DAY)');
+  const cond: string[] = ['deleted_at IS NOT NULL'];
+  const params: string[] = [];
+  if (q && q.trim()) {
+    const like = `%${q.trim()}%`;
+    cond.push('(cliente LIKE ? OR numero LIKE ? OR indirizzo LIKE ?)');
+    params.push(like, like, like);
+  }
+  const [rows] = await pool.execute(
+    `SELECT ${SUMMARY_COLS} FROM maioli_bolle WHERE ${cond.join(' AND ')} ORDER BY deleted_at DESC LIMIT ${lim(limit)}`,
+    params,
   );
   return rows as BollaSummary[];
 }
@@ -281,8 +297,17 @@ export async function updateBolla(id: number, b: BollaInput): Promise<boolean> {
   }
 }
 
+// soft-delete: sposta nel cestino
 export async function deleteBolla(id: number): Promise<boolean> {
-  const [r] = (await pool.execute('DELETE FROM maioli_bolle WHERE id=?', [id])) as [{ affectedRows: number }, unknown];
+  const [r] = (await pool.execute('UPDATE maioli_bolle SET deleted_at = NOW() WHERE id=? AND deleted_at IS NULL', [id])) as [{ affectedRows: number }, unknown];
+  return r.affectedRows > 0;
+}
+export async function restoreBolla(id: number): Promise<boolean> {
+  const [r] = (await pool.execute('UPDATE maioli_bolle SET deleted_at = NULL WHERE id=? AND deleted_at IS NOT NULL', [id])) as [{ affectedRows: number }, unknown];
+  return r.affectedRows > 0;
+}
+export async function purgeBolla(id: number): Promise<boolean> {
+  const [r] = (await pool.execute('DELETE FROM maioli_bolle WHERE id=? AND deleted_at IS NOT NULL', [id])) as [{ affectedRows: number }, unknown];
   return r.affectedRows > 0;
 }
 

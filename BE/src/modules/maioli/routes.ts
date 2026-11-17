@@ -13,9 +13,12 @@ router.delete('/clienti/:id', c.clientiDelete as never);
 
 // Bolle
 router.get('/bolle', c.bolleList as never);
+router.get('/bolle/cancellate', c.bolleCancellate as never); // prima di /bolle/:id
 router.get('/bolle/:id', c.bolleGet as never);
 router.post('/bolle', c.bolleCreate as never);
 router.put('/bolle/:id', c.bolleUpdate as never);
+router.post('/bolle/:id/restore', c.bolleRestore as never);
+router.delete('/bolle/:id/permanent', c.bollePurge as never);
 router.delete('/bolle/:id', c.bolleDelete as never);
 
 // Marche (sconto installatore / ricarico azienda)

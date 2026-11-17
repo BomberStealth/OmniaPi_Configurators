@@ -172,6 +172,21 @@
 .maioli-foto-del { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; border: none; background: rgba(0,0,0,0.55); color: #fff; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .maioli-foto-del:hover { background: rgba(225,29,42,0.9); }
 
+/* ── conferma modale ── */
+.maioli-confirm-ov { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.42); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.maioli-confirm { background: #fff; border-radius: var(--radius); max-width: 410px; width: 100%; padding: 22px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.maioli-confirm-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+.maioli-confirm-msg { font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px; }
+.maioli-confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.maioli-btn-danger { background: #e11d2a; color: #fff; border: none; }
+.maioli-btn-danger:hover { background: #c01020; }
+
+/* ── toggle archivio attive/cancellate ── */
+.maioli-arch-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-xs); overflow: hidden; margin-bottom: 14px; }
+.maioli-arch-toggle button { padding: 8px 16px; border: none; background: #fff; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; border-left: 1px solid var(--border); }
+.maioli-arch-toggle button:first-child { border-left: none; }
+.maioli-arch-toggle button.active { background: var(--accent); color: #fff; }
+
 .maioli-iva { display: flex; align-items: center; gap: 10px; justify-content: flex-end; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
 .maioli-iva-lbl { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .maioli-iva-seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-xs); overflow: hidden; }

@@ -50,6 +50,17 @@ export async function bolleDelete(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
   try { const ok = await s.deleteBolla(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.status(204).end(); } catch { err(res); }
 }
+export async function bolleCancellate(req: Request, res: Response): Promise<void> {
+  try { res.json(await s.listBolleCancellate(String(req.query.q ?? ''))); } catch { err(res); }
+}
+export async function bolleRestore(req: Request, res: Response): Promise<void> {
+  const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
+  try { const ok = await s.restoreBolla(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true }); } catch { err(res); }
+}
+export async function bollePurge(req: Request, res: Response): Promise<void> {
+  const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
+  try { const ok = await s.purgeBolla(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.status(204).end(); } catch { err(res); }
+}
 
 // ── Listino ──
 export async function listinoList(req: Request, res: Response): Promise<void> {
