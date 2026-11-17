@@ -3,6 +3,7 @@ import NuovaBolla from './views/NuovaBolla';
 import BolleFatte from './views/BolleFatte';
 import Listino from './views/Listino';
 import { LOGO } from './azienda';
+import { MAIOLI_VERSION } from './version';
 import { datiVuoti } from './model';
 import type { RapportoData } from './model';
 import { initStore, storeMode, getBolla } from './store';
@@ -43,9 +44,12 @@ export default function MaioliPage() {
               <div className="maioli-head-sub">Rapporti di intervento · bolle</div>
             </div>
           </div>
-          <span className={`maioli-mode ${mode === 'api' ? 'on' : 'off'}`} title={mode === 'api' ? 'Collegato al database' : 'Modalità demo: dati salvati solo su questo dispositivo'}>
-            {mode === 'api' ? '● Database' : '● Demo locale'}
-          </span>
+          <div className="maioli-head-right">
+            <span className="maioli-ver" title="Versione">{MAIOLI_VERSION}</span>
+            <span className={`maioli-mode ${mode === 'api' ? 'on' : 'off'}`} title={mode === 'api' ? 'Collegato al database' : 'Modalità demo: dati salvati solo su questo dispositivo'}>
+              {mode === 'api' ? '● Database' : '● Demo locale'}
+            </span>
+          </div>
         </div>
 
         <nav className="maioli-nav">

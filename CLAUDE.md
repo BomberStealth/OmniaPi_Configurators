@@ -44,6 +44,11 @@ npm run build
 - Branch di sviluppo per sessioni cloud: `claude/serene-thompson-ezk4p`; il lavoro
   Maioli è stato fatto e pushato su `main`.
 
+## Versione Maioli
+Ad OGNI modifica della sezione Maioli che verrà deployata, incrementare
+`MAIOLI_VERSION` in `FE/src/pages/maioli/version.ts` (mostrata come chip in alto
+nell'header). Patch per correzioni/piccole aggiunte, minor per funzioni nuove.
+
 ## In sospeso
 - Foto dei 3 operai (Edoardo/Daniele/Sandro) per gli avatar della manodopera
   (ora iniziali colorate): `FE/src/pages/maioli/azienda.ts`, campo `foto`.
