@@ -140,7 +140,7 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
         {/* FORM */}
         <div className="maioli-form-col">
           <div className="card maioli-card">
-            <div className="maioli-sec-title">Dati intervento</div>
+            <div className="maioli-sec-title"><span className="maioli-sec-ic" style={{ background: 'rgba(37,99,235,0.12)' }}>📋</span>Dati intervento</div>
             <div className="maioli-field maioli-col2">
               <span className="form-label">Cliente *</span>
               <ClientePicker
@@ -180,13 +180,13 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
           </div>
 
           <div className="card maioli-card">
-            <div className="maioli-sec-title">Manodopera</div>
+            <div className="maioli-sec-title"><span className="maioli-sec-ic" style={{ background: 'rgba(16,185,129,0.14)' }}>👷</span>Manodopera</div>
             <OperaiManodopera value={data.manodopera} onChange={(v) => set('manodopera', v)} />
           </div>
 
           <div className="card maioli-card">
             <div className="maioli-sec-title">
-              Materiali
+              <span className="maioli-sec-ic" style={{ background: 'rgba(139,92,246,0.14)' }}>📦</span>Materiali
               <span className="maioli-sec-hint">le righe si aggiungono da sole</span>
             </div>
             <div className="maioli-mat-head"><span>Articolo</span><span>Q.tà</span><span>Prezzo €</span><span /></div>
@@ -224,7 +224,7 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
 
           <div className="card maioli-card">
             <div className="maioli-sec-title">
-              Foto
+              <span className="maioli-sec-ic" style={{ background: 'rgba(8,145,178,0.14)' }}>📷</span>Foto
               <span className="maioli-sec-hint">salvate nella bolla, non nel foglio</span>
             </div>
             <FotoSection value={data.foto} onChange={(v) => set('foto', v)} />

@@ -51,7 +51,8 @@
 
 /* ── card / form ── */
 .maioli-card { padding: 18px; margin-bottom: 16px; }
-.maioli-sec-title { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.maioli-sec-title { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; justify-content: flex-start; gap: 10px; flex-wrap: wrap; }
+.maioli-sec-title > .maioli-sec-hint, .maioli-sec-title > .maioli-listino-tools, .maioli-sec-title > .maioli-search, .maioli-sec-title > .btn { margin-left: auto; }
 .maioli-sec-hint { font-size: 11px; font-weight: 600; color: var(--text-muted); font-style: italic; }
 
 .maioli-grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 12px; margin-bottom: 10px; }
@@ -100,10 +101,10 @@
 
 /* ── operai manodopera ── */
 .op-wrap { display: flex; flex-direction: column; gap: 10px; }
-.op-row { display: flex; gap: 18px; flex-wrap: wrap; }
-.op-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.op-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.op-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .op-avatar {
-  position: relative; width: 54px; height: 54px; border-radius: 50%;
+  position: relative; width: 46px; height: 46px; border-radius: 50%;
   border: 2px solid var(--border); background: var(--glass); cursor: pointer;
   display: flex; align-items: center; justify-content: center; padding: 0; overflow: visible;
   transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
@@ -123,11 +124,11 @@
 }
 .op-item.op-active .op-check { background: var(--opc); }
 .op-name { font-size: 12px; font-weight: 600; color: var(--text); }
-.op-fields { display: flex; gap: 6px; margin-top: 2px; }
+.op-fields { display: flex; gap: 4px; margin-top: 2px; }
 .op-fields label { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.op-fields span { font-size: 9.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.op-fields span { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.02em; }
 .op-fields input {
-  width: 56px; padding: 5px 6px; text-align: center; font-size: 13px;
+  width: 46px; padding: 5px 4px; text-align: center; font-size: 13px;
   border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; color: var(--text);
 }
 .op-fields input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
@@ -187,6 +188,34 @@
 .maioli-arch-toggle button { padding: 8px 16px; border: none; background: #fff; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; border-left: 1px solid var(--border); }
 .maioli-arch-toggle button:first-child { border-left: none; }
 .maioli-arch-toggle button.active { background: var(--accent); color: #fff; }
+
+/* ── card bolle (archivio) ── */
+.maioli-bcards { display: flex; flex-direction: column; gap: 10px; }
+.maioli-bcard { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--card-gradient); }
+.maioli-bcard-top { display: flex; align-items: center; gap: 12px; }
+.maioli-bcard-num { flex-shrink: 0; min-width: 54px; text-align: center; font-size: 14px; font-weight: 800; line-height: 1.05; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(37,99,235,0.2); border-radius: 8px; padding: 6px 8px; }
+.maioli-bcard-main { flex: 1; min-width: 0; }
+.maioli-bcard-cli { font-size: 15px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.maioli-bcard-ind { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.maioli-bcard-tot { flex-shrink: 0; font-size: 15px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+.maioli-bcard-bot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.maioli-bcard-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.maioli-chip-info, .maioli-chip-foto, .maioli-chip-scade { font-size: 12px; font-weight: 600; padding: 4px 9px; border-radius: 99px; white-space: nowrap; }
+.maioli-chip-info { background: var(--glass); border: 1px solid var(--border); color: var(--text-secondary); }
+.maioli-chip-foto { background: rgba(0,0,0,0.05); color: var(--text-muted); }
+.maioli-chip-foto.has { background: rgba(16,185,129,0.12); color: #0a9d6e; }
+.maioli-chip-scade { background: rgba(234,88,12,0.1); color: #b45309; }
+
+/* ── tasti foto quadrati ── */
+.maioli-foto-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 96px; height: 96px; border: 1.5px dashed var(--border-hover); border-radius: 14px; background: var(--glass); color: var(--accent); cursor: pointer; }
+.maioli-foto-tile:hover:not(:disabled) { background: var(--glass-hover); border-color: var(--accent); }
+.maioli-foto-tile:disabled { opacity: 0.5; cursor: default; }
+.maioli-foto-tile svg { width: 30px; height: 30px; }
+.maioli-foto-tile span { font-size: 12.5px; font-weight: 700; color: var(--text-secondary); }
+
+/* ── tocco di colore soft ── */
+.maioli-sec-ic { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 7px; font-size: 14px; flex-shrink: 0; }
+.maioli-tot-grand b { background: var(--accent-dim); border: 1px solid rgba(37,99,235,0.2); border-radius: 99px; padding: 3px 11px; }
 
 .maioli-iva { display: flex; align-items: center; gap: 10px; justify-content: flex-end; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
 .maioli-iva-lbl { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }

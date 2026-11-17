@@ -61,8 +61,19 @@ export default function FotoSection({ value, onChange }: Props) {
   return (
     <div className="maioli-foto">
       <div className="maioli-foto-actions">
-        <button type="button" className="btn btn-secondary btn-sm" onClick={() => camRef.current?.click()} disabled={busy}>📷 Fotocamera</button>
-        <button type="button" className="btn btn-secondary btn-sm" onClick={() => fileRef.current?.click()} disabled={busy}>🖼 Carica foto</button>
+        <button type="button" className="maioli-foto-tile" onClick={() => camRef.current?.click()} disabled={busy}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z" />
+            <circle cx="12" cy="12.5" r="3.2" />
+          </svg>
+          <span>Fotocamera</span>
+        </button>
+        <button type="button" className="maioli-foto-tile" onClick={() => fileRef.current?.click()} disabled={busy}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 16V5" /><path d="M8 9l4-4 4 4" /><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+          </svg>
+          <span>Carica foto</span>
+        </button>
         {busy && <span className="maioli-foto-busy">Elaboro…</span>}
         <input ref={camRef} type="file" accept="image/*" capture="environment" hidden onChange={e => addFiles(e.target.files)} />
         <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={e => addFiles(e.target.files)} />

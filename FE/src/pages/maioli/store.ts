@@ -23,6 +23,7 @@ export interface BollaSummary {
   totale: number;
   updated_at: string;
   deleted_at?: string | null;
+  n_foto?: number;
 }
 export interface ListinoItem {
   id: number;
@@ -212,7 +213,7 @@ export async function listBolle(q: string): Promise<BollaSummary[]> {
   const s = q.trim().toLowerCase();
   const rows = (s ? all.filter(b => (String(b.cliente) + b.numero + b.indirizzo).toLowerCase().includes(s)) : all)
     .sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
-  return rows.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at }));
+  return rows.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at, n_foto: (b.foto || []).length }));
 }
 
 export async function getBolla(id: number): Promise<RapportoData> {
@@ -280,7 +281,7 @@ export async function listBolleCancellate(q: string): Promise<BollaSummary[]> {
   const trashed = kept.filter(b => b.deleted_at)
     .filter(b => !s || (String(b.cliente) + b.numero + b.indirizzo).toLowerCase().includes(s))
     .sort((a, b) => (b.deleted_at || '').localeCompare(a.deleted_at || ''));
-  return trashed.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at, deleted_at: b.deleted_at }));
+  return trashed.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at, deleted_at: b.deleted_at, n_foto: (b.foto || []).length }));
 }
 
 export async function restoreBolla(id: number): Promise<void> {

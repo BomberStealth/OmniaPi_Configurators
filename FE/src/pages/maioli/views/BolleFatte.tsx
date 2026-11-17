@@ -68,32 +68,43 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
       ) : rows.length === 0 ? (
         <div className="maioli-empty">{tab === 'attive' ? 'Nessuna bolla. Creane una in Nuova Bolla e premi Salva.' : 'Il cestino è vuoto.'}</div>
       ) : (
-        <div className="maioli-table">
-          <div className="maioli-tr maioli-th">
-            <span>N°</span><span>Cliente</span><span>Indirizzo</span><span>{tab === 'attive' ? 'Data' : 'Scade tra'}</span><span className="r">Totale</span><span />
-          </div>
-          {rows.map(b => (
-            <div className="maioli-tr" key={b.id}>
-              <span className="maioli-num">{b.numero || `#${b.id}`}</span>
-              <span className="maioli-cli">{b.cliente}</span>
-              <span className="maioli-ind">{b.indirizzo || '—'}</span>
-              <span>{tab === 'attive' ? fmtData(b.data_intervento) : `${giorniRimasti(b.deleted_at)} gg`}</span>
-              <span className="r">{eurFromNumber(b.totale)}</span>
-              <span className="maioli-row-actions">
-                {tab === 'attive' ? (
-                  <>
-                    <button className="btn btn-secondary btn-sm" onClick={() => onOpen(b.id)}>Apri</button>
-                    <button className="btn-trash" title="Cancella" onClick={() => cestina(b)}>🗑</button>
-                  </>
-                ) : (
-                  <>
-                    <button className="btn btn-secondary btn-sm" onClick={() => ripristina(b)}>↩ Ripristina</button>
-                    <button className="btn-trash" title="Elimina definitivamente" onClick={() => eliminaDef(b)}>✕</button>
-                  </>
-                )}
-              </span>
-            </div>
-          ))}
+        <div className="maioli-bcards">
+          {rows.map(b => {
+            const np = (b.numero || '').split('/');
+            const foto = b.n_foto || 0;
+            return (
+              <div className="maioli-bcard" key={b.id}>
+                <div className="maioli-bcard-top">
+                  <span className="maioli-bcard-num">{b.numero && np[1] ? <>{np[0]}/<br />{np[1]}</> : (b.numero || `#${b.id}`)}</span>
+                  <div className="maioli-bcard-main">
+                    <div className="maioli-bcard-cli">{b.cliente}</div>
+                    {b.indirizzo ? <div className="maioli-bcard-ind">{b.indirizzo}</div> : null}
+                  </div>
+                  <div className="maioli-bcard-tot">{eurFromNumber(b.totale)}</div>
+                </div>
+                <div className="maioli-bcard-bot">
+                  <span className="maioli-bcard-meta">
+                    <span className="maioli-chip-info">📅 {fmtData(b.data_intervento)}</span>
+                    <span className={`maioli-chip-foto${foto > 0 ? ' has' : ''}`}>{foto > 0 ? `📷 ${foto} foto` : '📷 nessuna'}</span>
+                    {tab === 'cancellate' && <span className="maioli-chip-scade">⏳ {giorniRimasti(b.deleted_at)} gg</span>}
+                  </span>
+                  <span className="maioli-row-actions">
+                    {tab === 'attive' ? (
+                      <>
+                        <button className="btn btn-secondary btn-sm" onClick={() => onOpen(b.id)}>Apri</button>
+                        <button className="btn-trash" title="Cancella" onClick={() => cestina(b)}>🗑</button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="btn btn-secondary btn-sm" onClick={() => ripristina(b)}>↩ Ripristina</button>
+                        <button className="btn-trash" title="Elimina definitivamente" onClick={() => eliminaDef(b)}>✕</button>
+                      </>
+                    )}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
