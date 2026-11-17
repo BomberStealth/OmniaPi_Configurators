@@ -53,6 +53,16 @@
 
 .maioli-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; margin-bottom: 10px; }
 .maioli-col2 { grid-column: 1 / -1; }
+
+/* 3 date affiancate e compatte */
+.maioli-dates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.maioli-dates .maioli-field { margin-bottom: 0; }
+.maioli-dates .form-label { font-size: 11px; }
+.maioli-dates input { padding: 8px 6px; font-size: 13px; min-width: 0; }
+
+/* barra inferiore con Salva e Stampa */
+.maioli-bottombar { display: flex; justify-content: flex-end; margin-top: 4px; }
+.maioli-bottom-print { min-width: 210px; }
 .maioli-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
 .maioli-field .form-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
 .maioli-field input, .maioli-field textarea {
@@ -188,15 +198,21 @@
   .maioli-tabs { display: flex; }
   .maioli-split.tab-compila .maioli-preview-col { display: none; }
   .maioli-split.tab-anteprima .maioli-form-col { display: none; }
+  /* Salva e Stampa sempre raggiungibile in fondo */
+  .maioli-bottombar { position: sticky; bottom: 0; z-index: 5; padding: 10px 0 12px; margin-top: 8px; background: linear-gradient(to top, var(--bg) 72%, rgba(241,244,251,0)); }
+  .maioli-bottom-print { flex: 1; min-width: 0; padding: 13px; font-size: 15px; }
   .maioli-tr, .maioli-th { grid-template-columns: 70px 1fr 90px 110px; }
   .maioli-tr .maioli-ind, .maioli-th span:nth-child(3), .maioli-tr span:nth-child(4) { display: none; }
   .maioli-ltr { grid-template-columns: 1fr 86px 70px 100px; }
   .maioli-ltr > input:nth-child(1), .maioli-ltr > input:nth-child(4), .maioli-lth span:nth-child(1), .maioli-lth span:nth-child(4), .maioli-lth span:nth-child(7), .maioli-finale { display: none; }
 }
 @media (max-width: 520px) {
-  .maioli-grid2 { grid-template-columns: 1fr; }
+  /* i campi corti restano a 2 per riga (meno scroll); le date restano 3 affiancate */
+  .maioli-dates { gap: 6px; }
+  .maioli-dates .form-label { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .maioli-dates input { padding: 7px 4px; font-size: 12px; }
   .maioli-mat-head { display: none; }
-  .maioli-mat-row { grid-template-columns: 56px 1fr 80px; grid-template-areas: 'qta desc prezzo' 'cod cod act'; }
+  .maioli-mat-row { grid-template-columns: 58px 1fr auto; grid-template-areas: 'qta desc desc' 'cod prezzo act'; gap: 6px; }
   .maioli-mat-row .qta { grid-area: qta; }
   .maioli-mat-row input:nth-child(2) { grid-area: cod; }
   .maioli-mat-row input:nth-child(3) { grid-area: desc; }

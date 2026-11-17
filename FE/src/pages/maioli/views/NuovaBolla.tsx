@@ -138,13 +138,15 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
                 onSelect={(c: Cliente) => setData(d => clienteToData(c, d))}
               />
             </div>
-            <div className="maioli-grid2">
+            <div className="maioli-dates">
               <label className="maioli-field"><span className="form-label">Data chiamata *</span>
                 <input type="date" value={data.dataChiamata} onChange={e => set('dataChiamata', e.target.value)} /></label>
               <label className="maioli-field"><span className="form-label">Data intervento</span>
                 <input type="date" value={data.dataIntervento} onChange={e => set('dataIntervento', e.target.value)} /></label>
               <label className="maioli-field"><span className="form-label">Consegnato il</span>
                 <input type="date" value={data.dataConsegna} onChange={e => set('dataConsegna', e.target.value)} /></label>
+            </div>
+            <div className="maioli-grid2">
               <label className="maioli-field"><span className="form-label">Condominio</span>
                 <input value={data.condominio} onChange={e => set('condominio', e.target.value)} /></label>
               <label className="maioli-field"><span className="form-label">Amministratore</span>
@@ -209,6 +211,12 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
               {tot.aliquota > 0 && <span>IVA {tot.aliquota}%: <b>{eur(tot.iva)}</b></span>}
               <span className="maioli-tot-grand">Totale: <b>{eur(tot.totale)}</b></span>
             </div>
+          </div>
+
+          <div className="maioli-bottombar">
+            <button className="btn btn-primary maioli-bottom-print" onClick={salvaEStampa} disabled={!puoStampare || saving}>
+              {saving ? 'Salvo…' : '🖨 Salva e Stampa'}
+            </button>
           </div>
         </div>
 
