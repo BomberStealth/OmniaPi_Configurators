@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 export interface ConfirmOpts {
   title?: string;
@@ -20,7 +21,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
   return (
     <Ctx.Provider value={confirm}>
       {children}
-      {state && (
+      {state && createPortal(
         <div className="maioli-confirm-ov" onMouseDown={() => close(false)}>
           <div className="maioli-confirm" onMouseDown={e => e.stopPropagation()}>
             {state.opts.title && <div className="maioli-confirm-title">{state.opts.title}</div>}
@@ -32,7 +33,8 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </Ctx.Provider>
   );

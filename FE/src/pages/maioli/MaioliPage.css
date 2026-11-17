@@ -137,13 +137,12 @@
 /* ── materiali ── */
 .maioli-mat-head, .maioli-mat-row { display: grid; grid-template-columns: minmax(0, 1fr) 72px 92px auto; gap: 8px; align-items: center; }
 .maioli-mat-head { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 0 2px 6px; }
-.maioli-mat-row { margin-bottom: 8px; position: relative; grid-template-areas: 'articolo qta prezzo corner'; }
+.maioli-mat-row { margin-bottom: 8px; position: relative; grid-template-areas: 'articolo qta prezzo del'; }
 .maioli-mat-row .articolo { grid-area: articolo; }
 .maioli-mat-row .qta { grid-area: qta; }
 .maioli-mat-row .prezzo { grid-area: prezzo; }
 .mf-cod { font-size: 10px; color: var(--text-muted); font-family: ui-monospace, Menlo, monospace; padding-left: 2px; margin-top: 1px; }
-.maioli-mat-corner { grid-area: corner; display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
-.maioli-mat-del { width: 28px; height: 30px; border: 1px solid var(--border); background: var(--glass); border-radius: var(--radius-xs); color: var(--text-muted); cursor: pointer; font-size: 13px; line-height: 1; }
+.maioli-mat-del { grid-area: del; width: 28px; height: 30px; justify-self: end; border: 1px solid var(--border); background: var(--glass); border-radius: var(--radius-xs); color: var(--text-muted); cursor: pointer; font-size: 13px; line-height: 1; }
 .maioli-mat-del:hover { border-color: #e11d2a; color: #e11d2a; }
 .mf { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .mf-l { display: none; }
@@ -288,10 +287,9 @@
   .maioli-dates .form-label { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .maioli-dates input { padding: 7px 4px; font-size: 12px; }
   .maioli-mat-head { display: none; }
-  .maioli-mat-row { grid-template-columns: 92px 110px 1fr; grid-template-areas: 'corner corner corner' 'articolo articolo articolo' 'qta prezzo .'; gap: 8px; border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 12px; }
-  .maioli-mat-corner { grid-area: corner; justify-content: flex-end; }
-  .maioli-mat-num { display: flex; width: 22px; height: 22px; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(37,99,235,0.25); border-radius: 50%; }
-  .maioli-mat-del { height: 28px; }
+  .maioli-mat-row { grid-template-columns: 84px 100px 1fr; grid-template-areas: 'articolo articolo articolo' 'qta prezzo .'; gap: 8px; border: 1px solid var(--border); border-radius: 12px; padding: 14px 12px 12px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 15px; }
+  .maioli-mat-num { display: flex; position: absolute; top: -11px; left: 10px; min-width: 24px; height: 22px; padding: 0 6px; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--accent); background: #fff; border: 1px solid rgba(37,99,235,0.3); border-radius: 7px; }
+  .maioli-mat-del { position: absolute; top: -11px; right: 10px; width: 26px; height: 22px; justify-self: auto; background: #fff; border-radius: 7px; }
   .maioli-mat-row .articolo { grid-area: articolo; }
   .maioli-mat-row .qta { grid-area: qta; }
   .maioli-mat-row .prezzo { grid-area: prezzo; }

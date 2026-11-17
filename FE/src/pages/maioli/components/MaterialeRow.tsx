@@ -55,10 +55,8 @@ export default function MaterialeRow({ m, index, onChange, onDelete }: Props) {
 
   return (
     <div className="maioli-mat-row" ref={boxRef}>
-      <div className="maioli-mat-corner">
-        <span className="maioli-mat-num">{index}</span>
-        <button type="button" className="maioli-mat-del" title="Elimina articolo" onClick={onDelete}>✕</button>
-      </div>
+      <span className="maioli-mat-num">{index}</span>
+      <button type="button" className="maioli-mat-del" title="Elimina articolo" onClick={onDelete}>✕</button>
       <label className="mf articolo">
         <span className="mf-l">Articolo</span>
         <input value={m.descrizione}
