@@ -3,6 +3,7 @@ import FoglioRapporto from '../FoglioRapporto';
 import ClientePicker from '../components/ClientePicker';
 import OperaiManodopera from '../components/OperaiManodopera';
 import MaterialeRow from '../components/MaterialeRow';
+import FotoSection from '../components/FotoSection';
 import { datiVuoti, rigaVuota, calcola, eur } from '../model';
 import type { RapportoData } from '../model';
 import { saveBolla, clienteToData } from '../store';
@@ -221,6 +222,14 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
               {tot.aliquota > 0 && <span>IVA {tot.aliquota}%: <b>{eur(tot.iva)}</b></span>}
               <span className="maioli-tot-grand">Totale: <b>{eur(tot.totale)}</b></span>
             </div>
+          </div>
+
+          <div className="card maioli-card">
+            <div className="maioli-sec-title">
+              Foto
+              <span className="maioli-sec-hint">salvate nella bolla, non nel foglio</span>
+            </div>
+            <FotoSection value={data.foto} onChange={(v) => set('foto', v)} />
           </div>
 
           <div className="maioli-bottombar">

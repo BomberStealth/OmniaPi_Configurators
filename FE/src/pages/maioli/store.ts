@@ -73,6 +73,7 @@ export function toPayload(d: RapportoData) {
     manodopera: d.manodopera
       .filter(x => x.operaio)
       .map(x => ({ operaio: x.operaio, ore: n2(x.ore), tariffa: n2(x.tariffa) })),
+    foto: (d.foto ?? []).filter(Boolean),
   };
 }
 
@@ -96,6 +97,7 @@ export function fromBolla(row: Record<string, any>): RapportoData {
     iva: Number(row.iva ?? 0),
     manodopera: (row.manodopera ?? []).map((m: any) => ({ operaio: m.operaio, ore: String(m.ore ?? ''), tariffa: String(m.tariffa ?? '') })),
     materiali: (row.materiali ?? []).map((r: any) => ({ qta: String(r.qta ?? ''), codice: r.codice ?? '', descrizione: r.descrizione ?? '', prezzo: String(r.prezzo ?? ''), listino_id: r.listino_id ?? null })),
+    foto: Array.isArray(row.foto) ? row.foto.filter(Boolean) : [],
   };
 }
 
@@ -261,9 +263,14 @@ export async function listListino(q: string, marca = ''): Promise<ListinoItem[]>
   await initStore();
   if (MODE === 'api') return jfetch(`${API}/listino?q=${encodeURIComponent(q)}&marca=${encodeURIComponent(marca)}`);
   const all = lsGet<ListinoItem[]>(LS.listino, []);
-  const s = q.trim().toLowerCase();
+  const tokens = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
   return all
-    .filter(it => (!marca || it.marca === marca) && (!s || (it.codice + it.descrizione).toLowerCase().includes(s)))
+    .filter(it => {
+      if (marca && it.marca !== marca) return false;
+      if (!tokens.length) return true;
+      const hay = `${it.codice} ${it.descrizione} ${it.categoria ?? ''}`.toLowerCase();
+      return tokens.every(t => hay.includes(t));
+    })
     .sort((a, b) => (a.marca + a.descrizione).localeCompare(b.marca + b.descrizione));
 }
 

@@ -11,7 +11,7 @@ const app = express();
 const PORT = parseInt(process.env.PORT || '3001');
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '30mb' })); // le bolle possono includere foto (base64)
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, ts: new Date().toISOString() }));
 

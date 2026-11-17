@@ -63,6 +63,7 @@ export interface BollaInput {
   totale?: number;
   materiali?: RigaInput[];
   manodopera?: ManoInput[];
+  foto?: string[];
   // se true, aggiorna anche l'anagrafica cliente con questi dati
   salvaCliente?: boolean;
 }
@@ -178,7 +179,8 @@ export async function getBolla(id: number): Promise<Record<string, unknown> | nu
   if (!bolla) return null;
   const [righe] = await pool.execute('SELECT * FROM maioli_bolle_righe WHERE bolla_id=? ORDER BY ordine ASC, id ASC', [id]);
   const [mano] = await pool.execute('SELECT * FROM maioli_bolle_manodopera WHERE bolla_id=? ORDER BY id ASC', [id]);
-  return { ...bolla, materiali: righe, manodopera: mano };
+  const [foto] = (await pool.execute('SELECT img FROM maioli_bolle_foto WHERE bolla_id=? ORDER BY ordine ASC, id ASC', [id])) as [{ img: string }[], unknown];
+  return { ...bolla, materiali: righe, manodopera: mano, foto: foto.map(f => f.img) };
 }
 
 async function nextNumero(conn: PoolConnection): Promise<{ numero: string; anno: number; progressivo: number }> {
@@ -195,6 +197,7 @@ async function nextNumero(conn: PoolConnection): Promise<{ numero: string; anno:
 async function writeRighe(conn: PoolConnection, bollaId: number, b: BollaInput): Promise<void> {
   await conn.execute('DELETE FROM maioli_bolle_righe WHERE bolla_id=?', [bollaId]);
   await conn.execute('DELETE FROM maioli_bolle_manodopera WHERE bolla_id=?', [bollaId]);
+  await conn.execute('DELETE FROM maioli_bolle_foto WHERE bolla_id=?', [bollaId]);
   const mats = (b.materiali ?? []).filter(m => (m.descrizione && m.descrizione.trim()) || m.qta || m.prezzo);
   let ord = 0;
   for (const m of mats) {
@@ -209,6 +212,14 @@ async function writeRighe(conn: PoolConnection, bollaId: number, b: BollaInput):
     await conn.execute(
       `INSERT INTO maioli_bolle_manodopera (bolla_id, operaio, ore, tariffa) VALUES (?, ?, ?, ?)`,
       [bollaId, x.operaio, x.ore || 0, x.tariffa || 0],
+    );
+  }
+  const foto = (b.foto ?? []).filter(Boolean);
+  let fo = 0;
+  for (const img of foto) {
+    await conn.execute(
+      `INSERT INTO maioli_bolle_foto (bolla_id, ordine, img) VALUES (?, ?, ?)`,
+      [bollaId, fo++, img],
     );
   }
 }
@@ -271,9 +282,13 @@ export async function listListino(q: string, marca: string, limit = 500): Promis
   const where: string[] = [];
   const params: (string | number)[] = [];
   if (q && q.trim()) {
-    const like = `%${q.trim()}%`;
-    where.push('(codice LIKE ? OR descrizione LIKE ?)');
-    params.push(like, like);
+    // ricerca a parole: ogni token deve comparire in codice/descrizione/categoria (AND)
+    const tokens = q.trim().split(/\s+/).slice(0, 6);
+    for (const tok of tokens) {
+      const like = `%${tok}%`;
+      where.push('(codice LIKE ? OR descrizione LIKE ? OR categoria LIKE ?)');
+      params.push(like, like, like);
+    }
   }
   if (marca && marca.trim()) {
     where.push('marca = ?');

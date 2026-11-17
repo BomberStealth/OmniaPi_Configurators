@@ -34,6 +34,7 @@ export interface RapportoData {
   iva: number;              // aliquota IVA: 0 (nessuna), 10 o 22
   manodopera: ManoRiga[];
   materiali: MaterialeRiga[];
+  foto: string[];           // foto allegate (dataURL) — salvate, NON stampate
 }
 
 export function oggiISO(): string {
@@ -67,6 +68,7 @@ export function datiVuoti(): RapportoData {
     iva: 0,
     manodopera: [],
     materiali: [rigaVuota()],
+    foto: [],
   };
 }
 

@@ -161,6 +161,17 @@
 .maioli-art-prezzo { margin-left: auto; font-size: 13.5px; font-weight: 800; color: var(--text); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .maioli-art-descr { font-size: 12.5px; color: var(--text-secondary); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* ── sezione foto ── */
+.maioli-foto { display: flex; flex-direction: column; gap: 12px; }
+.maioli-foto-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.maioli-foto-busy { font-size: 12px; color: var(--text-muted); }
+.maioli-foto-empty { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+.maioli-foto-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+.maioli-foto-thumb { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: #eef0f5; }
+.maioli-foto-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.maioli-foto-del { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; border: none; background: rgba(0,0,0,0.55); color: #fff; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.maioli-foto-del:hover { background: rgba(225,29,42,0.9); }
+
 .maioli-iva { display: flex; align-items: center; gap: 10px; justify-content: flex-end; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
 .maioli-iva-lbl { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .maioli-iva-seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-xs); overflow: hidden; }
