@@ -16,14 +16,18 @@ export default function Listino() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try {
-      const [items, marche] = await Promise.all([listListino(''), listMarche()]);
-      setRows(items);
-      const s: Record<string, MarcaSet> = {};
-      for (const it of items) s[it.marca] = { sconto: String(it.sconto ?? 0), ricarico: String(it.ricarico ?? 0) };
-      for (const m of marche) s[m.marca] = { sconto: String(m.sconto), ricarico: String(m.ricarico) };
-      setSett(s);
-    } catch { setRows([]); } finally { setLoading(false); }
+    // fetch indipendenti: se le marche non sono disponibili (BE non aggiornato)
+    // il listino si vede lo stesso
+    let items: ListinoItem[] = [];
+    let marche: { marca: string; sconto: number; ricarico: number }[] = [];
+    try { items = await listListino(''); } catch { items = []; }
+    try { marche = await listMarche(); } catch { marche = []; }
+    setRows(items);
+    const s: Record<string, MarcaSet> = {};
+    for (const it of items) s[it.marca] = { sconto: String(it.sconto ?? 0), ricarico: String(it.ricarico ?? 0) };
+    for (const m of marche) s[m.marca] = { sconto: String(m.sconto), ricarico: String(m.ricarico) };
+    setSett(s);
+    setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
