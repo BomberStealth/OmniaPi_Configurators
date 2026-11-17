@@ -140,6 +140,7 @@
 .maioli-mat-row { margin-bottom: 8px; position: relative; }
 .mf { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .mf-l { display: none; }
+.maioli-mat-num { display: none; }
 .maioli-mat-row input { width: 100%; padding: 8px 9px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; color: var(--text); font-size: 13px; }
 .maioli-mat-row .cod input { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .maioli-mat-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
@@ -249,7 +250,8 @@
   .maioli-dates .form-label { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .maioli-dates input { padding: 7px 4px; font-size: 12px; }
   .maioli-mat-head { display: none; }
-  .maioli-mat-row { grid-template-columns: 72px minmax(0, 1fr) auto; grid-template-areas: 'descr descr descr' 'qta prezzo act' 'cod cod cod'; gap: 6px; }
+  .maioli-mat-row { grid-template-columns: 72px minmax(0, 1fr) auto; grid-template-areas: 'descr descr descr' 'qta prezzo act' 'cod cod cod'; gap: 8px; border: 1px solid var(--border); border-radius: 12px; padding: 14px 12px 12px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 12px; }
+  .maioli-mat-num { display: flex; position: absolute; top: 10px; right: 12px; width: 22px; height: 22px; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(37,99,235,0.25); border-radius: 50%; }
   .maioli-mat-row .descr { grid-area: descr; }
   .maioli-mat-row .qta { grid-area: qta; }
   .maioli-mat-row .prezzo { grid-area: prezzo; }

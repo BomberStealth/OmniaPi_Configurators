@@ -192,6 +192,7 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
               <MaterialeRow
                 key={i}
                 m={m}
+                index={i + 1}
                 isFirst={i === 0}
                 isLast={i === data.materiali.length - 1}
                 onChange={(patch) => setMatPatch(i, patch)}

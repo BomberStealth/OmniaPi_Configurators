@@ -10,6 +10,7 @@ export const prezzoFinale = (it: Pick<ListinoItem, 'prezzo' | 'ricarico'>) =>
 
 interface Props {
   m: MaterialeRiga;
+  index: number;
   isFirst: boolean;
   isLast: boolean;
   onChange: (patch: Partial<MaterialeRiga>) => void;
@@ -17,7 +18,7 @@ interface Props {
   onDelete: () => void;
 }
 
-export default function MaterialeRow({ m, isFirst, isLast, onChange, onMove, onDelete }: Props) {
+export default function MaterialeRow({ m, index, isFirst, isLast, onChange, onMove, onDelete }: Props) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const [results, setResults] = useState<ListinoItem[]>([]);
@@ -56,6 +57,7 @@ export default function MaterialeRow({ m, isFirst, isLast, onChange, onMove, onD
 
   return (
     <div className="maioli-mat-row" ref={boxRef}>
+      <span className="maioli-mat-num">{index}</span>
       <label className="mf qta">
         <span className="mf-l">Q.tà</span>
         <input inputMode="decimal" value={m.qta} onChange={e => onChange({ qta: e.target.value })} placeholder="1" />
