@@ -44,6 +44,17 @@ npm run build
 - Branch di sviluppo per sessioni cloud: `claude/serene-thompson-ezk4p`; il lavoro
   Maioli è stato fatto e pushato su `main`.
 
+## ⚠️ IN SOSPESO — fix salvataggio bolla con FOTO (ricordare a Edoardo)
+Salvare una bolla CON foto dà "Salvataggio non riuscito". Cause server-side:
+1. Il BACKEND va ricompilato+riavviato con la v1.1.0+ (limite body alzato a
+   30mb e tabella `maioli_bolle_foto`): `cd BE && npm run build && pm2 restart
+   configuratori-be && pm2 logs configuratori-be --lines 25 --nostream`
+   (nei log deve comparire `Migration applicata: 010_bolle_foto.sql`).
+2. Se persiste: nginx blocca i body > 1MB → aggiungere `client_max_body_size
+   30m;` nel server block del sito (backup prima) e `sudo nginx -t &&
+   sudo systemctl reload nginx`.
+Scommessa: era solo il BE non aggiornato. Chiedere a Edoardo se l'ha risolto.
+
 ## Versione Maioli
 Ad OGNI modifica della sezione Maioli che verrà deployata, incrementare
 `MAIOLI_VERSION` in `FE/src/pages/maioli/version.ts` (mostrata come chip in alto
