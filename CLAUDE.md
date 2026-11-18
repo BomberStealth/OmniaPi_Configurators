@@ -104,6 +104,9 @@ Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
 (BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **19**.
 
 ## In sospeso / idee
+- ⚠️ **DEMO LOCALE** — a inizio prossima sessione CHIEDERE a Edoardo: vuole
+  parlare della modalità fallback localStorage ("Demo locale" in `store.ts`,
+  quando il BE non risponde). Da chiarire con lui prima di toccarla.
 - `schema_migrations` table: far girare ogni migrazione una sola volta (ora
   rigirano tutte ad ogni boot; funziona ma è fragile per le UPDATE).
 - Riepiloghi/totali mensili (bolle del mese, incassato).
