@@ -52,10 +52,11 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label className="form-label">Email</label>
-            <input className="form-input" type="email" value={email}
+            <label className="form-label">Email o nome utente</label>
+            <input className="form-input" type="text" value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="email@esempio.com" required autoFocus />
+              placeholder="email@esempio.com oppure nome utente"
+              autoComplete="username" required autoFocus />
           </div>
           <div className="form-group">
             <label className="form-label">Password</label>
