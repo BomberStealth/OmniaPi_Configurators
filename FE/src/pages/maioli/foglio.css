@@ -71,6 +71,7 @@
 .foglio-root .sign .decl { font-size: 2.55mm; font-weight: 700; padding: 1mm 2mm; border-bottom: var(--line); }
 .foglio-root .sign .who { display: grid; grid-template-columns: 1fr 1fr; }
 .foglio-root .sign .who > div { padding: 1.2mm 2mm; height: 17mm; position: relative; }
+.foglio-root .sign .who .firma-img { position: absolute; left: 2mm; right: 2mm; top: 5mm; bottom: 1mm; margin: auto; max-width: calc(100% - 4mm); max-height: 11mm; object-fit: contain; object-position: center bottom; }
 
 .foglio-root .foot { margin-top: auto; padding-top: 4mm; border-top: var(--line); display: grid; grid-template-columns: 1fr 1fr 34mm; gap: 4mm; align-items: end; font-size: 2.7mm; font-weight: 700; line-height: 1.35; }
 .foglio-root .foot .fg-logo-img { justify-self: end; }

@@ -35,6 +35,8 @@ export interface RapportoData {
   manodopera: ManoRiga[];
   materiali: MaterialeRiga[];
   foto: string[];           // foto allegate (dataURL) — salvate, NON stampate
+  firmaTecnico: string;     // firma a dito (dataURL PNG) — stampata nel foglio
+  firmaCliente: string;     // firma a dito (dataURL PNG) — stampata nel foglio
 }
 
 export function oggiISO(): string {
@@ -69,6 +71,8 @@ export function datiVuoti(): RapportoData {
     manodopera: [],
     materiali: [rigaVuota()],
     foto: [],
+    firmaTecnico: '',
+    firmaCliente: '',
   };
 }
 

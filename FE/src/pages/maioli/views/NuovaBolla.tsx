@@ -4,6 +4,7 @@ import ClientePicker from '../components/ClientePicker';
 import OperaiManodopera from '../components/OperaiManodopera';
 import MaterialeRow from '../components/MaterialeRow';
 import FotoSection from '../components/FotoSection';
+import SignaturePad from '../components/SignaturePad';
 import { datiVuoti, rigaVuota, calcola, eur } from '../model';
 import type { RapportoData } from '../model';
 import { saveBolla, clienteToData } from '../store';
@@ -228,6 +229,17 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
               <span className="maioli-sec-hint">salvate nella bolla, non nel foglio</span>
             </div>
             <FotoSection value={data.foto} onChange={(v) => set('foto', v)} />
+          </div>
+
+          <div className="card maioli-card">
+            <div className="maioli-sec-title">
+              <span className="maioli-sec-ic" style={{ background: 'rgba(37,99,235,0.14)' }}>✍️</span>Firme
+              <span className="maioli-sec-hint">compaiono in fondo al foglio stampato</span>
+            </div>
+            <div className="maioli-firme">
+              <SignaturePad label="Firma Tecnico" value={data.firmaTecnico} onChange={(v) => set('firmaTecnico', v)} />
+              <SignaturePad label="Firma Cliente" value={data.firmaCliente} onChange={(v) => set('firmaCliente', v)} />
+            </div>
           </div>
 
           <div className="maioli-bottombar">

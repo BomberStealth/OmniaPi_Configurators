@@ -86,6 +86,8 @@ export function toPayload(d: RapportoData) {
       .filter(x => x.operaio)
       .map(x => ({ operaio: x.operaio, ore: n2(x.ore), tariffa: n2(x.tariffa) })),
     foto: (d.foto ?? []).filter(Boolean),
+    firma_tecnico: d.firmaTecnico || null,
+    firma_cliente: d.firmaCliente || null,
   };
 }
 
@@ -110,6 +112,8 @@ export function fromBolla(row: Record<string, any>): RapportoData {
     manodopera: (row.manodopera ?? []).map((m: any) => ({ operaio: m.operaio, ore: String(m.ore ?? ''), tariffa: String(m.tariffa ?? '') })),
     materiali: (row.materiali ?? []).map((r: any) => ({ qta: String(r.qta ?? ''), codice: r.codice ?? '', descrizione: r.descrizione ?? '', prezzo: String(r.prezzo ?? ''), listino_id: r.listino_id ?? null })),
     foto: Array.isArray(row.foto) ? row.foto.filter(Boolean) : [],
+    firmaTecnico: row.firma_tecnico ?? '',
+    firmaCliente: row.firma_cliente ?? '',
   };
 }
 

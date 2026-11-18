@@ -121,8 +121,14 @@ export default function FoglioRapporto({ data }: { data: RapportoData }) {
                 Si prende atto che i lavori effettuati sono regolarmente funzionanti e che non sono stati causati danni di qualsiasi natura
               </div>
               <div className="who">
-                <div><span className="lbl">FIRMA DEL CLIENTE:</span></div>
-                <div><span className="lbl">FIRMA DEL TECNICO:</span></div>
+                <div>
+                  <span className="lbl">FIRMA DEL CLIENTE:</span>
+                  {ultima && data.firmaCliente ? <img className="firma-img" src={data.firmaCliente} alt="Firma cliente" /> : null}
+                </div>
+                <div>
+                  <span className="lbl">FIRMA DEL TECNICO:</span>
+                  {ultima && data.firmaTecnico ? <img className="firma-img" src={data.firmaTecnico} alt="Firma tecnico" /> : null}
+                </div>
               </div>
             </div>
 

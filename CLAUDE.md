@@ -96,16 +96,18 @@ listino **Vimar/BTicino/Hager/Cavi/Tubi e Corrugati** con ricerca a parole
 (es. "dpn 10"), **sigle marca 3 lettere** nella tendina ("SIGLA · Codice ·
 Descrizione") e nel listino, **sotto-gruppi per categoria** nel listino,
 **sconto installatore + ricarico azienda per marca** (Listino → Scontato → Finale),
-**login JWT** con account creati a mano.
+**login JWT** con account creati a mano, **firme a dito** (Tecnico + Cliente,
+pad canvas) stampate in fondo al foglio.
 
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.8.0**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.9.0**.
+Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
+(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **18**.
 
 ## In sospeso / idee
 - `schema_migrations` table: far girare ogni migrazione una sola volta (ora
   rigirano tutte ad ogni boot; funziona ma è fragile per le UPDATE).
-- Firma a dito (canvas) su cliente/tecnico nel foglio.
 - Riepiloghi/totali mensili (bolle del mese, incassato).
 - Articoli recenti/preferiti in cima alla ricerca materiali.
