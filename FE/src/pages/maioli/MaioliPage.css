@@ -151,6 +151,8 @@
 .maioli-mat-row input { width: 100%; padding: 8px 9px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; color: var(--text); font-size: 13px; }
 .maioli-mat-row .qta input, .maioli-mat-row .prezzo input { text-align: center; padding: 8px 6px; }
 .maioli-mat-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.maioli-mat-row .prezzo input.zero { background: #fff1f1; border-color: #fca5a5; }
+.maioli-mat-row .prezzo input.zero:focus { border-color: #f87171; box-shadow: 0 0 0 3px rgba(248,113,113,0.18); }
 
 /* tendina ricerca articoli dal listino */
 .maioli-art-dropdown { position: absolute; z-index: 30; top: calc(100% + 2px); left: 0; right: 0; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 10px 30px rgba(0,0,0,0.18); max-height: 330px; overflow-y: auto; }

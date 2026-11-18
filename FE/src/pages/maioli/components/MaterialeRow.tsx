@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { listListino } from '../store';
 import type { ListinoItem } from '../store';
-import { eur, finaleDa } from '../model';
+import { eur, finaleDa, n2 } from '../model';
 import type { MaterialeRiga } from '../model';
 import { siglaMarca } from '../azienda';
 
@@ -42,17 +42,20 @@ export default function MaterialeRow({ m, index, onChange, onDelete }: Props) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, []);
 
-  // digitazione libera nell'unico campo "Articolo": cerca e azzera il codice (testo libero)
+  // digitazione libera nell'unico campo "Articolo": cerca e azzera marca/codice (testo libero)
   const typeSearch = (val: string) => {
-    onChange({ descrizione: val, codice: '', listino_id: null });
+    onChange({ descrizione: val, codice: '', marca: '', listino_id: null });
     setQ(val);
     setOpen(true);
   };
 
   const pick = (it: ListinoItem) => {
-    onChange({ codice: it.codice, descrizione: it.descrizione, prezzo: String(prezzoFinale(it)), listino_id: it.id });
+    onChange({ codice: it.codice, marca: it.marca, descrizione: it.descrizione, prezzo: String(prezzoFinale(it)), listino_id: it.id });
     setOpen(false);
   };
+
+  // riga "piena" ma con prezzo 0 → evidenzia la casella prezzo (va bene, ma si nota)
+  const prezzoZero = (m.descrizione.trim() !== '' || !!m.codice) && n2(m.prezzo) === 0;
 
   return (
     <div className="maioli-mat-row" ref={boxRef}>
@@ -64,7 +67,7 @@ export default function MaterialeRow({ m, index, onChange, onDelete }: Props) {
           onChange={e => typeSearch(e.target.value)}
           onFocus={() => { setQ(m.descrizione || m.codice); setOpen(true); }}
           placeholder="Cerca articolo (codice o descrizione)…" autoComplete="off" />
-        {m.codice ? <span className="mf-cod">{m.codice}</span> : null}
+        {(m.marca || m.codice) ? <span className="mf-cod">{[m.marca, m.codice].filter(Boolean).join(' · ')}</span> : null}
         {open && results.length > 0 && (
           <div className="maioli-art-dropdown">
             {results.map(it => (
@@ -87,7 +90,7 @@ export default function MaterialeRow({ m, index, onChange, onDelete }: Props) {
       </label>
       <label className="mf prezzo">
         <span className="mf-l">Prezzo €</span>
-        <input inputMode="decimal" value={m.prezzo} onChange={e => onChange({ prezzo: e.target.value, listino_id: null })} placeholder="0,00" />
+        <input className={prezzoZero ? 'zero' : ''} inputMode="decimal" value={m.prezzo} onChange={e => onChange({ prezzo: e.target.value, listino_id: null })} placeholder="0,00" />
       </label>
     </div>
   );

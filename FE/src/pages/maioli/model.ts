@@ -3,6 +3,7 @@ import { DEFAULT_TARIFFA_ORARIA, OPERAI } from './azienda';
 export interface MaterialeRiga {
   qta: string;
   codice: string;
+  marca?: string;
   descrizione: string;
   prezzo: string;
   listino_id?: number | null;
@@ -46,7 +47,7 @@ export function oggiISO(): string {
 }
 
 export function rigaVuota(): MaterialeRiga {
-  return { qta: '', codice: '', descrizione: '', prezzo: '', listino_id: null };
+  return { qta: '', codice: '', marca: '', descrizione: '', prezzo: '', listino_id: null };
 }
 
 export function datiVuoti(): RapportoData {

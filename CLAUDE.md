@@ -99,9 +99,9 @@ pad canvas) stampate in fondo al foglio.
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.9.0**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.10.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
-(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **18**.
+(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **19**.
 
 ## In sospeso / idee
 - `schema_migrations` table: far girare ogni migrazione una sola volta (ora

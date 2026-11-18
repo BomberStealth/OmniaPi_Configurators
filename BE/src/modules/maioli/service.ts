@@ -103,6 +103,7 @@ export interface Marca {
 export interface RigaInput {
   qta: number;
   codice: string;
+  marca?: string | null;
   descrizione: string;
   prezzo: number;
   listino_id?: number | null;
@@ -299,9 +300,9 @@ async function writeRighe(conn: PoolConnection, bollaId: number, b: BollaInput):
   let ord = 0;
   for (const m of mats) {
     await conn.execute(
-      `INSERT INTO maioli_bolle_righe (bolla_id, ordine, qta, codice, descrizione, prezzo, listino_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [bollaId, ord++, m.qta || 0, m.codice ?? '', m.descrizione ?? '', m.prezzo || 0, m.listino_id ?? null],
+      `INSERT INTO maioli_bolle_righe (bolla_id, ordine, qta, codice, marca, descrizione, prezzo, listino_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [bollaId, ord++, m.qta || 0, m.codice ?? '', m.marca ?? '', m.descrizione ?? '', m.prezzo || 0, m.listino_id ?? null],
     );
   }
   const mano = (b.manodopera ?? []).filter(x => x.operaio && (x.ore || x.tariffa));
