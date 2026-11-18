@@ -139,7 +139,7 @@
 .maioli-mat-head, .maioli-mat-row { display: grid; grid-template-columns: minmax(0, 1fr) 72px 92px auto; gap: 8px; align-items: center; }
 .maioli-mat-head { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 0 2px 6px; }
 .maioli-mat-row { margin-bottom: 8px; position: relative; grid-template-areas: 'articolo qta prezzo del'; }
-.maioli-mat-row .articolo { grid-area: articolo; }
+.maioli-mat-row .articolo { grid-area: articolo; position: relative; }
 .maioli-mat-row .qta { grid-area: qta; }
 .maioli-mat-row .prezzo { grid-area: prezzo; }
 .mf-cod { font-size: 10px; color: var(--text-muted); font-family: ui-monospace, Menlo, monospace; padding-left: 2px; margin-top: 1px; }

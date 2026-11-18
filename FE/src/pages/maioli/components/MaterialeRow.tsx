@@ -65,6 +65,21 @@ export default function MaterialeRow({ m, index, onChange, onDelete }: Props) {
           onFocus={() => { setQ(m.descrizione || m.codice); setOpen(true); }}
           placeholder="Cerca articolo (codice o descrizione)…" autoComplete="off" />
         {m.codice ? <span className="mf-cod">{m.codice}</span> : null}
+        {open && results.length > 0 && (
+          <div className="maioli-art-dropdown">
+            {results.map(it => (
+              <button type="button" key={it.id} className="maioli-art-opt"
+                onMouseDown={e => { e.preventDefault(); pick(it); }}>
+                <div className="maioli-art-top">
+                  <span className="maioli-art-sigla">{siglaMarca(it.marca)}</span>
+                  <span className="maioli-art-cod">{it.codice || '—'}</span>
+                  <span className="maioli-art-prezzo">{eur(prezzoFinale(it))}</span>
+                </div>
+                <div className="maioli-art-descr">{it.descrizione}</div>
+              </button>
+            ))}
+          </div>
+        )}
       </label>
       <label className="mf qta">
         <span className="mf-l">Q.tà</span>
@@ -74,22 +89,6 @@ export default function MaterialeRow({ m, index, onChange, onDelete }: Props) {
         <span className="mf-l">Prezzo €</span>
         <input inputMode="decimal" value={m.prezzo} onChange={e => onChange({ prezzo: e.target.value, listino_id: null })} placeholder="0,00" />
       </label>
-
-      {open && results.length > 0 && (
-        <div className="maioli-art-dropdown">
-          {results.map(it => (
-            <button type="button" key={it.id} className="maioli-art-opt"
-              onMouseDown={e => { e.preventDefault(); pick(it); }}>
-              <div className="maioli-art-top">
-                <span className="maioli-art-sigla">{siglaMarca(it.marca)}</span>
-                <span className="maioli-art-cod">{it.codice || '—'}</span>
-                <span className="maioli-art-prezzo">{eur(prezzoFinale(it))}</span>
-              </div>
-              <div className="maioli-art-descr">{it.descrizione}</div>
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
