@@ -1,5 +1,5 @@
 // Versione della sezione Maioli. INCREMENTARE ad ogni modifica + deploy.
-export const MAIOLI_VERSION = 'v1.9.0';
+export const MAIOLI_VERSION = 'v1.9.1';
 
 // Versione minima del backend richiesta da questa FE. Se il BE deployato
 // riporta un numero più basso (health → beVersion), la pagina mostra un

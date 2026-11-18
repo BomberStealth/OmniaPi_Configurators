@@ -116,21 +116,23 @@ export default function FoglioRapporto({ data }: { data: RapportoData }) {
               </tbody>
             </table>
 
-            <div className="sign">
-              <div className="decl">
-                Si prende atto che i lavori effettuati sono regolarmente funzionanti e che non sono stati causati danni di qualsiasi natura
-              </div>
-              <div className="who">
-                <div>
-                  <span className="lbl">FIRMA DEL CLIENTE:</span>
-                  {ultima && data.firmaCliente ? <img className="firma-img" src={data.firmaCliente} alt="Firma cliente" /> : null}
+            {ultima && (
+              <div className="sign">
+                <div className="decl">
+                  Si prende atto che i lavori effettuati sono regolarmente funzionanti e che non sono stati causati danni di qualsiasi natura
                 </div>
-                <div>
-                  <span className="lbl">FIRMA DEL TECNICO:</span>
-                  {ultima && data.firmaTecnico ? <img className="firma-img" src={data.firmaTecnico} alt="Firma tecnico" /> : null}
+                <div className="who">
+                  <div>
+                    <span className="lbl">FIRMA DEL CLIENTE:</span>
+                    {data.firmaCliente ? <img className="firma-img" src={data.firmaCliente} alt="Firma cliente" /> : null}
+                  </div>
+                  <div>
+                    <span className="lbl">FIRMA DEL TECNICO:</span>
+                    {data.firmaTecnico ? <img className="firma-img" src={data.firmaTecnico} alt="Firma tecnico" /> : null}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="foot">
               <div>

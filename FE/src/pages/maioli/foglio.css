@@ -89,7 +89,8 @@
   .maioli-head,
   .maioli-nav,
   .maioli-subhead,
-  .maioli-tabs { display: none !important; }
+  .maioli-tabs,
+  .maioli-be-warn { display: none !important; }
 
   html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
 
