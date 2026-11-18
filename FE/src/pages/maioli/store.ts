@@ -1,5 +1,7 @@
 import { calcola, n2, oggiISO, rigaHaContenuto, qtaEff } from './model';
 import type { RapportoData } from './model';
+import { authHeaders, getToken, onAuthExpired } from '../../auth';
+import { REQUIRED_BE_VERSION } from './version';
 
 const API = '/api/configuratori/maioli';
 const HEALTH = '/api/configuratori/health';
@@ -128,11 +130,53 @@ export function clienteToData(c: Cliente, base: RapportoData): RapportoData {
 async function jfetch(url: string, opts?: RequestInit) {
   const res = await fetch(url, {
     ...opts,
-    headers: { 'Content-Type': 'application/json', ...(opts?.headers ?? {}) },
+    headers: { 'Content-Type': 'application/json', ...authHeaders(), ...(opts?.headers ?? {}) },
   });
+  if (res.status === 401) { onAuthExpired(); throw new Error('HTTP 401'); }
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   if (res.status === 204) return null;
   return res.json();
+}
+
+// ───────── Foto: upload file su SSD (con fallback inline) ─────────
+// Carica una dataURL e ritorna l'URL del file salvato dal BE. Se il BE non è
+// raggiungibile o è vecchio (endpoint assente), tiene la foto inline (base64)
+// così il salvataggio funziona comunque.
+export async function uploadFoto(dataUrl: string): Promise<string> {
+  await initStore();
+  if (MODE !== 'api') return dataUrl;
+  try {
+    const r = await jfetch(`${API}/foto`, { method: 'POST', body: JSON.stringify({ dataUrl }) });
+    return (r && typeof r.url === 'string') ? r.url : dataUrl;
+  } catch {
+    return dataUrl;
+  }
+}
+
+// Sorgente per <img>: le foto-file sono protette, quindi al path serve il
+// token in query string (le <img> non mandano l'header Authorization).
+// Le base64 (legacy/demo) si usano così come sono.
+export function fotoSrc(v: string): string {
+  if (!v) return v;
+  if (v.startsWith('data:')) return v;
+  if (v.startsWith('/api/')) {
+    const t = getToken();
+    return t ? `${v}${v.includes('?') ? '&' : '?'}t=${encodeURIComponent(t)}` : v;
+  }
+  return v;
+}
+
+// Stato del backend: reachable + se è più vecchio di quanto richiede la FE.
+export async function beVersionStatus(): Promise<{ reachable: boolean; outdated: boolean }> {
+  try {
+    const res = await fetch(HEALTH);
+    if (!res.ok) return { reachable: false, outdated: false };
+    const j = await res.json();
+    const v = Number(j?.beVersion ?? 0);
+    return { reachable: true, outdated: v < REQUIRED_BE_VERSION };
+  } catch {
+    return { reachable: false, outdated: false };
+  }
 }
 
 // ───────── localStorage layer (fallback demo) ─────────
@@ -165,10 +209,12 @@ export async function initStore(): Promise<StoreMode> {
     const t = setTimeout(() => ctrl.abort(), 2500);
     const res = await fetch(HEALTH, { signal: ctrl.signal });
     clearTimeout(t);
-    // api valida solo se il DB risponde: provo una query reale
+    // api valida solo se il DB risponde: provo una query reale (con token)
     if (res.ok) {
-      const probe = await fetch(`${API}/clienti?q=`);
-      MODE = probe.ok ? 'api' : 'local';
+      const probe = await fetch(`${API}/clienti?q=`, { headers: authHeaders() });
+      if (probe.ok) MODE = 'api';
+      else if (probe.status === 401) { onAuthExpired(); MODE = 'local'; }
+      else MODE = 'local';
     } else {
       MODE = 'local';
     }

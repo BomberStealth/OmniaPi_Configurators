@@ -13,6 +13,7 @@ export default function Listino() {
   const [sett, setSett] = useState<Record<string, MarcaSet>>({});
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState<Set<string>>(new Set());
+  const [openCat, setOpenCat] = useState<Set<string>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -48,6 +49,25 @@ export default function Listino() {
   const searching = q.trim().length > 0;
   const isOpen = (marca: string) => searching || open.has(marca);
   const toggle = (marca: string) => setOpen(prev => { const n = new Set(prev); n.has(marca) ? n.delete(marca) : n.add(marca); return n; });
+  const catKey = (marca: string, cat: string) => `${marca}::${cat}`;
+  const isCatOpen = (marca: string, cat: string) => searching || openCat.has(catKey(marca, cat));
+  const toggleCat = (marca: string, cat: string) => setOpenCat(prev => { const k = catKey(marca, cat); const n = new Set(prev); n.has(k) ? n.delete(k) : n.add(k); return n; });
+
+  // raggruppa gli articoli di una marca per categoria (serie/tipo)
+  const SENZA_CAT = '— Senza categoria —';
+  const subGroups = (items: Row[]): [string, Row[]][] => {
+    const map = new Map<string, Row[]>();
+    for (const r of items) {
+      const cat = (r.categoria ?? '').trim() || SENZA_CAT;
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat)!.push(r);
+    }
+    return [...map.entries()].sort((a, b) => {
+      const au = a[0] === SENZA_CAT, bu = b[0] === SENZA_CAT;
+      if (au !== bu) return au ? 1 : -1; // "senza categoria" in fondo
+      return a[0].localeCompare(b[0]);
+    });
+  };
 
   const getSet = (marca: string): MarcaSet => sett[marca] ?? { sconto: '0', ricarico: '0' };
   const editSet = (marca: string, k: 'sconto' | 'ricarico', v: string) =>
@@ -125,6 +145,22 @@ export default function Listino() {
         <div className="maioli-acc">
           {groups.map(([marca, items]) => {
             const ms = getSet(marca);
+            const renderRow = (r: Row) => (
+              <div className={`maioli-ltr${r._dirty ? ' dirty' : ''}`} key={r.id}>
+                <input className="cod" value={r.codice} onChange={e => edit(r.id, { codice: e.target.value })} placeholder="Codice" />
+                <input className="descr" value={r.descrizione} onChange={e => edit(r.id, { descrizione: e.target.value })} placeholder="Descrizione" />
+                <input className="um" value={r.um} onChange={e => edit(r.id, { um: e.target.value })} placeholder="um" />
+                <input className="r prezzo" inputMode="decimal" value={String(r.prezzo)} onChange={e => edit(r.id, { prezzo: e.target.value as unknown as number })} placeholder="Listino €" />
+                <span className="r maioli-scontato">{eur(scontatoDa(r.prezzo, ms.sconto))}</span>
+                <span className="r maioli-finale">{eur(finaleDa(r.prezzo, ms.sconto, ms.ricarico))}</span>
+                <span className="maioli-row-actions">
+                  <button className="btn btn-primary btn-sm" disabled={!r._dirty} onClick={() => save(r.id)}>Salva</button>
+                  <button className="btn-trash" title="Elimina" onClick={() => del(r.id)}>🗑</button>
+                </span>
+              </div>
+            );
+            const subs = subGroups(items);
+            const useSubs = subs.length > 1; // più serie/tipi → sotto-accordion
             return (
               <div className="maioli-acc-group" key={marca}>
                 <button type="button" className={`maioli-acc-head${isOpen(marca) ? ' open' : ''}`} onClick={() => toggle(marca)}>
@@ -147,20 +183,18 @@ export default function Listino() {
                     <div className="maioli-ltr maioli-lth">
                       <span>Codice</span><span>Descrizione</span><span>UM</span><span className="r">Listino</span><span className="r">Scontato</span><span className="r">Finale</span><span />
                     </div>
-                    {items.map(r => (
-                      <div className={`maioli-ltr${r._dirty ? ' dirty' : ''}`} key={r.id}>
-                        <input className="cod" value={r.codice} onChange={e => edit(r.id, { codice: e.target.value })} placeholder="Codice" />
-                        <input className="descr" value={r.descrizione} onChange={e => edit(r.id, { descrizione: e.target.value })} placeholder="Descrizione" />
-                        <input className="um" value={r.um} onChange={e => edit(r.id, { um: e.target.value })} placeholder="um" />
-                        <input className="r prezzo" inputMode="decimal" value={String(r.prezzo)} onChange={e => edit(r.id, { prezzo: e.target.value as unknown as number })} placeholder="Listino €" />
-                        <span className="r maioli-scontato">{eur(scontatoDa(r.prezzo, ms.sconto))}</span>
-                        <span className="r maioli-finale">{eur(finaleDa(r.prezzo, ms.sconto, ms.ricarico))}</span>
-                        <span className="maioli-row-actions">
-                          <button className="btn btn-primary btn-sm" disabled={!r._dirty} onClick={() => save(r.id)}>Salva</button>
-                          <button className="btn-trash" title="Elimina" onClick={() => del(r.id)}>🗑</button>
-                        </span>
-                      </div>
-                    ))}
+                    {!useSubs
+                      ? items.map(renderRow)
+                      : subs.map(([cat, its]) => (
+                          <div className="maioli-subacc" key={cat}>
+                            <button type="button" className={`maioli-subacc-head${isCatOpen(marca, cat) ? ' open' : ''}`} onClick={() => toggleCat(marca, cat)}>
+                              <span className="maioli-subacc-chevron">▸</span>
+                              <span className="maioli-subacc-name">{cat}</span>
+                              <span className="maioli-subacc-count">{its.length}</span>
+                            </button>
+                            {isCatOpen(marca, cat) && its.map(renderRow)}
+                          </div>
+                        ))}
                   </div>
                 )}
               </div>

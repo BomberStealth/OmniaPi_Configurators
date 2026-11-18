@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useConfirm } from './ConfirmDialog';
+import { uploadFoto, fotoSrc } from '../store';
 
 interface Props {
   value: string[];
@@ -45,7 +46,7 @@ export default function FotoSection({ value, onChange }: Props) {
     for (const f of Array.from(files)) {
       if (!f.type.startsWith('image/')) continue;
       const d = await fileToDataURL(f);
-      if (d) added.push(d);
+      if (d) added.push(await uploadFoto(d)); // salva su SSD; fallback inline
     }
     if (added.length) onChange([...value, ...added]);
     setBusy(false);
@@ -85,7 +86,7 @@ export default function FotoSection({ value, onChange }: Props) {
         <div className="maioli-foto-grid">
           {value.map((src, i) => (
             <div className="maioli-foto-thumb" key={i}>
-              <img src={src} alt={`Foto ${i + 1}`} />
+              <img src={fotoSrc(src)} alt={`Foto ${i + 1}`} />
               <button type="button" className="maioli-foto-del" title="Rimuovi" onClick={() => remove(i)}>✕</button>
             </div>
           ))}

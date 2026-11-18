@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "user:list": "node dist/scripts/users.js list",
+    "user:add": "node dist/scripts/users.js add",
+    "user:passwd": "node dist/scripts/users.js passwd",
+    "user:role": "node dist/scripts/users.js role",
+    "user:del": "node dist/scripts/users.js del"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

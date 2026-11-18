@@ -1,5 +1,66 @@
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
 import { pool } from '../../config/database';
 import type { PoolConnection } from 'mysql2/promise';
+
+// ─────────────────────── Foto su disco (SSD) ───────────────────────
+// Le foto delle bolle vengono salvate come file (JPEG) su una cartella
+// configurabile (idealmente l'SSD collegato al Raspberry) invece che come
+// base64 nel DB. Nel DB (colonna maioli_bolle_foto.img) salviamo solo il
+// percorso relativo servito dalla API.
+export const UPLOAD_DIR = process.env.MAIOLI_UPLOAD_DIR
+  || path.resolve(process.cwd(), 'uploads/maioli');
+// Prefisso con cui la FE richiede le foto (passa per nginx → /api/maioli/foto)
+const FOTO_URL_PREFIX = '/api/configuratori/maioli/foto';
+
+function ensureDir(dir: string): void {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+}
+
+// Salva una dataURL/base64 come file e ritorna l'URL relativo da salvare in DB.
+export function saveFotoFile(dataUrl: string): string {
+  const m = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/s.exec(dataUrl.trim());
+  if (!m) throw new Error('Formato immagine non valido');
+  const mime = m[1];
+  const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
+  const buf = Buffer.from(m[2], 'base64');
+  if (buf.length > 25 * 1024 * 1024) throw new Error('Immagine troppo grande');
+  const year = String(new Date().getFullYear());
+  const dir = path.join(UPLOAD_DIR, year);
+  ensureDir(dir);
+  const name = `${Date.now().toString(36)}-${crypto.randomBytes(5).toString('hex')}.${ext}`;
+  fs.writeFileSync(path.join(dir, name), buf);
+  return `${FOTO_URL_PREFIX}/${year}/${name}`;
+}
+
+// Risolve un URL foto (come salvato in DB) nel path su disco, in sicurezza.
+export function resolveFotoPath(year: string, name: string): string | null {
+  if (!/^\d{4}$/.test(year)) return null;
+  if (!/^[a-zA-Z0-9._-]+$/.test(name) || name.includes('..')) return null;
+  const root = path.resolve(UPLOAD_DIR);
+  const abs = path.resolve(root, year, name);
+  // difesa anti path-traversal: deve restare dentro UPLOAD_DIR
+  if (abs !== root && !abs.startsWith(root + path.sep)) return null;
+  return fs.existsSync(abs) ? abs : null;
+}
+
+// Cancella i file foto non più referenziati da nessuna bolla (best-effort).
+async function deleteOrphanFotoFiles(urls: string[]): Promise<void> {
+  for (const url of urls) {
+    if (!url || !url.startsWith(FOTO_URL_PREFIX)) continue; // ignora base64 legacy
+    try {
+      const [rows] = (await pool.execute(
+        'SELECT COUNT(*) AS n FROM maioli_bolle_foto WHERE img = ?', [url],
+      )) as [{ n: number }[], unknown];
+      if (Number(rows[0]?.n ?? 0) > 0) continue; // ancora usata
+      const rel = url.slice(FOTO_URL_PREFIX.length).replace(/^\/+/, '');
+      const [year, name] = rel.split('/');
+      const p = resolveFotoPath(year ?? '', name ?? '');
+      if (p) fs.unlinkSync(p);
+    } catch { /* best-effort, ignora */ }
+  }
+}
 
 // LIMIT come intero validato (mysql2 execute non lega bene LIMIT ?)
 const lim = (n: number): number => {
@@ -185,7 +246,14 @@ export async function listBolle(q: string, limit = 50): Promise<BollaSummary[]> 
 
 // bolle nel cestino (soft-deleted); purga prima quelle oltre i 30 giorni
 export async function listBolleCancellate(q: string, limit = 100): Promise<BollaSummary[]> {
+  // auto-purge oltre i 30 giorni: raccogli le foto da ripulire su disco, poi elimina
+  const [expiredFoto] = (await pool.execute(
+    `SELECT f.img FROM maioli_bolle_foto f
+     JOIN maioli_bolle b ON b.id = f.bolla_id
+     WHERE b.deleted_at IS NOT NULL AND b.deleted_at < (NOW() - INTERVAL 30 DAY)`,
+  )) as [{ img: string }[], unknown];
   await pool.execute('DELETE FROM maioli_bolle WHERE deleted_at IS NOT NULL AND deleted_at < (NOW() - INTERVAL 30 DAY)');
+  if (expiredFoto.length) await deleteOrphanFotoFiles(expiredFoto.map(f => f.img));
   const cond: string[] = ['deleted_at IS NOT NULL'];
   const params: string[] = [];
   if (q && q.trim()) {
@@ -278,10 +346,13 @@ export async function createBolla(b: BollaInput): Promise<{ id: number; numero: 
 
 export async function updateBolla(id: number, b: BollaInput): Promise<boolean> {
   const conn = await pool.getConnection();
+  let oldFoto: string[] = [];
   try {
     await conn.beginTransaction();
     const [exist] = (await conn.execute('SELECT id FROM maioli_bolle WHERE id=? LIMIT 1', [id])) as [{ id: number }[], unknown];
     if (!exist[0]) { await conn.rollback(); return false; }
+    const [prevFoto] = (await conn.execute('SELECT img FROM maioli_bolle_foto WHERE bolla_id=?', [id])) as [{ img: string }[], unknown];
+    oldFoto = prevFoto.map(f => f.img);
     const clienteId = await upsertClienteTx(conn, b);
     await conn.execute(
       `UPDATE maioli_bolle SET cliente_id=?, cliente=?, telefono=?, email=?, indirizzo=?, condominio=?, amministratore=?, preventivo=?, data_chiamata=?, data_intervento=?, data_consegna=?, richiesta=?, difetti=?, iva=?, imponibile=?, totale=? WHERE id=?`,
@@ -290,6 +361,9 @@ export async function updateBolla(id: number, b: BollaInput): Promise<boolean> {
     );
     await writeRighe(conn, id, b);
     await conn.commit();
+    // pulizia file foto non più referenziati (dopo il commit)
+    const newFoto = new Set((b.foto ?? []).filter(Boolean));
+    await deleteOrphanFotoFiles(oldFoto.filter(u => !newFoto.has(u)));
     return true;
   } catch (e) {
     await conn.rollback();
@@ -309,7 +383,9 @@ export async function restoreBolla(id: number): Promise<boolean> {
   return r.affectedRows > 0;
 }
 export async function purgeBolla(id: number): Promise<boolean> {
+  const [foto] = (await pool.execute('SELECT img FROM maioli_bolle_foto WHERE bolla_id=?', [id])) as [{ img: string }[], unknown];
   const [r] = (await pool.execute('DELETE FROM maioli_bolle WHERE id=? AND deleted_at IS NOT NULL', [id])) as [{ affectedRows: number }, unknown];
+  if (r.affectedRows > 0) await deleteOrphanFotoFiles(foto.map(f => f.img));
   return r.affectedRows > 0;
 }
 // contrassegna/annulla "consegnata"

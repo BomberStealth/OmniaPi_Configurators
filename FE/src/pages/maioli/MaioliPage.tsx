@@ -6,7 +6,7 @@ import { LOGO } from './azienda';
 import { MAIOLI_VERSION } from './version';
 import { datiVuoti } from './model';
 import type { RapportoData } from './model';
-import { initStore, storeMode, getBolla } from './store';
+import { initStore, storeMode, getBolla, beVersionStatus } from './store';
 import { ConfirmProvider } from './components/ConfirmDialog';
 import './MaioliPage.css';
 
@@ -22,9 +22,13 @@ export default function MaioliPage() {
   const [tab, setTab] = useState<Tab>('nuova');
   const [data, setData] = useState<RapportoData>(datiVuoti);
   const [mode, setMode] = useState<'api' | 'local'>('local');
+  const [beOutdated, setBeOutdated] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
-  useEffect(() => { initStore().then(() => setMode(storeMode())); }, []);
+  useEffect(() => {
+    initStore().then(() => setMode(storeMode()));
+    beVersionStatus().then(s => setBeOutdated(s.outdated));
+  }, []);
 
   const openBolla = async (id: number) => {
     try {
@@ -53,6 +57,13 @@ export default function MaioliPage() {
             </span>
           </div>
         </div>
+
+        {beOutdated && (
+          <div className="maioli-be-warn" role="alert">
+            <span className="maioli-be-warn-ic">⚠</span>
+            <span>Backend da aggiornare: alcune funzioni nuove non saranno attive finché non ricompili e riavvii il BE sul server (<code>npm run build</code> + <code>pm2 restart configuratori-be</code>).</span>
+          </div>
+        )}
 
         <nav className="maioli-nav">
           {TABS.map(t => (

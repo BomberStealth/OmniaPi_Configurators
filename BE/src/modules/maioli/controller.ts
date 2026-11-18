@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import { verifyToken } from '../../config/jwt';
 import * as s from './service';
 
 const err = (res: Response) => res.status(500).json({ message: 'Errore del server' });
@@ -100,4 +101,30 @@ export async function listinoImport(req: Request, res: Response): Promise<void> 
   const { marca, items } = req.body ?? {};
   if (!Array.isArray(items)) { res.status(400).json({ message: 'items mancanti' }); return; }
   try { res.json(await s.importListino(String(marca ?? 'Generico'), items)); } catch { err(res); }
+}
+
+// ── Foto (file su SSD) ──
+// upload: riceve { dataUrl } (JPEG compresso dalla FE), salva su disco e
+// ritorna { url } da memorizzare nella bolla.
+export async function fotoUpload(req: Request, res: Response): Promise<void> {
+  const dataUrl = req.body?.dataUrl;
+  if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/')) {
+    res.status(400).json({ message: 'Immagine mancante' }); return;
+  }
+  try { res.status(201).json({ url: s.saveFotoFile(dataUrl) }); }
+  catch (e) { res.status(400).json({ message: e instanceof Error ? e.message : 'Upload non riuscito' }); }
+}
+
+// serve il file foto. Le <img> del browser non mandano l'header Authorization,
+// quindi qui accettiamo il token anche come query param ?t=... (oltre al Bearer).
+export function fotoServe(req: Request, res: Response): void {
+  const header = req.headers.authorization;
+  const token = header?.startsWith('Bearer ') ? header.slice(7) : String(req.query.t ?? '');
+  if (!token) { res.status(401).json({ message: 'Token mancante' }); return; }
+  try { verifyToken(token); } catch { res.status(401).json({ message: 'Token non valido' }); return; }
+  const year = Array.isArray(req.params.year) ? req.params.year[0] : req.params.year;
+  const name = Array.isArray(req.params.name) ? req.params.name[0] : req.params.name;
+  const p = s.resolveFotoPath(String(year ?? ''), String(name ?? ''));
+  if (!p) { res.status(404).json({ message: 'Foto non trovata' }); return; }
+  res.sendFile(p);
 }

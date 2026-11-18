@@ -285,6 +285,22 @@
 .maioli-acc-count { font-size: 11px; font-weight: 700; color: var(--text-muted); background: #fff; border: 1px solid var(--border); border-radius: 99px; padding: 2px 9px; }
 .maioli-acc-body { padding: 6px 10px 10px; border-top: 1px solid var(--border); }
 
+/* sotto-accordion per serie/tipo (categoria) dentro una marca */
+.maioli-subacc { border: 1px solid var(--border); border-radius: 9px; margin: 7px 0; overflow: hidden; background: rgba(0,0,0,0.015); }
+.maioli-subacc-head { display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 11px; background: transparent; border: none; cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--text); }
+.maioli-subacc-head:hover { background: var(--glass-hover); }
+.maioli-subacc-chevron { color: var(--accent); font-size: 11px; transition: transform 0.18s; }
+.maioli-subacc-head.open .maioli-subacc-chevron { transform: rotate(90deg); }
+.maioli-subacc-name { flex: 1; text-align: left; }
+.maioli-subacc-count { font-size: 10.5px; font-weight: 700; color: var(--text-muted); background: #fff; border: 1px solid var(--border); border-radius: 99px; padding: 1px 8px; }
+.maioli-subacc .maioli-ltr { padding-left: 11px; padding-right: 8px; }
+.maioli-subacc .maioli-ltr:last-child { border-bottom: none; }
+
+/* banner "backend da aggiornare" */
+.maioli-be-warn { display: flex; align-items: flex-start; gap: 9px; margin: 2px 0 10px; padding: 10px 13px; background: #fff7ed; border: 1px solid #fdba74; border-radius: 10px; color: #9a3412; font-size: 12.5px; line-height: 1.45; }
+.maioli-be-warn-ic { font-size: 15px; line-height: 1.2; }
+.maioli-be-warn code { background: rgba(154,52,18,0.1); border-radius: 4px; padding: 1px 5px; font-size: 11.5px; }
+
 .maioli-ltr { display: grid; grid-template-columns: 100px minmax(0, 1fr) 44px 84px 84px 90px auto; gap: 7px; align-items: center; padding: 5px 2px; border-bottom: 1px solid var(--border); }
 .maioli-ltr:last-child { border-bottom: none; }
 .maioli-ltr.dirty { background: rgba(37,99,235,0.05); border-radius: 8px; }

@@ -6,14 +6,15 @@ import { runMigrations } from './migrate';
 import authRoutes from './shared/auth.routes';
 import ftvRoutes from './modules/fotovoltaico/routes';
 import maioliRoutes from './modules/maioli/routes';
+import { BE_VERSION } from './version';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001');
 
 app.use(cors());
-app.use(express.json({ limit: '30mb' })); // le bolle possono includere foto (base64)
+app.use(express.json({ limit: '30mb' })); // upload foto (base64) e payload bolle
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, ts: new Date().toISOString() }));
+app.get('/api/health', (_req, res) => res.json({ ok: true, ts: new Date().toISOString(), beVersion: BE_VERSION }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/fotovoltaico', ftvRoutes);

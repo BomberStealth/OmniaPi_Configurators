@@ -14,19 +14,22 @@ export default function Login() {
     if (getSession()) navigate('/', { replace: true });
   }, [navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    setTimeout(() => {
-      const session = login(email, password);
-      setLoading(false);
+    try {
+      const session = await login(email, password);
       if (session) {
         navigate('/', { replace: true });
       } else {
         setError('Email o password non validi');
       }
-    }, 350);
+    } catch {
+      setError('Server non raggiungibile. Riprova.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

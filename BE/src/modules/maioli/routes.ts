@@ -1,8 +1,16 @@
 import { Router } from 'express';
 import * as c from './controller';
+import { requireAuth } from '../../middleware/auth';
 
-// Strumento interno (LAN / Raspberry): rotte senza JWT, coerenti con la FE.
 const router = Router();
+
+// Serve-foto: deve stare PRIMA del requireAuth globale perché le <img> del
+// browser non inviano l'header Authorization. Valida il token da sé (anche
+// via query param ?t=...).
+router.get('/foto/:year/:name', c.fotoServe);
+
+// Da qui in poi tutto richiede login (JWT Bearer).
+router.use(requireAuth);
 
 // Clienti
 router.get('/clienti', c.clientiList as never);
@@ -21,6 +29,9 @@ router.post('/bolle/:id/restore', c.bolleRestore as never);
 router.post('/bolle/:id/consegna', c.bolleConsegna as never);
 router.delete('/bolle/:id/permanent', c.bollePurge as never);
 router.delete('/bolle/:id', c.bolleDelete as never);
+
+// Foto (upload file su SSD)
+router.post('/foto', c.fotoUpload as never);
 
 // Marche (sconto installatore / ricarico azienda)
 router.get('/marche', c.marcheList as never);

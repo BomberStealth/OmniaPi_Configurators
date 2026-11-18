@@ -1,9 +1,12 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import { getSession } from '../auth';
 
 export default function Layout() {
   const location = useLocation();
+  // Accesso riservato: senza sessione si torna al login.
+  if (!getSession()) return <Navigate to="/login" replace />;
   return (
     <div className="cfg-layout">
       <Navbar />
