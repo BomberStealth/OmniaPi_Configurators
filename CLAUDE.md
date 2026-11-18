@@ -1,23 +1,20 @@
 # OmniaPi Configuratori — note per Claude
 
-## ⚠️ DEPLOY: il backend va fatto a MANO
-L'auto-deploy sul server (`omniapi-deploy`) aggiorna **solo la FE**. Ogni volta
-che si tocca il **BE** (service o nuove migrazioni), Edoardo deve ricompilarlo e
-riavviarlo a mano, altrimenti FE e BE vanno fuori sync.
-
-**Scorciatoia:** c'è `scripts/deploy.sh` che fa TUTTO (pull + build BE + restart
-pm2 + build FE + rsync). Sul server basta:
-```bash
-cd /home/omniapi/configuratori && git pull && bash scripts/deploy.sh
-```
-A mano, i passi singoli:
-```bash
-cd /home/omniapi/configuratori && git pull
-# BACKEND (migrazioni auto-eseguite all'avvio; --update-env rilegge il .env)
-cd BE && npm install && npm run build && pm2 restart configuratori-be --update-env && pm2 logs configuratori-be --lines 20 --nostream
-# FRONTEND (di solito la fa l'auto-deploy; a mano:)
-cd ../FE && npm run build && rsync -a --delete dist/ /var/www/staging/configuratori/
-```
+## DEPLOY: AUTOMATICO (FE + BE)
+A ogni push su `main` il webhook server sul Pi (pm2 `omniapi-deploy`,
+`/home/omniapi/omniapi/BE/deploy/webhook-server.js`) lancia
+`deploy-configurators.sh`, che ora fa **TUTTO**: git reset, build+restart del BE
+e build+pubblicazione della FE. Non serve più fare niente a mano.
+- Lo script vive sul server in
+  `/home/omniapi/omniapi/BE/deploy/deploy-configurators.sh`; **copia di
+  riferimento versionata** in `scripts/deploy-configurators.sh` (se lo cambi,
+  aggiorna entrambi copiandolo: `cp scripts/deploy-configurators.sh
+  /home/omniapi/omniapi/BE/deploy/deploy-configurators.sh`).
+- `.env` del webhook: `OMNIAPI_CONF_DIR=/home/omniapi/configuratori`,
+  `OMNIAPI_CONF_BE_PM2=configuratori-be`, webroot
+  `/var/www/staging/configuratori`.
+- Deploy completo a mano (fallback): `cd /home/omniapi/configuratori && git pull
+  && bash scripts/deploy.sh`.
 - Repo sul server: `/home/omniapi/configuratori`. BE: pm2 `configuratori-be` (:3001).
   FE webroot staging: `/var/www/staging/configuratori`. DB MariaDB `configuratori_db`.
 - Nginx inoltra `/api/configuratori` → BE `:3001`. Limite upload body BE = 30mb.
