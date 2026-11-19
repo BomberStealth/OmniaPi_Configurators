@@ -1,4 +1,4 @@
-import { calcola, n2, oggiISO, rigaHaContenuto, qtaEff } from './model';
+import { calcola, n2, numStr, oggiISO, rigaHaContenuto, qtaEff } from './model';
 import type { RapportoData } from './model';
 import { authHeaders, getToken, onAuthExpired } from '../../auth';
 import { REQUIRED_BE_VERSION } from './version';
@@ -93,6 +93,7 @@ export function toPayload(d: RapportoData) {
     firma_cliente: d.firmaCliente || null,
     lavoro_incompleto: d.lavoroIncompleto ? 1 : 0,
     da_completare: d.daCompletare || null,
+    costo_chiamata: d.costoChiamata ? 1 : 0,
   };
 }
 
@@ -115,13 +116,14 @@ export function fromBolla(row: Record<string, any>): RapportoData {
     richiesta: row.richiesta ?? '',
     difetti: row.difetti ?? '',
     iva: Number(row.iva ?? 0),
-    manodopera: (row.manodopera ?? []).map((m: any) => ({ operaio: m.operaio, ore: String(m.ore ?? ''), tariffa: String(m.tariffa ?? '') })),
+    manodopera: (row.manodopera ?? []).map((m: any) => ({ operaio: m.operaio, ore: numStr(m.ore), tariffa: numStr(m.tariffa) })),
     materiali: (row.materiali ?? []).map((r: any) => ({ qta: String(r.qta ?? ''), codice: r.codice ?? '', marca: r.marca ?? '', descrizione: r.descrizione ?? '', prezzo: String(r.prezzo ?? ''), listino_id: r.listino_id ?? null })),
     foto: Array.isArray(row.foto) ? row.foto.filter(Boolean) : [],
     firmaTecnico: row.firma_tecnico ?? '',
     firmaCliente: row.firma_cliente ?? '',
     lavoroIncompleto: !!row.lavoro_incompleto,
     daCompletare: row.da_completare ?? '',
+    costoChiamata: !!row.costo_chiamata,
   };
 }
 

@@ -140,6 +140,7 @@ export interface BollaInput {
   firma_cliente?: string | null;
   lavoro_incompleto?: number;
   da_completare?: string | null;
+  costo_chiamata?: number;
   // se true, aggiorna anche l'anagrafica cliente con questi dati
   salvaCliente?: boolean;
 }
@@ -338,12 +339,12 @@ export async function createBolla(b: BollaInput): Promise<{ id: number; numero: 
     const { numero, anno, progressivo } = await nextNumero(conn);
     const [r] = (await conn.execute(
       `INSERT INTO maioli_bolle
-       (numero, anno, progressivo, cliente_id, cliente, riferimento, telefono, email, indirizzo, condominio, amministratore, preventivo, data_chiamata, data_intervento, data_consegna, richiesta, difetti, iva, imponibile, totale, firma_tecnico, firma_cliente, lavoro_incompleto, da_completare)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (numero, anno, progressivo, cliente_id, cliente, riferimento, telefono, email, indirizzo, condominio, amministratore, preventivo, data_chiamata, data_intervento, data_consegna, richiesta, difetti, iva, imponibile, totale, firma_tecnico, firma_cliente, lavoro_incompleto, da_completare, costo_chiamata)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [numero, anno, progressivo, clienteId, b.cliente, b.riferimento ?? '', b.telefono ?? '', b.email ?? '', b.indirizzo ?? '',
        b.condominio ?? '', b.amministratore ?? '', b.preventivo ?? '', b.data_chiamata || null, b.data_intervento || null,
        b.data_consegna || null, b.richiesta ?? '', b.difetti ?? '', b.iva ?? 0, b.imponibile ?? 0, b.totale ?? 0,
-       b.firma_tecnico ?? null, b.firma_cliente ?? null, b.lavoro_incompleto ? 1 : 0, b.da_completare ?? null],
+       b.firma_tecnico ?? null, b.firma_cliente ?? null, b.lavoro_incompleto ? 1 : 0, b.da_completare ?? null, b.costo_chiamata ? 1 : 0],
     )) as [{ insertId: number }, unknown];
     await writeRighe(conn, r.insertId, b);
     await conn.commit();
@@ -367,10 +368,10 @@ export async function updateBolla(id: number, b: BollaInput): Promise<boolean> {
     oldFoto = prevFoto.map(f => f.img);
     const clienteId = await upsertClienteTx(conn, b);
     await conn.execute(
-      `UPDATE maioli_bolle SET cliente_id=?, cliente=?, riferimento=?, telefono=?, email=?, indirizzo=?, condominio=?, amministratore=?, preventivo=?, data_chiamata=?, data_intervento=?, data_consegna=?, richiesta=?, difetti=?, iva=?, imponibile=?, totale=?, firma_tecnico=?, firma_cliente=?, lavoro_incompleto=?, da_completare=? WHERE id=?`,
+      `UPDATE maioli_bolle SET cliente_id=?, cliente=?, riferimento=?, telefono=?, email=?, indirizzo=?, condominio=?, amministratore=?, preventivo=?, data_chiamata=?, data_intervento=?, data_consegna=?, richiesta=?, difetti=?, iva=?, imponibile=?, totale=?, firma_tecnico=?, firma_cliente=?, lavoro_incompleto=?, da_completare=?, costo_chiamata=? WHERE id=?`,
       [clienteId, b.cliente, b.riferimento ?? '', b.telefono ?? '', b.email ?? '', b.indirizzo ?? '', b.condominio ?? '', b.amministratore ?? '',
        b.preventivo ?? '', b.data_chiamata || null, b.data_intervento || null, b.data_consegna || null, b.richiesta ?? '', b.difetti ?? '', b.iva ?? 0, b.imponibile ?? 0, b.totale ?? 0,
-       b.firma_tecnico ?? null, b.firma_cliente ?? null, b.lavoro_incompleto ? 1 : 0, b.da_completare ?? null, id],
+       b.firma_tecnico ?? null, b.firma_cliente ?? null, b.lavoro_incompleto ? 1 : 0, b.da_completare ?? null, b.costo_chiamata ? 1 : 0, id],
     );
     await writeRighe(conn, id, b);
     await conn.commit();

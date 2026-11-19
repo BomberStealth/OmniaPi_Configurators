@@ -41,7 +41,11 @@ export interface RapportoData {
   firmaCliente: string;     // firma a dito (dataURL PNG) — stampata nel foglio
   lavoroIncompleto: boolean; // spunta "lavoro non completato" (solo interno)
   daCompletare: string;      // cosa manca da fare (interno, NON stampato)
+  costoChiamata: boolean;    // diritto di chiamata (+30€ oltre la manodopera)
 }
+
+// Diritto di chiamata fisso (aggiunto alla manodopera se attivo)
+export const COSTO_CHIAMATA = 30;
 
 export function oggiISO(): string {
   const n = new Date();
@@ -80,8 +84,20 @@ export function datiVuoti(): RapportoData {
     firmaCliente: '',
     lavoroIncompleto: false,
     daCompletare: '',
+    costoChiamata: false,
   };
 }
+
+// arrotonda le ore per eccesso al mezz'ora: 2,1-2,4 → 2,5 ; 2,6-2,9 → 3
+export const roundOre = (x: string | number): number => {
+  const n = n2(x);
+  return n > 0 ? Math.ceil(n * 2) / 2 : 0;
+};
+// numero "pulito" come stringa: 30.00 → "30", 2.50 → "2.5", 0 → ""
+export const numStr = (x: string | number | null | undefined): string => {
+  const n = n2(x);
+  return n ? String(n) : '';
+};
 
 // ── Helpers numerici / formattazione (it-IT) ──
 export const n2 = (s: string | number | null | undefined): number => {
@@ -128,7 +144,8 @@ export const qtaEff = (m: MaterialeRiga): number => {
 };
 
 export function calcola(d: RapportoData): Totali {
-  const manodopera = (d.manodopera ?? []).reduce((s, m) => s + n2(m.ore) * n2(m.tariffa), 0);
+  const chiamata = d.costoChiamata ? COSTO_CHIAMATA : 0;
+  const manodopera = chiamata + (d.manodopera ?? []).reduce((s, m) => s + n2(m.ore) * n2(m.tariffa), 0);
   const materiali = d.materiali.reduce((s, m) => s + qtaEff(m) * n2(m.prezzo), 0);
   const imponibile = manodopera + materiali;
   const aliquota = n2(d.iva);

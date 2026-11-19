@@ -1,5 +1,5 @@
 import { OPERAI } from '../azienda';
-import { defaultManoRiga, n2, eur } from '../model';
+import { defaultManoRiga, n2, eur, roundOre } from '../model';
 import type { ManoRiga } from '../model';
 
 interface Props {
@@ -46,8 +46,10 @@ export default function OperaiManodopera({ value, onChange }: Props) {
                 <div className="op-fields">
                   <label>
                     <span>ore</span>
-                    <input type="number" step="0.5" min="0" value={mano!.ore}
-                      onChange={e => setField(op.id, 'ore', e.target.value)} placeholder="0" />
+                    <input type="number" step="0.5" min="0" inputMode="decimal" value={mano!.ore}
+                      onChange={e => setField(op.id, 'ore', e.target.value)}
+                      onBlur={e => { const r = roundOre(e.target.value); setField(op.id, 'ore', r ? String(r) : ''); }}
+                      placeholder="0" />
                   </label>
                   <label>
                     <span>€/h</span>

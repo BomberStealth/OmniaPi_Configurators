@@ -76,7 +76,8 @@
 }
 .maioli-field input:focus, .maioli-field textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
 .maioli-field input.err { border-color: #e11d2a; }
-.maioli-field textarea { resize: vertical; }
+.maioli-field textarea { resize: none; overflow: hidden; }
+.maioli-autogrow { resize: none; overflow: hidden; min-height: 42px; line-height: 1.4; }
 
 /* ── client picker ── */
 .cli-picker { position: relative; }
@@ -128,9 +129,11 @@
 .op-fields label { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .op-fields span { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.02em; }
 .op-fields input {
-  width: 46px; padding: 5px 4px; text-align: center; font-size: 13px;
+  width: 60px; padding: 6px 6px; text-align: center; font-size: 14px;
   border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; color: var(--text);
+  -moz-appearance: textfield;
 }
+.op-fields input::-webkit-outer-spin-button, .op-fields input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .op-fields input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
 .op-total { font-size: 13px; color: var(--text-muted); padding-top: 8px; border-top: 1px solid var(--border); }
 .op-total b { color: var(--text); }
@@ -186,9 +189,10 @@
 .maioli-btn-danger:hover { background: #c01020; }
 
 /* ── toggle archivio attive/cancellate ── */
-.maioli-arch-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-xs); overflow: hidden; margin-bottom: 14px; }
-.maioli-arch-toggle button { padding: 8px 16px; border: none; background: #fff; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; border-left: 1px solid var(--border); }
+.maioli-arch-toggle { display: flex; width: 100%; border: 1px solid var(--border); border-radius: var(--radius-xs); overflow: hidden; margin-bottom: 14px; }
+.maioli-arch-toggle button { flex: 1; min-width: 0; padding: 8px 6px; border: none; background: #fff; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; border-left: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .maioli-arch-toggle button:first-child { border-left: none; }
+.maioli-arch-toggle button:last-child { flex: 0 0 auto; padding: 8px 14px; } /* cestino: solo icona */
 .maioli-arch-toggle button.active { background: var(--accent); color: #fff; }
 
 /* ── card bolle (archivio) ── */
@@ -308,10 +312,24 @@
 .maioli-subacc .maioli-ltr { padding-left: 11px; padding-right: 8px; }
 .maioli-subacc .maioli-ltr:last-child { border-bottom: none; }
 
-/* spunta "lavoro non completato" */
-.maioli-check { display: flex; align-items: center; gap: 9px; margin-top: 10px; cursor: pointer; user-select: none; }
+/* spunta "lavoro non completato" / "costo di chiamata" */
+.maioli-check { display: flex; align-items: center; gap: 9px; margin: 10px 0; cursor: pointer; user-select: none; }
 .maioli-check input { width: 20px; height: 20px; accent-color: #ca8a04; cursor: pointer; flex: none; }
 .maioli-check-lbl { font-size: 13.5px; font-weight: 700; color: var(--text); }
+.maioli-check-chiamata input { accent-color: #16a34a; }
+
+/* "Informazioni aggiuntive" (accordion) */
+.maioli-extra { margin-bottom: 10px; }
+.maioli-extra-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 11px; background: var(--glass); border: 1px dashed var(--border); border-radius: var(--radius-xs); cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--text-muted); }
+.maioli-extra-chevron { color: var(--accent); font-size: 11px; transition: transform 0.18s; }
+.maioli-extra-head.open .maioli-extra-chevron { transform: rotate(90deg); }
+.maioli-extra-body { margin-top: 10px; }
+
+/* campo "cosa manca da fare" con spunta verde dentro */
+.maioli-completa-wrap { display: flex; gap: 0; align-items: stretch; }
+.maioli-completa-wrap .maioli-autogrow { flex: 1; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.maioli-completa-btn { flex: none; width: 46px; border: 1px solid #16a34a; border-left: none; border-radius: 0 var(--radius-xs) var(--radius-xs) 0; background: #16a34a; color: #fff; font-size: 20px; font-weight: 800; cursor: pointer; }
+.maioli-completa-btn:hover { background: #15803d; }
 
 /* firme a dito (pad) */
 .maioli-firme { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }

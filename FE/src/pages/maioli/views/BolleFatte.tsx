@@ -49,11 +49,11 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
   };
   const setConsegna = async (b: BollaSummary, consegnata: boolean) => {
     const ok = await confirm({
-      title: consegnata ? 'Contrassegnare come consegnata?' : 'Rimettere in sospeso?',
+      title: consegnata ? 'Segnare pronta da fatturare?' : 'Rimettere in sospeso?',
       message: consegnata
-        ? `La bolla di "${b.cliente}" verrà segnata come consegnata (data di oggi) e spostata in "Consegnate".`
+        ? `La bolla di "${b.cliente}" verrà spostata in "Da fatturare" (con la data di oggi).`
         : `La bolla di "${b.cliente}" tornerà tra le bolle in sospeso.`,
-      confirmLabel: consegnata ? 'Sì, consegnata' : 'Rimetti in sospeso',
+      confirmLabel: consegnata ? 'Sì, da fatturare' : 'Rimetti in sospeso',
     });
     if (!ok) return;
     try { await markConsegnata(b.id, consegnata); load(q, tab); } catch { alert('Operazione non riuscita.'); }
@@ -61,8 +61,8 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
 
   const TABS: { id: Tab; label: string }[] = [
     { id: 'sospeso', label: 'In sospeso' },
-    { id: 'consegnate', label: 'Consegnate' },
-    { id: 'cancellate', label: '🗑 Cancellate' },
+    { id: 'consegnate', label: 'Da fatturare' },
+    { id: 'cancellate', label: '🗑' },
   ];
 
   return (
@@ -79,7 +79,7 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
       </div>
 
       {tab === 'sospeso' && (
-        <div className="maioli-swipe-hint"><span className="maioli-swipe-ar left">←</span> scorri per <b>consegnata</b> · <b>cancella</b> scorrendo <span className="maioli-swipe-ar right">→</span></div>
+        <div className="maioli-swipe-hint"><span className="maioli-swipe-ar left">←</span> scorri per <b>da fatturare</b> · <b>cancella</b> scorrendo <span className="maioli-swipe-ar right">→</span></div>
       )}
       {tab === 'consegnate' && (
         <div className="maioli-swipe-hint"><span className="maioli-swipe-ar left">←</span> scorri per <b>rimettere in sospeso</b> · <b>cancella</b> scorrendo <span className="maioli-swipe-ar right">→</span></div>
@@ -99,7 +99,7 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
           {rows.map(b => {
             const consegnate = tab === 'consegnate';
             const incompleto = tab === 'sospeso' && !!Number(b.lavoro_incompleto);
-            const dataTxt = consegnate ? `🚚 ${fmtData(b.consegnata_at)}` : `📅 ${fmtData(b.data_intervento)}`;
+            const dataTxt = consegnate ? `🧾 ${fmtData(b.consegnata_at)}` : `📅 ${fmtData(b.data_intervento)}`;
 
             if (tab === 'cancellate') {
               return (
@@ -133,7 +133,7 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
                 onRight={() => cestina(b)}
                 onLeft={() => (consegnate ? setConsegna(b, false) : setConsegna(b, true))}
                 rightLabel="🗑 Cancella"
-                leftLabel={consegnate ? '↩ In sospeso' : '✅ Consegnata'}>
+                leftLabel={consegnate ? '↩ In sospeso' : '🧾 Da fatturare'}>
                 {card}
               </SwipeCard>
             );

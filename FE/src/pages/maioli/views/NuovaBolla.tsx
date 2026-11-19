@@ -5,8 +5,9 @@ import OperaiManodopera from '../components/OperaiManodopera';
 import MaterialeRow from '../components/MaterialeRow';
 import FotoSection from '../components/FotoSection';
 import FirmaField from '../components/FirmaField';
+import AutoTextarea from '../components/AutoTextarea';
 import { useConfirm } from '../components/ConfirmDialog';
-import { datiVuoti, rigaVuota, calcola, eur } from '../model';
+import { datiVuoti, rigaVuota, calcola, eur, dt, oggiISO } from '../model';
 import type { RapportoData } from '../model';
 import { saveBolla, clienteToData } from '../store';
 import type { Cliente } from '../store';
@@ -34,6 +35,7 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const [pendingPrint, setPendingPrint] = useState(false);
+  const [showExtra, setShowExtra] = useState(false); // "Informazioni aggiuntive" (chiuse di default)
   // bolla "bloccata" (già salvata): i campi non si modificano per sbaglio
   const [locked, setLocked] = useState(false);
   useEffect(() => { setLocked(!!data.id); }, [data.id]);
@@ -74,11 +76,12 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
   }, [pendingPrint, data]);
 
   // aggiunge da sola una riga materiale vuota in coda quando l'ultima è compilata
+  // (o quando la lista è vuota, es. bolla salvata senza materiali)
   useEffect(() => {
     const mats = data.materiali;
     const last = mats[mats.length - 1];
     const vuota = (m?: typeof mats[number]) => !m || (!m.qta && !m.codice && !m.descrizione && !m.prezzo);
-    if (!vuota(last)) setData(d => ({ ...d, materiali: [...d.materiali, rigaVuota()] }));
+    if (!mats.length || !vuota(last)) setData(d => ({ ...d, materiali: [...d.materiali, rigaVuota()] }));
   }, [data.materiali, setData]);
 
   const set = <K extends keyof RapportoData>(k: K, v: RapportoData[K]) => setData(d => ({ ...d, [k]: v }));
@@ -93,6 +96,19 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
 
   const puoStampare = data.cliente.trim() !== '' && data.dataChiamata !== '';
   const stampa = () => setPendingPrint(true); // ristampa senza salvare (bolla bloccata)
+
+  // "fatto": sposta la nota "cosa manca da fare" in Richiesta (con la data) e
+  // toglie lo stato incompleto
+  const completaLavoro = () => {
+    const nota = data.daCompletare.trim();
+    if (!nota) return;
+    setData(d => ({
+      ...d,
+      richiesta: (d.richiesta ? d.richiesta + '\n' : '') + `- ${dt(oggiISO())}: ${nota}`,
+      daCompletare: '',
+      lavoroIncompleto: false,
+    }));
+  };
 
   const salva = async (poiStampa: boolean) => {
     if (!puoStampare) { alert('Per salvare servono almeno il CLIENTE e la DATA CHIAMATA.'); return; }
@@ -171,35 +187,53 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
                 <input type="date" value={data.dataConsegna} onChange={e => set('dataConsegna', e.target.value)} /></label>
             </div>
             <div className="maioli-grid2">
-              <label className="maioli-field"><span className="form-label">Condominio</span>
-                <input value={data.condominio} onChange={e => set('condominio', e.target.value)} /></label>
-              <label className="maioli-field"><span className="form-label">Amministratore</span>
-                <input value={data.amministratore} onChange={e => set('amministratore', e.target.value)} /></label>
-              <label className="maioli-field"><span className="form-label">Telefono</span>
-                <input value={data.telefono} onChange={e => set('telefono', e.target.value)} /></label>
-              <label className="maioli-field"><span className="form-label">Mail</span>
-                <input value={data.email} onChange={e => set('email', e.target.value)} /></label>
               <label className="maioli-field maioli-col2"><span className="form-label">Indirizzo</span>
                 <input value={data.indirizzo} onChange={e => set('indirizzo', e.target.value)} /></label>
               <label className="maioli-field maioli-col2"><span className="form-label">Preventivo</span>
                 <input value={data.preventivo} onChange={e => set('preventivo', e.target.value)} placeholder="facoltativo" /></label>
             </div>
+            <div className="maioli-extra">
+              <button type="button" className={`maioli-extra-head${showExtra ? ' open' : ''}`} onClick={() => setShowExtra(s => !s)}>
+                <span className="maioli-extra-chevron">▸</span> Informazioni aggiuntive
+              </button>
+              {showExtra && (
+                <div className="maioli-grid2 maioli-extra-body">
+                  <label className="maioli-field"><span className="form-label">Condominio</span>
+                    <input value={data.condominio} onChange={e => set('condominio', e.target.value)} /></label>
+                  <label className="maioli-field"><span className="form-label">Amministratore</span>
+                    <input value={data.amministratore} onChange={e => set('amministratore', e.target.value)} /></label>
+                  <label className="maioli-field"><span className="form-label">Telefono</span>
+                    <input value={data.telefono} onChange={e => set('telefono', e.target.value)} /></label>
+                  <label className="maioli-field"><span className="form-label">Mail</span>
+                    <input value={data.email} onChange={e => set('email', e.target.value)} /></label>
+                </div>
+              )}
+            </div>
             <label className="maioli-field"><span className="form-label">Richiesta intervento per</span>
-              <textarea rows={3} value={data.richiesta} onChange={e => set('richiesta', e.target.value)} /></label>
+              <AutoTextarea value={data.richiesta} onChange={e => set('richiesta', e.target.value)} /></label>
             <label className="maioli-field"><span className="form-label">Difetti riscontrati</span>
-              <textarea rows={2} value={data.difetti} onChange={e => set('difetti', e.target.value)} /></label>
+              <AutoTextarea value={data.difetti} onChange={e => set('difetti', e.target.value)} /></label>
             <label className="maioli-check">
               <input type="checkbox" checked={data.lavoroIncompleto} onChange={e => set('lavoroIncompleto', e.target.checked)} />
               <span className="maioli-check-lbl">⚠️ Lavoro non completato</span>
             </label>
             {data.lavoroIncompleto && (
               <label className="maioli-field"><span className="form-label">Cosa manca da fare</span>
-                <textarea rows={2} value={data.daCompletare} onChange={e => set('daCompletare', e.target.value)} placeholder="Es: manca da montare la placca, tornare per collegare…" /></label>
+                <div className="maioli-completa-wrap">
+                  <AutoTextarea value={data.daCompletare} onChange={e => set('daCompletare', e.target.value)} placeholder="Es: manca da montare la placca, tornare per collegare…" />
+                  {data.daCompletare.trim() && (
+                    <button type="button" className="maioli-completa-btn" title="Fatto: sposta in Richiesta con la data" onClick={completaLavoro}>✓</button>
+                  )}
+                </div></label>
             )}
           </div>
 
           <div className="card maioli-card">
             <div className="maioli-sec-title"><span className="maioli-sec-ic" style={{ background: 'rgba(16,185,129,0.14)' }}>👷</span>Manodopera</div>
+            <label className="maioli-check maioli-check-chiamata">
+              <input type="checkbox" checked={data.costoChiamata} onChange={e => set('costoChiamata', e.target.checked)} />
+              <span className="maioli-check-lbl">🚐 Costo di chiamata <b>(+30 €)</b></span>
+            </label>
             <OperaiManodopera value={data.manodopera} onChange={(v) => set('manodopera', v)} />
           </div>
 
