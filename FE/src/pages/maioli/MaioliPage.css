@@ -219,6 +219,18 @@
 .maioli-cli-edit input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
 .maioli-cli-edit input:first-child { grid-column: 1 / -1; font-weight: 700; }
 .maioli-cli-edit .maioli-cli-actions { grid-column: 1 / -1; justify-content: flex-end; }
+.maioli-cli-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.maioli-cli-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.maioli-cli-badge.sospeso { background: rgba(234,179,8,0.16); color: #a16207; }
+.maioli-cli-badge.dafatt { background: rgba(37,99,235,0.14); color: var(--accent); }
+.maioli-cli-badge.none { background: var(--glass); color: var(--text-muted); }
+
+/* campo Riferimento con autocomplete */
+.maioli-rif-wrap { position: relative; }
+.maioli-rif-dropdown { position: absolute; z-index: 30; top: calc(100% + 2px); left: 0; right: 0; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 10px 30px rgba(0,0,0,0.18); max-height: 240px; overflow-y: auto; }
+.maioli-rif-opt { display: block; width: 100%; text-align: left; padding: 10px 12px; background: none; border: none; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--text); }
+.maioli-rif-opt:last-child { border-bottom: none; }
+.maioli-rif-opt:hover { background: var(--glass-hover); }
 .maioli-bcard-top { display: flex; align-items: center; gap: 12px; }
 .maioli-bcard-num { flex-shrink: 0; min-width: 54px; text-align: center; font-size: 14px; font-weight: 800; line-height: 1.05; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(37,99,235,0.2); border-radius: 8px; padding: 6px 8px; }
 .maioli-bcard-main { flex: 1; min-width: 0; }

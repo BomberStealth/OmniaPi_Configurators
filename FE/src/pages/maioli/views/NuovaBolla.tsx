@@ -6,6 +6,7 @@ import MaterialeRow from '../components/MaterialeRow';
 import FotoSection from '../components/FotoSection';
 import FirmaField from '../components/FirmaField';
 import AutoTextarea from '../components/AutoTextarea';
+import RiferimentoPicker from '../components/RiferimentoPicker';
 import { useConfirm } from '../components/ConfirmDialog';
 import { datiVuoti, rigaVuota, calcola, eur, dt, oggiISO } from '../model';
 import type { RapportoData } from '../model';
@@ -177,7 +178,7 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
               />
             </div>
             <label className="maioli-field maioli-col2"><span className="form-label">Riferimento</span>
-              <input value={data.riferimento} onChange={e => set('riferimento', e.target.value)} placeholder="es. Via delle Prove, Capannone… (per la ricerca)" /></label>
+              <RiferimentoPicker value={data.riferimento} clienteId={data.cliente_id ?? null} onChange={v => set('riferimento', v)} /></label>
             <div className="maioli-dates">
               <label className="maioli-field"><span className="form-label">Data chiamata *</span>
                 <input type="date" value={data.dataChiamata} onChange={e => set('dataChiamata', e.target.value)} /></label>

@@ -30,6 +30,12 @@ export async function clientiDelete(req: Request, res: Response): Promise<void> 
   try { const ok = await s.deleteCliente(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.status(204).end(); } catch { err(res); }
 }
 
+export async function riferimentiList(req: Request, res: Response): Promise<void> {
+  const cid = parseId(req.query.cliente_id as string | string[] | undefined);
+  if (cid === null) { res.json([]); return; }
+  try { res.json(await s.listRiferimenti(cid, String(req.query.q ?? ''))); } catch { err(res); }
+}
+
 // ── Bolle ──
 export async function bolleList(req: Request, res: Response): Promise<void> {
   const stato = String(req.query.stato ?? 'sospeso') === 'consegnate' ? 'consegnate' : 'sospeso';

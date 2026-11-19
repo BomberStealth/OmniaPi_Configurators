@@ -15,6 +15,8 @@ export interface Cliente {
   condominio: string;
   amministratore: string;
   note?: string | null;
+  n_sospeso?: number;
+  n_dafatturare?: number;
 }
 export interface BollaSummary {
   id: number;
@@ -273,6 +275,18 @@ export async function removeCliente(id: number): Promise<void> {
   await initStore();
   if (MODE === 'api') { await jfetch(`${API}/clienti/${id}`, { method: 'DELETE' }); return; }
   lsSet(LS.clienti, lsGet<Cliente[]>(LS.clienti, []).filter(x => x.id !== id));
+}
+
+// riferimenti già usati per quel cliente (autocomplete nel campo Riferimento)
+export async function listRiferimenti(clienteId: number | null, q: string): Promise<string[]> {
+  await initStore();
+  if (!clienteId) return [];
+  if (MODE === 'api') return jfetch(`${API}/riferimenti?cliente_id=${clienteId}&q=${encodeURIComponent(q)}`);
+  const all = lsGet<any[]>(LS.bolle, []).filter(b => !b.deleted_at && b.cliente_id === clienteId);
+  const s = q.trim().toLowerCase();
+  const set = new Set<string>();
+  for (const b of all) { const r = String(b.riferimento || '').trim(); if (r && (!s || r.toLowerCase().includes(s))) set.add(r); }
+  return [...set].sort().slice(0, 10);
 }
 
 function upsertClienteLocal(d: RapportoData): number | null {

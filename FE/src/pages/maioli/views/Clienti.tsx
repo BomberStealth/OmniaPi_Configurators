@@ -70,6 +70,11 @@ export default function Clienti() {
               <div className="maioli-cli-main">
                 <div className="maioli-cli-nome">{r.nome}</div>
                 <div className="maioli-cli-sub">{[r.telefono, r.indirizzo].filter(Boolean).join(' · ') || '—'}</div>
+                <div className="maioli-cli-badges">
+                  {Number(r.n_sospeso) > 0 && <span className="maioli-cli-badge sospeso">📅 {r.n_sospeso} in sospeso</span>}
+                  {Number(r.n_dafatturare) > 0 && <span className="maioli-cli-badge dafatt">🧾 {r.n_dafatturare} da fatturare</span>}
+                  {!Number(r.n_sospeso) && !Number(r.n_dafatturare) && <span className="maioli-cli-badge none">nessuna bolla</span>}
+                </div>
               </div>
               <div className="maioli-cli-actions">
                 <button className="btn btn-secondary btn-sm" onClick={() => patch(r.id, { _editing: true })}>Modifica</button>

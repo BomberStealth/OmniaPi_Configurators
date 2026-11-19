@@ -78,7 +78,14 @@ export interface Cliente {
   condominio: string;
   amministratore: string;
   note: string | null;
+  n_sospeso?: number;
+  n_dafatturare?: number;
 }
+
+// colonne cliente + conteggio bolle per stato (per la sezione Clienti)
+const CLI_COLS = `c.*,
+  (SELECT COUNT(*) FROM maioli_bolle b WHERE b.cliente_id=c.id AND b.deleted_at IS NULL AND b.consegnata_at IS NULL) AS n_sospeso,
+  (SELECT COUNT(*) FROM maioli_bolle b WHERE b.cliente_id=c.id AND b.deleted_at IS NULL AND b.consegnata_at IS NOT NULL) AS n_dafatturare`;
 
 export interface ListinoItem {
   id: number;
@@ -150,17 +157,29 @@ export async function searchClienti(q: string, limit = 20): Promise<Cliente[]> {
   if (q && q.trim()) {
     const like = `%${q.trim()}%`;
     const [rows] = await pool.execute(
-      `SELECT * FROM maioli_clienti
-       WHERE nome LIKE ? OR indirizzo LIKE ? OR telefono LIKE ?
-       ORDER BY nome ASC LIMIT ${lim(limit)}`,
+      `SELECT ${CLI_COLS} FROM maioli_clienti c
+       WHERE c.nome LIKE ? OR c.indirizzo LIKE ? OR c.telefono LIKE ?
+       ORDER BY c.nome ASC LIMIT ${lim(limit)}`,
       [like, like, like],
     );
     return rows as Cliente[];
   }
   const [rows] = await pool.execute(
-    `SELECT * FROM maioli_clienti ORDER BY updated_at DESC LIMIT ${lim(limit)}`,
+    `SELECT ${CLI_COLS} FROM maioli_clienti c ORDER BY c.updated_at DESC LIMIT ${lim(limit)}`,
   );
   return rows as Cliente[];
+}
+
+// riferimenti distinti già usati per un cliente (autocomplete nel campo Riferimento)
+export async function listRiferimenti(clienteId: number, q: string, limit = 10): Promise<string[]> {
+  const params: (string | number)[] = [clienteId];
+  let where = "cliente_id = ? AND riferimento <> ''";
+  if (q && q.trim()) { where += ' AND riferimento LIKE ?'; params.push(`%${q.trim()}%`); }
+  const [rows] = (await pool.execute(
+    `SELECT DISTINCT riferimento FROM maioli_bolle WHERE ${where} ORDER BY riferimento ASC LIMIT ${lim(limit)}`,
+    params,
+  )) as [{ riferimento: string }[], unknown];
+  return rows.map(r => r.riferimento);
 }
 
 export async function getCliente(id: number): Promise<Cliente | null> {

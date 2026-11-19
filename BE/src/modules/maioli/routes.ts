@@ -12,6 +12,9 @@ router.get('/foto/:year/:name', c.fotoServe);
 // Da qui in poi tutto richiede login (JWT Bearer).
 router.use(requireAuth);
 
+// Riferimenti (autocomplete per cliente)
+router.get('/riferimenti', c.riferimentiList as never);
+
 // Clienti
 router.get('/clienti', c.clientiList as never);
 router.get('/clienti/:id', c.clientiGet as never);
