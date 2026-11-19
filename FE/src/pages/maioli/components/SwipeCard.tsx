@@ -16,6 +16,7 @@ export default function SwipeCard({ onRight, onLeft, rightLabel, leftLabel, chil
   const [dragging, setDragging] = useState(false);
   const st = useRef<{ x: number; y: number; locked: boolean; id: number } | null>(null);
   const dxRef = useRef(0);
+  const swiped = useRef(false); // per non far scattare il click (apri) dopo uno swipe
 
   const down = (e: React.PointerEvent) => {
     st.current = { x: e.clientX, y: e.clientY, locked: false, id: e.pointerId };
@@ -41,6 +42,8 @@ export default function SwipeCard({ onRight, onLeft, rightLabel, leftLabel, chil
     setDragging(false);
     setDx(0);
     if (!s || !s.locked) return;
+    swiped.current = true;
+    setTimeout(() => { swiped.current = false; }, 60);
     if (d >= THRESH) onRight();
     else if (d <= -THRESH) onLeft();
   };
@@ -49,7 +52,8 @@ export default function SwipeCard({ onRight, onLeft, rightLabel, leftLabel, chil
   const past = Math.abs(dx) >= THRESH;
 
   return (
-    <div className="swipe" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
+    <div className="swipe" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
+      onClickCapture={(e) => { if (swiped.current) { e.stopPropagation(); e.preventDefault(); } }}>
       {dx !== 0 && (
         <div className="swipe-bg" style={{ opacity: 0.25 + 0.75 * p, background: dx > 0 ? '#e11d2a' : '#10b981', justifyContent: dx > 0 ? 'flex-start' : 'flex-end' }}>
           <span className={`swipe-bg-lbl${past ? ' past' : ''}`}>{dx > 0 ? rightLabel : leftLabel}</span>

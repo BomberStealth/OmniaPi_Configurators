@@ -96,14 +96,18 @@ Descrizione") e nel listino, **sotto-gruppi per categoria** nel listino,
 **login JWT** con account creati a mano, **firme a dito** (Tecnico + Cliente,
 pad canvas) stampate in fondo al foglio, **marca sull'articolo** (Marca · Codice)
 e prezzo 0 evidenziato, **stato "lavoro non completato"** (spunta + nota, card
-gialla in archivio; verde se consegnata).
+gialla in archivio; verde se consegnata). Archivio diviso in **In sospeso /
+Consegnate / Cancellate** con card compatte (Cliente · Riferimento · Data),
+tap per aprire e swipe per consegna/cestino. Campo **Riferimento** (in bolla +
+foglio + ricerca). **Firma in finestra** grande (no segni per sbaglio). Bolla
+**bloccata dopo il salvataggio** (tap → "Vuoi modificare?").
 
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.11.0**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.12.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
-(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **20**.
+(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **21**.
 
 ## In sospeso / idee
 - ⚠️ **DEMO LOCALE** — a inizio prossima sessione CHIEDERE a Edoardo: vuole

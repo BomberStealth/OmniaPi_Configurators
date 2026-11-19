@@ -4,7 +4,8 @@ import ClientePicker from '../components/ClientePicker';
 import OperaiManodopera from '../components/OperaiManodopera';
 import MaterialeRow from '../components/MaterialeRow';
 import FotoSection from '../components/FotoSection';
-import SignaturePad from '../components/SignaturePad';
+import FirmaField from '../components/FirmaField';
+import { useConfirm } from '../components/ConfirmDialog';
 import { datiVuoti, rigaVuota, calcola, eur } from '../model';
 import type { RapportoData } from '../model';
 import { saveBolla, clienteToData } from '../store';
@@ -28,10 +29,18 @@ interface Props {
 }
 
 export default function NuovaBolla({ data, setData, onSaved }: Props) {
+  const confirm = useConfirm();
   const [mobileTab, setMobileTab] = useState<'compila' | 'anteprima'>('compila');
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const [pendingPrint, setPendingPrint] = useState(false);
+  // bolla "bloccata" (già salvata): i campi non si modificano per sbaglio
+  const [locked, setLocked] = useState(false);
+  useEffect(() => { setLocked(!!data.id); }, [data.id]);
+  const askUnlock = async () => {
+    const ok = await confirm({ title: 'Modificare la bolla?', message: 'La bolla è bloccata per non modificarla per sbaglio. Vuoi sbloccarla per modificarla?', confirmLabel: 'Sì, modifica' });
+    if (ok) setLocked(false);
+  };
 
   // anteprima scalata
   const colRef = useRef<HTMLDivElement>(null);
@@ -77,20 +86,13 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
     setData(d => { const materiali = d.materiali.slice(); materiali[i] = { ...materiali[i], ...patch }; return { ...d, materiali }; });
   const delRiga = (i: number) => setData(d => { const m = d.materiali.filter((_, idx) => idx !== i); return { ...d, materiali: m.length ? m : [rigaVuota()] }; });
 
-  const nuovo = useCallback(() => {
-    if (confirm('Creare una nuova bolla? I dati non salvati andranno persi.')) setData(datiVuoti());
-  }, [setData]);
-
-  const duplica = useCallback(() => {
-    setData(d => ({
-      ...datiVuoti(),
-      cliente_id: d.cliente_id, cliente: d.cliente, condominio: d.condominio,
-      amministratore: d.amministratore, telefono: d.telefono, email: d.email,
-      indirizzo: d.indirizzo,
-    }));
-  }, [setData]);
+  const nuovo = useCallback(async () => {
+    const ok = await confirm({ title: 'Nuova bolla?', message: 'I dati non ancora salvati andranno persi.', confirmLabel: 'Nuova bolla', danger: true });
+    if (ok) setData(datiVuoti());
+  }, [confirm, setData]);
 
   const puoStampare = data.cliente.trim() !== '' && data.dataChiamata !== '';
+  const stampa = () => setPendingPrint(true); // ristampa senza salvare (bolla bloccata)
 
   const salva = async (poiStampa: boolean) => {
     if (!puoStampare) { alert('Per salvare servono almeno il CLIENTE e la DATA CHIAMATA.'); return; }
@@ -98,6 +100,7 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
     try {
       const { id, numero } = await saveBolla(data);
       setData(d => ({ ...d, id, numero }));
+      setLocked(true); // dopo il salvataggio la bolla si blocca
       onSaved?.();
       if (poiStampa) {
         setPendingPrint(true);
@@ -127,7 +130,6 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
                    : <span className="maioli-chip maioli-chip-new">Nuova bolla</span>}
         </div>
         <div className="maioli-toolbar">
-          <button className="btn btn-secondary btn-sm" onClick={duplica}>⧉ Duplica</button>
           <button className="btn btn-secondary btn-sm" onClick={nuovo}>✕ Nuovo</button>
         </div>
       </div>
@@ -140,6 +142,12 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
       <div className={`maioli-split tab-${mobileTab}`}>
         {/* FORM */}
         <div className="maioli-form-col">
+          <div className={`maioli-form-fields${locked ? ' locked' : ''}`}>
+            {locked && (
+              <div className="maioli-lock-overlay" onClick={askUnlock}>
+                <span className="maioli-lock-pill">🔒 Bolla salvata — tocca per modificare</span>
+              </div>
+            )}
           <div className="card maioli-card">
             <div className="maioli-sec-title"><span className="maioli-sec-ic" style={{ background: 'rgba(37,99,235,0.12)' }}>📋</span>Dati intervento</div>
             <div className="maioli-field maioli-col2">
@@ -152,6 +160,8 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
                 onSelect={(c: Cliente) => setData(d => clienteToData(c, d))}
               />
             </div>
+            <label className="maioli-field maioli-col2"><span className="form-label">Riferimento</span>
+              <input value={data.riferimento} onChange={e => set('riferimento', e.target.value)} placeholder="es. Via delle Prove, Capannone… (per la ricerca)" /></label>
             <div className="maioli-dates">
               <label className="maioli-field"><span className="form-label">Data chiamata *</span>
                 <input type="date" value={data.dataChiamata} onChange={e => set('dataChiamata', e.target.value)} /></label>
@@ -245,19 +255,29 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
               <span className="maioli-sec-hint">compaiono in fondo al foglio stampato</span>
             </div>
             <div className="maioli-firme">
-              <SignaturePad label="Firma Tecnico" value={data.firmaTecnico} onChange={(v) => set('firmaTecnico', v)} />
-              <SignaturePad label="Firma Cliente" value={data.firmaCliente} onChange={(v) => set('firmaCliente', v)} />
+              <FirmaField label="Firma Tecnico" value={data.firmaTecnico} onChange={(v) => set('firmaTecnico', v)} />
+              <FirmaField label="Firma Cliente" value={data.firmaCliente} onChange={(v) => set('firmaCliente', v)} />
             </div>
           </div>
+          </div>{/* /maioli-form-fields */}
 
           <div className="maioli-bottombar">
             {savedFlash && <span className="maioli-saved-flash">✓ Salvata</span>}
-            <button className="btn btn-secondary maioli-bottom-save" onClick={() => salva(false)} disabled={!puoStampare || saving}>
-              {saving ? 'Salvo…' : '💾 Salva'}
-            </button>
-            <button className="btn btn-primary maioli-bottom-print" onClick={() => salva(true)} disabled={!puoStampare || saving}>
-              🖨 Salva e Stampa
-            </button>
+            {locked ? (
+              <>
+                <button className="btn btn-secondary maioli-bottom-save" onClick={askUnlock}>✏️ Modifica</button>
+                <button className="btn btn-primary maioli-bottom-print" onClick={stampa}>🖨 Stampa</button>
+              </>
+            ) : (
+              <>
+                <button className="btn btn-secondary maioli-bottom-save" onClick={() => salva(false)} disabled={!puoStampare || saving}>
+                  {saving ? 'Salvo…' : '💾 Salva'}
+                </button>
+                <button className="btn btn-primary maioli-bottom-print" onClick={() => salva(true)} disabled={!puoStampare || saving}>
+                  🖨 Salva e Stampa
+                </button>
+              </>
+            )}
           </div>
         </div>
 

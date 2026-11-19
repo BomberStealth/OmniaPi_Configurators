@@ -20,6 +20,7 @@ export interface BollaSummary {
   id: number;
   numero: string | null;
   cliente: string;
+  riferimento?: string | null;
   indirizzo: string;
   data_intervento: string | null;
   totale: number;
@@ -66,6 +67,7 @@ export function toPayload(d: RapportoData) {
   return {
     cliente_id: d.cliente_id ?? null,
     cliente: d.cliente.trim(),
+    riferimento: d.riferimento ?? '',
     telefono: d.telefono,
     email: d.email,
     indirizzo: d.indirizzo,
@@ -100,6 +102,7 @@ export function fromBolla(row: Record<string, any>): RapportoData {
     numero: row.numero ?? '',
     cliente_id: row.cliente_id ?? null,
     cliente: row.cliente ?? '',
+    riferimento: row.riferimento ?? '',
     dataChiamata: isoDate(row.data_chiamata),
     dataIntervento: isoDate(row.data_intervento),
     dataConsegna: isoDate(row.data_consegna),
@@ -262,14 +265,20 @@ function upsertClienteLocal(d: RapportoData): number | null {
 }
 
 // ── Bolle ──
-export async function listBolle(q: string): Promise<BollaSummary[]> {
+export type StatoBolla = 'sospeso' | 'consegnate';
+
+export async function listBolle(q: string, stato: StatoBolla = 'sospeso'): Promise<BollaSummary[]> {
   await initStore();
-  if (MODE === 'api') return jfetch(`${API}/bolle?q=${encodeURIComponent(q)}`);
-  const all = lsGet<any[]>(LS.bolle, []).filter(b => !b.deleted_at);
+  if (MODE === 'api') return jfetch(`${API}/bolle?q=${encodeURIComponent(q)}&stato=${stato}`);
+  const all = lsGet<any[]>(LS.bolle, [])
+    .filter(b => !b.deleted_at)
+    .filter(b => (stato === 'consegnate' ? !!b.consegnata_at : !b.consegnata_at));
   const s = q.trim().toLowerCase();
-  const rows = (s ? all.filter(b => (String(b.cliente) + b.numero + b.indirizzo).toLowerCase().includes(s)) : all)
-    .sort((a, b) => (a.numero || '').localeCompare(b.numero || '', undefined, { numeric: true }));
-  return rows.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at, consegnata_at: b.consegnata_at ?? null, n_foto: (b.foto || []).length, lavoro_incompleto: b.lavoro_incompleto ? 1 : 0 }));
+  const rows = (s ? all.filter(b => (String(b.cliente) + (b.riferimento || '') + b.numero + b.indirizzo).toLowerCase().includes(s)) : all)
+    .sort((a, b) => stato === 'consegnate'
+      ? (b.consegnata_at || '').localeCompare(a.consegnata_at || '')
+      : (a.numero || '').localeCompare(b.numero || '', undefined, { numeric: true }));
+  return rows.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, riferimento: b.riferimento ?? '', indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at, consegnata_at: b.consegnata_at ?? null, n_foto: (b.foto || []).length, lavoro_incompleto: b.lavoro_incompleto ? 1 : 0 }));
 }
 
 export async function getBolla(id: number): Promise<RapportoData> {
@@ -335,9 +344,9 @@ export async function listBolleCancellate(q: string): Promise<BollaSummary[]> {
   if (kept.length !== all.length) lsSet(LS.bolle, kept);
   const s = q.trim().toLowerCase();
   const trashed = kept.filter(b => b.deleted_at)
-    .filter(b => !s || (String(b.cliente) + b.numero + b.indirizzo).toLowerCase().includes(s))
+    .filter(b => !s || (String(b.cliente) + (b.riferimento || '') + b.numero + b.indirizzo).toLowerCase().includes(s))
     .sort((a, b) => (b.deleted_at || '').localeCompare(a.deleted_at || ''));
-  return trashed.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at, deleted_at: b.deleted_at, n_foto: (b.foto || []).length }));
+  return trashed.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, riferimento: b.riferimento ?? '', indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at, deleted_at: b.deleted_at, consegnata_at: b.consegnata_at ?? null, n_foto: (b.foto || []).length }));
 }
 
 export async function restoreBolla(id: number): Promise<void> {

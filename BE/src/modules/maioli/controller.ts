@@ -32,7 +32,8 @@ export async function clientiDelete(req: Request, res: Response): Promise<void> 
 
 // ── Bolle ──
 export async function bolleList(req: Request, res: Response): Promise<void> {
-  try { res.json(await s.listBolle(String(req.query.q ?? ''))); } catch { err(res); }
+  const stato = String(req.query.stato ?? 'sospeso') === 'consegnate' ? 'consegnate' : 'sospeso';
+  try { res.json(await s.listBolle(String(req.query.q ?? ''), stato)); } catch { err(res); }
 }
 export async function bolleGet(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }

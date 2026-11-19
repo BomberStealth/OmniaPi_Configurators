@@ -108,7 +108,8 @@
   .maioli-preview-scaler { transform: none !important; width: auto !important; height: auto !important; }
   .maioli-preview-inner { position: static !important; width: auto !important; }
 
-  .foglio-root .sheet { margin: 0 !important; box-shadow: none !important; page-break-after: always; break-after: page; }
-  .foglio-root .sheet:last-child { page-break-after: auto; break-after: auto; }
+  /* 295mm invece di 297: evita che l'arrotondamento su mobile crei una 2ª pagina vuota */
+  .foglio-root .sheet { margin: 0 !important; box-shadow: none !important; height: 295mm !important; page-break-after: always; break-after: page; overflow: hidden; }
+  .foglio-root .sheet:last-child { page-break-after: avoid !important; break-after: avoid !important; }
   .foglio-root .sheet + .sheet { margin-top: 0 !important; }
 }

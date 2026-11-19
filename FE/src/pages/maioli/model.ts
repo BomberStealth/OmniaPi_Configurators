@@ -21,6 +21,7 @@ export interface RapportoData {
   numero: string;            // progressivo assegnato al salvataggio (sola lettura)
   cliente_id?: number | null;
   cliente: string;           // OBBLIGATORIO
+  riferimento: string;       // es. "Via delle Prove" / "Capannone" — chiave di ricerca
   dataChiamata: string;      // OBBLIGATORIO
   condominio: string;
   dataIntervento: string;
@@ -59,6 +60,7 @@ export function datiVuoti(): RapportoData {
     numero: '',
     cliente_id: null,
     cliente: '',
+    riferimento: '',
     dataChiamata: oggi,
     condominio: '',
     dataIntervento: oggi,

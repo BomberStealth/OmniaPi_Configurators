@@ -118,6 +118,7 @@ export interface ManoInput {
 export interface BollaInput {
   cliente_id?: number | null;
   cliente: string;
+  riferimento?: string;
   telefono?: string;
   email?: string;
   indirizzo?: string;
@@ -223,6 +224,7 @@ export interface BollaSummary {
   id: number;
   numero: string | null;
   cliente: string;
+  riferimento?: string | null;
   indirizzo: string;
   data_intervento: string | null;
   totale: number;
@@ -233,18 +235,21 @@ export interface BollaSummary {
   lavoro_incompleto?: number;
 }
 
-const SUMMARY_COLS = 'id, numero, cliente, indirizzo, data_intervento, totale, updated_at, deleted_at, consegnata_at, lavoro_incompleto, (SELECT COUNT(*) FROM maioli_bolle_foto f WHERE f.bolla_id = maioli_bolle.id) AS n_foto';
+const SUMMARY_COLS = 'id, numero, cliente, riferimento, indirizzo, data_intervento, totale, updated_at, deleted_at, consegnata_at, lavoro_incompleto, (SELECT COUNT(*) FROM maioli_bolle_foto f WHERE f.bolla_id = maioli_bolle.id) AS n_foto';
 
-export async function listBolle(q: string, limit = 50): Promise<BollaSummary[]> {
+export async function listBolle(q: string, stato = 'sospeso', limit = 50): Promise<BollaSummary[]> {
   const cond: string[] = ['deleted_at IS NULL'];
   const params: string[] = [];
+  // sospeso = non ancora consegnata; consegnate = contrassegnate consegnate
+  cond.push(stato === 'consegnate' ? 'consegnata_at IS NOT NULL' : 'consegnata_at IS NULL');
   if (q && q.trim()) {
     const like = `%${q.trim()}%`;
-    cond.push('(cliente LIKE ? OR numero LIKE ? OR indirizzo LIKE ?)');
-    params.push(like, like, like);
+    cond.push('(cliente LIKE ? OR riferimento LIKE ? OR numero LIKE ? OR indirizzo LIKE ?)');
+    params.push(like, like, like, like);
   }
+  const order = stato === 'consegnate' ? 'consegnata_at DESC, id DESC' : 'anno ASC, progressivo ASC, id ASC';
   const [rows] = await pool.execute(
-    `SELECT ${SUMMARY_COLS} FROM maioli_bolle WHERE ${cond.join(' AND ')} ORDER BY anno ASC, progressivo ASC, id ASC LIMIT ${lim(limit)}`,
+    `SELECT ${SUMMARY_COLS} FROM maioli_bolle WHERE ${cond.join(' AND ')} ORDER BY ${order} LIMIT ${lim(limit)}`,
     params,
   );
   return rows as BollaSummary[];
@@ -333,9 +338,9 @@ export async function createBolla(b: BollaInput): Promise<{ id: number; numero: 
     const { numero, anno, progressivo } = await nextNumero(conn);
     const [r] = (await conn.execute(
       `INSERT INTO maioli_bolle
-       (numero, anno, progressivo, cliente_id, cliente, telefono, email, indirizzo, condominio, amministratore, preventivo, data_chiamata, data_intervento, data_consegna, richiesta, difetti, iva, imponibile, totale, firma_tecnico, firma_cliente, lavoro_incompleto, da_completare)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [numero, anno, progressivo, clienteId, b.cliente, b.telefono ?? '', b.email ?? '', b.indirizzo ?? '',
+       (numero, anno, progressivo, cliente_id, cliente, riferimento, telefono, email, indirizzo, condominio, amministratore, preventivo, data_chiamata, data_intervento, data_consegna, richiesta, difetti, iva, imponibile, totale, firma_tecnico, firma_cliente, lavoro_incompleto, da_completare)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [numero, anno, progressivo, clienteId, b.cliente, b.riferimento ?? '', b.telefono ?? '', b.email ?? '', b.indirizzo ?? '',
        b.condominio ?? '', b.amministratore ?? '', b.preventivo ?? '', b.data_chiamata || null, b.data_intervento || null,
        b.data_consegna || null, b.richiesta ?? '', b.difetti ?? '', b.iva ?? 0, b.imponibile ?? 0, b.totale ?? 0,
        b.firma_tecnico ?? null, b.firma_cliente ?? null, b.lavoro_incompleto ? 1 : 0, b.da_completare ?? null],
@@ -362,8 +367,8 @@ export async function updateBolla(id: number, b: BollaInput): Promise<boolean> {
     oldFoto = prevFoto.map(f => f.img);
     const clienteId = await upsertClienteTx(conn, b);
     await conn.execute(
-      `UPDATE maioli_bolle SET cliente_id=?, cliente=?, telefono=?, email=?, indirizzo=?, condominio=?, amministratore=?, preventivo=?, data_chiamata=?, data_intervento=?, data_consegna=?, richiesta=?, difetti=?, iva=?, imponibile=?, totale=?, firma_tecnico=?, firma_cliente=?, lavoro_incompleto=?, da_completare=? WHERE id=?`,
-      [clienteId, b.cliente, b.telefono ?? '', b.email ?? '', b.indirizzo ?? '', b.condominio ?? '', b.amministratore ?? '',
+      `UPDATE maioli_bolle SET cliente_id=?, cliente=?, riferimento=?, telefono=?, email=?, indirizzo=?, condominio=?, amministratore=?, preventivo=?, data_chiamata=?, data_intervento=?, data_consegna=?, richiesta=?, difetti=?, iva=?, imponibile=?, totale=?, firma_tecnico=?, firma_cliente=?, lavoro_incompleto=?, da_completare=? WHERE id=?`,
+      [clienteId, b.cliente, b.riferimento ?? '', b.telefono ?? '', b.email ?? '', b.indirizzo ?? '', b.condominio ?? '', b.amministratore ?? '',
        b.preventivo ?? '', b.data_chiamata || null, b.data_intervento || null, b.data_consegna || null, b.richiesta ?? '', b.difetti ?? '', b.iva ?? 0, b.imponibile ?? 0, b.totale ?? 0,
        b.firma_tecnico ?? null, b.firma_cliente ?? null, b.lavoro_incompleto ? 1 : 0, b.da_completare ?? null, id],
     );

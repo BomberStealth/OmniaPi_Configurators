@@ -193,7 +193,15 @@
 
 /* ── card bolle (archivio) ── */
 .maioli-bcards { display: flex; flex-direction: column; gap: 10px; }
-.maioli-bcard { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--card-gradient); }
+.maioli-bcard { display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--card-gradient); }
+.maioli-bcard.tappable { cursor: pointer; transition: background 0.12s, border-color 0.12s; }
+.maioli-bcard.tappable:hover { background: var(--glass-hover); }
+.maioli-bcard.tappable:active { transform: scale(0.995); }
+.maioli-bcard-rif { font-size: 13px; font-weight: 700; color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
+.maioli-bcard-date { font-size: 12.5px; font-weight: 700; color: var(--text-muted); white-space: nowrap; flex: none; }
+.maioli-bcard.consegnata .maioli-bcard-date { color: #0a9d6e; }
+.maioli-bcard-main .maioli-chip-incompleto { display: inline-block; margin-top: 5px; }
+.maioli-bcard-right { display: flex; align-items: center; gap: 7px; flex: none; }
 .maioli-bcard-top { display: flex; align-items: center; gap: 12px; }
 .maioli-bcard-num { flex-shrink: 0; min-width: 54px; text-align: center; font-size: 14px; font-weight: 800; line-height: 1.05; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(37,99,235,0.2); border-radius: 8px; padding: 6px 8px; }
 .maioli-bcard-main { flex: 1; min-width: 0; }
@@ -314,6 +322,27 @@
 .maioli-firma-pad { position: relative; border: 1.5px dashed var(--border); border-radius: 10px; background: #fff; overflow: hidden; touch-action: none; }
 .maioli-firma-pad canvas { display: block; width: 100%; cursor: crosshair; }
 .maioli-firma-hint { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 13px; pointer-events: none; }
+
+/* anteprima firma (apre la finestra) */
+.maioli-firma-preview { display: flex; align-items: center; justify-content: center; width: 100%; height: 90px; border: 1.5px dashed var(--border); border-radius: 10px; background: #fff; cursor: pointer; padding: 6px; }
+.maioli-firma-preview.has { border-style: solid; }
+.maioli-firma-preview img { max-height: 100%; max-width: 100%; object-fit: contain; }
+.maioli-firma-ph { color: var(--text-muted); font-size: 13px; font-weight: 600; }
+
+/* finestra firma (sfondo appannato) */
+.maioli-firma-backdrop { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(15,23,42,0.45); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
+.maioli-firma-modal { width: 100%; max-width: 560px; background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.35); overflow: hidden; display: flex; flex-direction: column; }
+.maioli-firma-modal-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 800; color: var(--text); }
+.maioli-firma-modal-x { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted); padding: 2px 6px; }
+.maioli-firma-modal-pad { position: relative; margin: 14px 16px; height: 240px; border: 1.5px dashed var(--border); border-radius: 12px; background: #fff; overflow: hidden; touch-action: none; }
+.maioli-firma-modal-pad canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+.maioli-firma-modal-actions { display: flex; gap: 10px; padding: 0 16px 16px; }
+.maioli-firma-modal-actions .btn { flex: 1; }
+
+/* overlay "bolla bloccata" */
+.maioli-form-fields { position: relative; }
+.maioli-lock-overlay { position: absolute; inset: 0; z-index: 20; display: flex; align-items: flex-start; justify-content: center; padding-top: 14px; background: rgba(148,163,184,0.06); border-radius: 14px; cursor: pointer; }
+.maioli-lock-pill { position: sticky; top: 14px; background: #1e293b; color: #fff; font-size: 12.5px; font-weight: 700; padding: 8px 14px; border-radius: 99px; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
 
 /* banner "backend da aggiornare" */
 .maioli-be-warn { display: flex; align-items: flex-start; gap: 9px; margin: 2px 0 10px; padding: 10px 13px; background: #fff7ed; border: 1px solid #fdba74; border-radius: 10px; color: #9a3412; font-size: 12.5px; line-height: 1.45; }

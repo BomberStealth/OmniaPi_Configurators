@@ -76,6 +76,9 @@ export default function FoglioRapporto({ data }: { data: RapportoData }) {
                   <div className="cell tall"><div className="lbl">CLIENTE:</div><div className="val">{data.cliente}</div></div>
                   <div className="cell tall"><div className="lbl">DATA CHIAMATA:</div><div className="val">{dt(data.dataChiamata)}</div></div>
                 </div>
+                {data.riferimento ? (
+                  <div className="row"><div className="cell inline"><span className="lbl">RIFERIMENTO:</span><span className="val">{data.riferimento}</span></div></div>
+                ) : null}
                 <div className="row split">
                   <div className="cell tall"><div className="lbl">CONDOMINIO:</div><div className="val">{data.condominio}</div></div>
                   <div className="cell tall"><div className="lbl">DATA INTERVENTO:</div><div className="val">{dt(data.dataIntervento)}</div></div>
