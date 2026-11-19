@@ -27,7 +27,7 @@ function nomeFileStampa(d: RapportoData): string {
 interface Props {
   data: RapportoData;
   setData: React.Dispatch<React.SetStateAction<RapportoData>>;
-  onSaved?: () => void;
+  onSaved?: (saved?: RapportoData) => void;
 }
 
 export default function NuovaBolla({ data, setData, onSaved }: Props) {
@@ -116,9 +116,10 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
     setSaving(true);
     try {
       const { id, numero } = await saveBolla(data);
-      setData(d => ({ ...d, id, numero }));
+      const saved = { ...data, id, numero };
+      setData(saved);
       setLocked(true); // dopo il salvataggio la bolla si blocca
-      onSaved?.();
+      onSaved?.(saved);
       if (poiStampa) {
         setPendingPrint(true);
       } else {

@@ -54,7 +54,7 @@ export default function Clienti() {
         <div className="maioli-cli-list">
           {rows.map(r => (r._editing ? (
             <div className="maioli-cli-edit" key={r.id}>
-              <input placeholder="Nome *" value={r.nome} onChange={e => patch(r.id, { nome: e.target.value })} />
+              <input placeholder="Nome *" value={r.nome} onChange={e => patch(r.id, { nome: e.target.value.toUpperCase() })} />
               <input placeholder="Telefono" value={r.telefono} onChange={e => patch(r.id, { telefono: e.target.value })} />
               <input placeholder="Email" value={r.email} onChange={e => patch(r.id, { email: e.target.value })} />
               <input placeholder="Indirizzo" value={r.indirizzo} onChange={e => patch(r.id, { indirizzo: e.target.value })} />

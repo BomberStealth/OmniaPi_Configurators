@@ -42,7 +42,7 @@ export default function ClientePicker({ nome, clienteId, invalid, onNameChange, 
           className={invalid ? 'err' : ''}
           value={nome}
           onFocus={() => setOpen(true)}
-          onChange={e => { onNameChange(e.target.value); setOpen(true); }}
+          onChange={e => { onNameChange(e.target.value.toUpperCase()); setOpen(true); }}
           placeholder="Cerca o inserisci cliente…"
           autoComplete="off"
         />

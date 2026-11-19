@@ -194,7 +194,7 @@ export async function createCliente(d: Partial<Cliente>): Promise<{ id: number }
   const [r] = (await pool.execute(
     `INSERT INTO maioli_clienti (nome, telefono, email, indirizzo, condominio, amministratore, note)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [d.nome ?? '', d.telefono ?? '', d.email ?? '', d.indirizzo ?? '', d.condominio ?? '', d.amministratore ?? '', d.note ?? null],
+    [(d.nome ?? '').toUpperCase(), d.telefono ?? '', d.email ?? '', d.indirizzo ?? '', d.condominio ?? '', d.amministratore ?? '', d.note ?? null],
   )) as [{ insertId: number }, unknown];
   return { id: r.insertId };
 }
@@ -203,7 +203,7 @@ export async function updateCliente(id: number, d: Partial<Cliente>): Promise<bo
   const [r] = (await pool.execute(
     `UPDATE maioli_clienti SET nome=?, telefono=?, email=?, indirizzo=?, condominio=?, amministratore=?, note=?
      WHERE id=?`,
-    [d.nome ?? '', d.telefono ?? '', d.email ?? '', d.indirizzo ?? '', d.condominio ?? '', d.amministratore ?? '', d.note ?? null, id],
+    [(d.nome ?? '').toUpperCase(), d.telefono ?? '', d.email ?? '', d.indirizzo ?? '', d.condominio ?? '', d.amministratore ?? '', d.note ?? null, id],
   )) as [{ affectedRows: number }, unknown];
   return r.affectedRows > 0;
 }
@@ -216,7 +216,7 @@ export async function deleteCliente(id: number): Promise<boolean> {
 // Upsert cliente dentro una transazione; ritorna l'id del cliente (o null)
 async function upsertClienteTx(conn: PoolConnection, b: BollaInput): Promise<number | null> {
   const dati = {
-    nome: b.cliente,
+    nome: (b.cliente || '').toUpperCase(),
     telefono: b.telefono ?? '',
     email: b.email ?? '',
     indirizzo: b.indirizzo ?? '',
