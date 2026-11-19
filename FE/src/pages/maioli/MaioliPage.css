@@ -206,6 +206,19 @@
 .maioli-bcard.consegnata .maioli-bcard-date { color: #0a9d6e; }
 .maioli-bcard-main .maioli-chip-incompleto { display: inline-block; margin-top: 5px; }
 .maioli-bcard-right { display: flex; align-items: center; gap: 7px; flex: none; }
+
+/* sezione Clienti */
+.maioli-cli-list { display: flex; flex-direction: column; gap: 9px; }
+.maioli-cli-card { display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 11px 13px; background: var(--card-gradient); }
+.maioli-cli-main { flex: 1; min-width: 0; }
+.maioli-cli-nome { font-size: 15px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.maioli-cli-sub { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.maioli-cli-actions { display: flex; align-items: center; gap: 7px; flex: none; }
+.maioli-cli-edit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 12px 13px; background: rgba(37,99,235,0.04); }
+.maioli-cli-edit input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; color: var(--text); font-size: 13.5px; }
+.maioli-cli-edit input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.maioli-cli-edit input:first-child { grid-column: 1 / -1; font-weight: 700; }
+.maioli-cli-edit .maioli-cli-actions { grid-column: 1 / -1; justify-content: flex-end; }
 .maioli-bcard-top { display: flex; align-items: center; gap: 12px; }
 .maioli-bcard-num { flex-shrink: 0; min-width: 54px; text-align: center; font-size: 14px; font-weight: 800; line-height: 1.05; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(37,99,235,0.2); border-radius: 8px; padding: 6px 8px; }
 .maioli-bcard-main { flex: 1; min-width: 0; }

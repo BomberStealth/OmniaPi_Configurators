@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import NuovaBolla from './views/NuovaBolla';
 import BolleFatte from './views/BolleFatte';
+import Clienti from './views/Clienti';
 import Listino from './views/Listino';
 import { LOGO } from './azienda';
 import { MAIOLI_VERSION } from './version';
@@ -10,11 +11,12 @@ import { initStore, storeMode, getBolla, beVersionStatus } from './store';
 import { ConfirmProvider } from './components/ConfirmDialog';
 import './MaioliPage.css';
 
-type Tab = 'nuova' | 'archivio' | 'listino';
+type Tab = 'nuova' | 'archivio' | 'clienti' | 'listino';
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'nuova', label: 'Nuova Bolla', icon: '📝' },
   { id: 'archivio', label: 'Storico bolle', icon: '🗂' },
+  { id: 'clienti', label: 'Clienti', icon: '👥' },
   { id: 'listino', label: 'Listino prezzi', icon: '🏷' },
 ];
 
@@ -79,6 +81,7 @@ export default function MaioliPage() {
         {tab === 'archivio' && (
           <BolleFatte onOpen={openBolla} reloadKey={reloadKey} />
         )}
+        {tab === 'clienti' && <Clienti />}
         {tab === 'listino' && <Listino />}
       </div>
     </div>

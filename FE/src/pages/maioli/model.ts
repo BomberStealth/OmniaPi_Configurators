@@ -68,7 +68,7 @@ export function datiVuoti(): RapportoData {
     dataChiamata: oggi,
     condominio: '',
     dataIntervento: oggi,
-    dataConsegna: oggi,
+    dataConsegna: '', // vuoto finché non lo si imposta (non è "consegnata" di default)
     amministratore: '',
     preventivo: '',
     telefono: '',

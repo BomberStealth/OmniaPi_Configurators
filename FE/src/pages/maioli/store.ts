@@ -249,6 +249,32 @@ export async function searchClienti(q: string): Promise<Cliente[]> {
   return out.sort((a, b) => a.nome.localeCompare(b.nome)).slice(0, 20);
 }
 
+// ── gestione anagrafica clienti (sezione Clienti) ──
+export async function saveCliente(c: Partial<Cliente>): Promise<{ id: number }> {
+  await initStore();
+  if (MODE === 'api') {
+    if (c.id) { await jfetch(`${API}/clienti/${c.id}`, { method: 'PUT', body: JSON.stringify(c) }); return { id: c.id }; }
+    const r = await jfetch(`${API}/clienti`, { method: 'POST', body: JSON.stringify(c) });
+    return { id: r.id };
+  }
+  const all = lsGet<Cliente[]>(LS.clienti, []);
+  if (c.id) {
+    const i = all.findIndex(x => x.id === c.id);
+    if (i >= 0) { all[i] = { ...all[i], ...c } as Cliente; lsSet(LS.clienti, all); }
+    return { id: c.id };
+  }
+  const id = nextId('cliente');
+  all.push({ id, nome: c.nome ?? '', telefono: c.telefono ?? '', email: c.email ?? '', indirizzo: c.indirizzo ?? '', condominio: c.condominio ?? '', amministratore: c.amministratore ?? '' });
+  lsSet(LS.clienti, all);
+  return { id };
+}
+
+export async function removeCliente(id: number): Promise<void> {
+  await initStore();
+  if (MODE === 'api') { await jfetch(`${API}/clienti/${id}`, { method: 'DELETE' }); return; }
+  lsSet(LS.clienti, lsGet<Cliente[]>(LS.clienti, []).filter(x => x.id !== id));
+}
+
 function upsertClienteLocal(d: RapportoData): number | null {
   const all = lsGet<Cliente[]>(LS.clienti, []);
   const dati = {

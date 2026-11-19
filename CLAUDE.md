@@ -105,9 +105,9 @@ foglio + ricerca). **Firma in finestra** grande (no segni per sbaglio). Bolla
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.13.0**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.14.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
-(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **22**.
+(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **23**.
 
 ## In sospeso / idee
 - 🛠 **RUOLI/PERMESSI (in progettazione, non ancora implementato)**. La tabella
@@ -120,6 +120,12 @@ Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
   Pronto fattura (= "Da fatturare") → Fatturate → (pagate / non pagate). NB: va
   applicato anche lato BE (route con check `req.user.role`), non solo UI. Tab
   "Fatturate" già creato ma VUOTO (placeholder) in attesa di definire gli stati.
+  Dettaglio permessi noto: **Listino prezzi = solo ADMIN e Titolare** (non
+  Amministrazione). Sezione Clienti: probabilmente non per Dipendente.
+- 🛠 **STORICO AZIONI / AUDIT LOG (richiesto, non ancora fatto)**: tracciare chi
+  (account) crea/modifica/elimina bolle, sposta stati, tocca listino/clienti,
+  con data/ora. Tabella tipo `maioli_audit` (user, azione, entità, id, quando) +
+  log sulle rotte mutanti + una pagina per vederlo (admin). Legato ai ruoli.
 - ⚠️ **DEMO LOCALE** — a inizio prossima sessione CHIEDERE a Edoardo: vuole
   parlare della modalità fallback localStorage ("Demo locale" in `store.ts`,
   quando il BE non risponde). Da chiarire con lui prima di toccarla.

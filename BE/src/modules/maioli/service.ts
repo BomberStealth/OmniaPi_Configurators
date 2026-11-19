@@ -212,10 +212,24 @@ async function upsertClienteTx(conn: PoolConnection, b: BollaInput): Promise<num
     return b.cliente_id;
   }
   if (!dati.nome.trim()) return null;
+  // anti-duplicati: se esiste già un cliente con lo stesso nome (anche se non è
+  // stato selezionato dalla lista), riusalo e aggiornane i dati invece di crearne
+  // un altro uguale.
+  const [found] = (await conn.execute(
+    'SELECT id FROM maioli_clienti WHERE TRIM(nome) = TRIM(?) ORDER BY id ASC LIMIT 1',
+    [dati.nome],
+  )) as [{ id: number }[], unknown];
+  if (found[0]) {
+    await conn.execute(
+      `UPDATE maioli_clienti SET nome=?, telefono=?, email=?, indirizzo=?, condominio=?, amministratore=? WHERE id=?`,
+      [dati.nome.trim(), dati.telefono, dati.email, dati.indirizzo, dati.condominio, dati.amministratore, found[0].id],
+    );
+    return found[0].id;
+  }
   const [r] = (await conn.execute(
     `INSERT INTO maioli_clienti (nome, telefono, email, indirizzo, condominio, amministratore)
      VALUES (?, ?, ?, ?, ?, ?)`,
-    [dati.nome, dati.telefono, dati.email, dati.indirizzo, dati.condominio, dati.amministratore],
+    [dati.nome.trim(), dati.telefono, dati.email, dati.indirizzo, dati.condominio, dati.amministratore],
   )) as [{ insertId: number }, unknown];
   return r.insertId;
 }
