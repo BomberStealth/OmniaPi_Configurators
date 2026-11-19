@@ -190,9 +190,9 @@
 
 /* ── toggle archivio attive/cancellate ── */
 .maioli-arch-toggle { display: flex; width: 100%; border: 1px solid var(--border); border-radius: var(--radius-xs); overflow: hidden; margin-bottom: 14px; }
-.maioli-arch-toggle button { flex: 1; min-width: 0; padding: 8px 6px; border: none; background: #fff; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; border-left: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.maioli-arch-toggle button { flex: 1; min-width: 0; padding: 8px 4px; border: none; background: #fff; color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; border-left: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .maioli-arch-toggle button:first-child { border-left: none; }
-.maioli-arch-toggle button:last-child { flex: 0 0 auto; padding: 8px 14px; } /* cestino: solo icona */
+.maioli-arch-toggle button:last-child { flex: 0 0 auto; padding: 8px 12px; } /* cestino: solo icona */
 .maioli-arch-toggle button.active { background: var(--accent); color: #fff; }
 
 /* ── card bolle (archivio) ── */

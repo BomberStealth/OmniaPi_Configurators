@@ -4,7 +4,7 @@ import type { BollaSummary } from '../store';
 import { useConfirm } from '../components/ConfirmDialog';
 import SwipeCard from '../components/SwipeCard';
 
-type Tab = 'sospeso' | 'consegnate' | 'cancellate';
+type Tab = 'sospeso' | 'consegnate' | 'fatturate' | 'cancellate';
 
 interface Props {
   onOpen: (id: number) => void;
@@ -19,10 +19,11 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async (query: string, t: Tab) => {
+    if (t === 'fatturate') { setRows([]); setLoading(false); return; } // sezione vuota (da fare)
     setLoading(true);
     try {
       if (t === 'cancellate') setRows(await listBolleCancellate(query));
-      else setRows(await listBolle(query, t));
+      else setRows(await listBolle(query, t === 'consegnate' ? 'consegnate' : 'sospeso'));
     } catch { setRows([]); } finally { setLoading(false); }
   }, []);
 
@@ -62,6 +63,7 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
   const TABS: { id: Tab; label: string }[] = [
     { id: 'sospeso', label: 'In sospeso' },
     { id: 'consegnate', label: 'Da fatturare' },
+    { id: 'fatturate', label: 'Fatturate' },
     { id: 'cancellate', label: '🗑' },
   ];
 
@@ -92,7 +94,10 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
         <div className="maioli-empty">Caricamento…</div>
       ) : rows.length === 0 ? (
         <div className="maioli-empty">
-          {tab === 'sospeso' ? 'Nessuna bolla in sospeso.' : tab === 'consegnate' ? 'Nessuna bolla consegnata.' : 'Il cestino è vuoto.'}
+          {tab === 'sospeso' ? 'Nessuna bolla in sospeso.'
+            : tab === 'consegnate' ? 'Nessuna bolla da fatturare.'
+            : tab === 'fatturate' ? '🚧 Sezione in arrivo — ci lavoreremo presto.'
+            : 'Il cestino è vuoto.'}
         </div>
       ) : (
         <div className="maioli-bcards">

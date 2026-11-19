@@ -14,7 +14,7 @@ type Tab = 'nuova' | 'archivio' | 'listino';
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'nuova', label: 'Nuova Bolla', icon: '📝' },
-  { id: 'archivio', label: 'Bolle già fatte', icon: '🗂' },
+  { id: 'archivio', label: 'Storico bolle', icon: '🗂' },
   { id: 'listino', label: 'Listino prezzi', icon: '🏷' },
 ];
 
