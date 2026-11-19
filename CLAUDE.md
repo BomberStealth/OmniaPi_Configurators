@@ -110,6 +110,16 @@ Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
 (BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **22**.
 
 ## In sospeso / idee
+- 🛠 **RUOLI/PERMESSI (in progettazione, non ancora implementato)**. La tabella
+  `users` ha già `role`. Schema voluto da Edoardo: 4 ruoli **Dipendente /
+  Amministrazione / Titolare / ADMIN** (ADMIN = edoardo2846@gmail.com, tutti i
+  permessi). **Dipendente**: solo Nuova Bolla + Storico bolle, e dentro Storico
+  solo "In sospeso" e "Da fatturare" (no Listino, no Fatturate/Cancellate).
+  **Amministrazione/Titolare/ADMIN**: tutto, e potranno spostare le bolle da "Da
+  fatturare" a "Fatturate". Flusso stati ancora in definizione: In sospeso →
+  Pronto fattura (= "Da fatturare") → Fatturate → (pagate / non pagate). NB: va
+  applicato anche lato BE (route con check `req.user.role`), non solo UI. Tab
+  "Fatturate" già creato ma VUOTO (placeholder) in attesa di definire gli stati.
 - ⚠️ **DEMO LOCALE** — a inizio prossima sessione CHIEDERE a Edoardo: vuole
   parlare della modalità fallback localStorage ("Demo locale" in `store.ts`,
   quando il BE non risponde). Da chiarire con lui prima di toccarla.
