@@ -126,6 +126,14 @@ Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
   (account) crea/modifica/elimina bolle, sposta stati, tocca listino/clienti,
   con data/ora. Tabella tipo `maioli_audit` (user, azione, entità, id, quando) +
   log sulle rotte mutanti + una pagina per vederlo (admin). Legato ai ruoli.
+- 💡 **QoL / gestionale (idee, da prioritizzare con Edoardo)**: impostazioni da
+  UI (tariffa oraria, costo chiamata, IVA default, dati azienda) invece che nel
+  codice; filtri/ordinamento nello storico (data, cliente, importo, stato);
+  report mensili (incassato, n. bolle, per operaio); export CSV/Excel per il
+  commercialista; scadenzario pagamenti (fatturate non pagate + promemoria);
+  click sul cliente → suo storico interventi; validazioni/avvisi dati mancanti;
+  storico versioni di una bolla; (già fatti: conferme azioni, blocco post-salva,
+  avviso modifiche non salvate, backup locale).
 - ⚠️ **DEMO LOCALE** — a inizio prossima sessione CHIEDERE a Edoardo: vuole
   parlare della modalità fallback localStorage ("Demo locale" in `store.ts`,
   quando il BE non risponde). Da chiarire con lui prima di toccarla.
