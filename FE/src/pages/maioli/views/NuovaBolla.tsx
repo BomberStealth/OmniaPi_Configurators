@@ -178,6 +178,14 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
               <textarea rows={3} value={data.richiesta} onChange={e => set('richiesta', e.target.value)} /></label>
             <label className="maioli-field"><span className="form-label">Difetti riscontrati</span>
               <textarea rows={2} value={data.difetti} onChange={e => set('difetti', e.target.value)} /></label>
+            <label className="maioli-check">
+              <input type="checkbox" checked={data.lavoroIncompleto} onChange={e => set('lavoroIncompleto', e.target.checked)} />
+              <span className="maioli-check-lbl">⚠️ Lavoro non completato</span>
+            </label>
+            {data.lavoroIncompleto && (
+              <label className="maioli-field"><span className="form-label">Cosa manca da fare</span>
+                <textarea rows={2} value={data.daCompletare} onChange={e => set('daCompletare', e.target.value)} placeholder="Es: manca da montare la placca, tornare per collegare…" /></label>
+            )}
           </div>
 
           <div className="card maioli-card">

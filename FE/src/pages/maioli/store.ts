@@ -27,6 +27,7 @@ export interface BollaSummary {
   deleted_at?: string | null;
   consegnata_at?: string | null;
   n_foto?: number;
+  lavoro_incompleto?: number;
 }
 export interface ListinoItem {
   id: number;
@@ -88,6 +89,8 @@ export function toPayload(d: RapportoData) {
     foto: (d.foto ?? []).filter(Boolean),
     firma_tecnico: d.firmaTecnico || null,
     firma_cliente: d.firmaCliente || null,
+    lavoro_incompleto: d.lavoroIncompleto ? 1 : 0,
+    da_completare: d.daCompletare || null,
   };
 }
 
@@ -114,6 +117,8 @@ export function fromBolla(row: Record<string, any>): RapportoData {
     foto: Array.isArray(row.foto) ? row.foto.filter(Boolean) : [],
     firmaTecnico: row.firma_tecnico ?? '',
     firmaCliente: row.firma_cliente ?? '',
+    lavoroIncompleto: !!row.lavoro_incompleto,
+    daCompletare: row.da_completare ?? '',
   };
 }
 
@@ -264,7 +269,7 @@ export async function listBolle(q: string): Promise<BollaSummary[]> {
   const s = q.trim().toLowerCase();
   const rows = (s ? all.filter(b => (String(b.cliente) + b.numero + b.indirizzo).toLowerCase().includes(s)) : all)
     .sort((a, b) => (a.numero || '').localeCompare(b.numero || '', undefined, { numeric: true }));
-  return rows.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at, consegnata_at: b.consegnata_at ?? null, n_foto: (b.foto || []).length }));
+  return rows.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at, consegnata_at: b.consegnata_at ?? null, n_foto: (b.foto || []).length, lavoro_incompleto: b.lavoro_incompleto ? 1 : 0 }));
 }
 
 export async function getBolla(id: number): Promise<RapportoData> {

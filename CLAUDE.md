@@ -94,14 +94,16 @@ listino **Vimar/BTicino/Hager/Cavi/Tubi e Corrugati** con ricerca a parole
 Descrizione") e nel listino, **sotto-gruppi per categoria** nel listino,
 **sconto installatore + ricarico azienda per marca** (Listino → Scontato → Finale),
 **login JWT** con account creati a mano, **firme a dito** (Tecnico + Cliente,
-pad canvas) stampate in fondo al foglio.
+pad canvas) stampate in fondo al foglio, **marca sull'articolo** (Marca · Codice)
+e prezzo 0 evidenziato, **stato "lavoro non completato"** (spunta + nota, card
+gialla in archivio; verde se consegnata).
 
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.10.0**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.11.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
-(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **19**.
+(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **20**.
 
 ## In sospeso / idee
 - ⚠️ **DEMO LOCALE** — a inizio prossima sessione CHIEDERE a Edoardo: vuole

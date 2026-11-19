@@ -209,6 +209,8 @@
 .maioli-chip-scade { background: rgba(234,88,12,0.1); color: #b45309; }
 .maioli-chip-consegnata { font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 99px; white-space: nowrap; background: rgba(16,185,129,0.15); color: #0a9d6e; }
 .maioli-bcard.consegnata { background: rgba(16,185,129,0.09); border-color: rgba(16,185,129,0.35); }
+.maioli-bcard.incompleto { background: rgba(234,179,8,0.11); border-color: rgba(234,179,8,0.45); }
+.maioli-chip-incompleto { font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 99px; white-space: nowrap; background: rgba(234,179,8,0.18); color: #a16207; }
 
 /* swipe-to-action */
 .swipe { position: relative; overflow: hidden; border-radius: var(--radius-sm); touch-action: pan-y; }
@@ -297,6 +299,11 @@
 .maioli-subacc-count { font-size: 10.5px; font-weight: 700; color: var(--text-muted); background: #fff; border: 1px solid var(--border); border-radius: 99px; padding: 1px 8px; }
 .maioli-subacc .maioli-ltr { padding-left: 11px; padding-right: 8px; }
 .maioli-subacc .maioli-ltr:last-child { border-bottom: none; }
+
+/* spunta "lavoro non completato" */
+.maioli-check { display: flex; align-items: center; gap: 9px; margin-top: 10px; cursor: pointer; user-select: none; }
+.maioli-check input { width: 20px; height: 20px; accent-color: #ca8a04; cursor: pointer; flex: none; }
+.maioli-check-lbl { font-size: 13.5px; font-weight: 700; color: var(--text); }
 
 /* firme a dito (pad) */
 .maioli-firme { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }

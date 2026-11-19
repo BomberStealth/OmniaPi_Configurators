@@ -38,6 +38,8 @@ export interface RapportoData {
   foto: string[];           // foto allegate (dataURL) — salvate, NON stampate
   firmaTecnico: string;     // firma a dito (dataURL PNG) — stampata nel foglio
   firmaCliente: string;     // firma a dito (dataURL PNG) — stampata nel foglio
+  lavoroIncompleto: boolean; // spunta "lavoro non completato" (solo interno)
+  daCompletare: string;      // cosa manca da fare (interno, NON stampato)
 }
 
 export function oggiISO(): string {
@@ -74,6 +76,8 @@ export function datiVuoti(): RapportoData {
     foto: [],
     firmaTecnico: '',
     firmaCliente: '',
+    lavoroIncompleto: false,
+    daCompletare: '',
   };
 }
 

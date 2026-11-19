@@ -87,8 +87,9 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
             const np = (b.numero || '').split('/');
             const foto = Number(b.n_foto) || 0;
             const consegnata = !!b.consegnata_at;
+            const incompleto = !consegnata && !!Number(b.lavoro_incompleto); // verde vince sul giallo
             const card = (
-              <div className={`maioli-bcard${consegnata ? ' consegnata' : ''}`}>
+              <div className={`maioli-bcard${consegnata ? ' consegnata' : ''}${incompleto ? ' incompleto' : ''}`}>
                 <div className="maioli-bcard-top">
                   <span className="maioli-bcard-num">{b.numero && np[1] ? <>{np[0]}/<br />{np[1]}</> : (b.numero || `#${b.id}`)}</span>
                   <div className="maioli-bcard-main">
@@ -102,6 +103,7 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
                     <span className="maioli-chip-info">📅 {fmtData(b.data_intervento)}</span>
                     <span className={`maioli-chip-foto${foto > 0 ? ' has' : ''}`}>{foto > 0 ? `📷 ${foto} foto` : '📷 nessuna'}</span>
                     {consegnata && <span className="maioli-chip-consegnata">🚚 Consegnata {fmtData(b.consegnata_at ?? null)}</span>}
+                    {incompleto && <span className="maioli-chip-incompleto">⚠️ Da completare</span>}
                     {tab === 'cancellate' && <span className="maioli-chip-scade">⏳ {giorniRimasti(b.deleted_at)} gg</span>}
                   </span>
                   <span className="maioli-row-actions">
