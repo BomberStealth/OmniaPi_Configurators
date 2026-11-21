@@ -122,6 +122,27 @@ export async function listinoImport(req: Request, res: Response): Promise<void> 
   try { res.json(await s.importListino(String(marca ?? 'Generico'), items)); } catch { err(res); }
 }
 
+// ── Account / permessi ──
+type WithAcc = Request & { account?: { role: string; attivo: number; permessi: Record<string, boolean> }; user?: { email?: string } };
+
+export async function me(req: Request, res: Response): Promise<void> {
+  const r = req as WithAcc;
+  res.json({ email: r.user?.email, role: r.account?.role, attivo: r.account?.attivo, permessi: r.account?.permessi });
+}
+export async function accountsList(_req: Request, res: Response): Promise<void> {
+  try { res.json(await s.listAccounts()); } catch { err(res); }
+}
+export async function accountCreate(req: Request, res: Response): Promise<void> {
+  const { email, password, permessi, role } = req.body ?? {};
+  if (!email || !password || String(password).length < 6) { res.status(400).json({ message: 'Email e password (min 6 caratteri) obbligatorie' }); return; }
+  try { res.status(201).json(await s.createAccount(String(email), String(password), permessi || {}, role)); }
+  catch { res.status(409).json({ message: 'Email già esistente o dati non validi' }); }
+}
+export async function accountUpdate(req: Request, res: Response): Promise<void> {
+  const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
+  try { const ok = await s.updateAccount(id, req.body || {}); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true }); } catch { err(res); }
+}
+
 // ── Foto (file su SSD) ──
 // upload: riceve { dataUrl } (JPEG compresso dalla FE), salva su disco e
 // ritorna { url } da memorizzare nella bolla.

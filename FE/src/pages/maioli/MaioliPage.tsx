@@ -3,6 +3,8 @@ import NuovaBolla from './views/NuovaBolla';
 import BolleFatte from './views/BolleFatte';
 import Clienti from './views/Clienti';
 import Listino from './views/Listino';
+import Account from './views/Account';
+import { can, isAdmin, refreshMe } from '../../auth';
 import { LOGO } from './azienda';
 import { MAIOLI_VERSION } from './version';
 import { datiVuoti, rigaHaContenuto } from './model';
@@ -11,13 +13,14 @@ import { initStore, storeMode, resetStore, getBolla, beVersionStatus, lockBolla,
 import { ConfirmProvider, useConfirm } from './components/ConfirmDialog';
 import './MaioliPage.css';
 
-type Tab = 'nuova' | 'archivio' | 'clienti' | 'listino';
+type Tab = 'nuova' | 'archivio' | 'clienti' | 'listino' | 'account';
 
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'nuova', label: 'Nuova Bolla', icon: '📝' },
-  { id: 'archivio', label: 'Storico bolle', icon: '🗂' },
-  { id: 'clienti', label: 'Clienti', icon: '👥' },
-  { id: 'listino', label: 'Listino prezzi', icon: '🏷' },
+const TABS: { id: Tab; label: string; icon: string; cap?: string; adminOnly?: boolean }[] = [
+  { id: 'nuova', label: 'Nuova Bolla', icon: '📝', cap: 'nuova' },
+  { id: 'archivio', label: 'Storico bolle', icon: '🗂', cap: 'storico' },
+  { id: 'clienti', label: 'Clienti', icon: '👥', cap: 'clienti' },
+  { id: 'listino', label: 'Listino prezzi', icon: '🏷', cap: 'listino' },
+  { id: 'account', label: 'Account', icon: '👤', adminOnly: true },
 ];
 
 // snapshot per capire se la bolla è "modificata" (ignora le righe materiale vuote,
@@ -36,6 +39,8 @@ function MaioliInner() {
   const [reloadKey, setReloadKey] = useState(0);
   const baseline = useRef<string>(snap(datiVuoti()));
 
+  const [permKey, setPermKey] = useState(0);
+
   const checkConn = useCallback(() => {
     resetStore();
     setConn('checking');
@@ -43,6 +48,16 @@ function MaioliInner() {
     beVersionStatus().then(s => setBeOutdated(s.outdated));
   }, []);
   useEffect(() => { checkConn(); }, [checkConn]);
+  // ricarica ruolo+permessi freschi (l'admin può averli cambiati)
+  useEffect(() => { refreshMe().then(() => setPermKey(k => k + 1)); }, []);
+
+  const visibleTabs = TABS.filter(t => (t.adminOnly ? isAdmin() : can(t.cap!)));
+  // se il tab attivo non è permesso, vai al primo disponibile
+  useEffect(() => {
+    if (conn !== 'api') return;
+    if (visibleTabs.length && !visibleTabs.some(t => t.id === tab)) setTab(visibleTabs[0].id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [permKey, conn]);
 
   // "modificata" = diversa dall'ultimo salvataggio/apertura E non è una bolla vuota
   const cur = snap(data);
@@ -145,21 +160,25 @@ function MaioliInner() {
         ) : (
           <>
             <nav className="maioli-nav">
-              {TABS.map(t => (
+              {visibleTabs.map(t => (
                 <button key={t.id} className={`maioli-nav-btn${tab === t.id ? ' active' : ''}`} onClick={() => goTab(t.id)}>
                   <span className="maioli-nav-ic">{t.icon}</span>{t.label}
                 </button>
               ))}
             </nav>
 
-            {tab === 'nuova' && (
+            {visibleTabs.length === 0 && (
+              <div className="maioli-empty">Nessun permesso assegnato. Contatta l'amministratore.</div>
+            )}
+            {tab === 'nuova' && can('nuova') && (
               <NuovaBolla data={data} setData={setData} onSaved={onSaved} onReset={releaseLock} />
             )}
-            {tab === 'archivio' && (
+            {tab === 'archivio' && can('storico') && (
               <BolleFatte onOpen={openBolla} reloadKey={reloadKey} />
             )}
-            {tab === 'clienti' && <Clienti />}
-            {tab === 'listino' && <Listino />}
+            {tab === 'clienti' && can('clienti') && <Clienti />}
+            {tab === 'listino' && can('listino') && <Listino />}
+            {tab === 'account' && isAdmin() && <Account />}
           </>
         )}
       </div>

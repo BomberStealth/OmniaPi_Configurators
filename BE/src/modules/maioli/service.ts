@@ -1,8 +1,57 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import { pool } from '../../config/database';
 import type { PoolConnection } from 'mysql2/promise';
+
+// ─────────────── Account & permessi (pagina Account admin) ───────────────
+export const PERMESSI_KEYS = ['nuova', 'storico', 'clienti', 'listino', 'fatturate'] as const;
+export type Permessi = Record<string, boolean>;
+
+function sanitizePermessi(p: Permessi | undefined | null): Permessi {
+  const out: Permessi = {};
+  for (const k of PERMESSI_KEYS) out[k] = !!(p && (p as any)[k]);
+  return out;
+}
+function parsePermessi(raw: string | null): Permessi {
+  try { return sanitizePermessi(raw ? JSON.parse(raw) : {}); } catch { return sanitizePermessi(null); }
+}
+
+export interface Account { id: number; email: string; role: string; attivo: number; permessi: Permessi; }
+
+export async function listAccounts(): Promise<Account[]> {
+  const [rows] = (await pool.execute('SELECT id, email, role, attivo, permessi FROM users ORDER BY id ASC')) as [any[], unknown];
+  return rows.map(r => ({ id: r.id, email: r.email, role: r.role, attivo: r.attivo, permessi: parsePermessi(r.permessi) }));
+}
+
+export async function getUserRow(id: number): Promise<{ attivo: number; role: string; permessi: Permessi } | null> {
+  const [rows] = (await pool.execute('SELECT attivo, role, permessi FROM users WHERE id=? LIMIT 1', [id])) as [any[], unknown];
+  if (!rows[0]) return null;
+  return { attivo: rows[0].attivo, role: rows[0].role, permessi: parsePermessi(rows[0].permessi) };
+}
+
+export async function createAccount(email: string, password: string, permessi: Permessi, role = 'user'): Promise<{ id: number }> {
+  const hash = await bcrypt.hash(password, 10);
+  const [r] = (await pool.execute(
+    'INSERT INTO users (email, password_hash, role, attivo, permessi) VALUES (?, ?, ?, 1, ?)',
+    [email.toLowerCase().trim(), hash, role === 'admin' ? 'admin' : 'user', JSON.stringify(sanitizePermessi(permessi))],
+  )) as [{ insertId: number }, unknown];
+  return { id: r.insertId };
+}
+
+export async function updateAccount(id: number, d: { attivo?: number; permessi?: Permessi; role?: string; password?: string }): Promise<boolean> {
+  const sets: string[] = [];
+  const params: (string | number)[] = [];
+  if (d.attivo !== undefined) { sets.push('attivo=?'); params.push(d.attivo ? 1 : 0); }
+  if (d.permessi !== undefined) { sets.push('permessi=?'); params.push(JSON.stringify(sanitizePermessi(d.permessi))); }
+  if (d.role === 'admin' || d.role === 'user') { sets.push('role=?'); params.push(d.role); }
+  if (d.password && String(d.password).length >= 6) { sets.push('password_hash=?'); params.push(await bcrypt.hash(String(d.password), 10)); }
+  if (!sets.length) return false;
+  params.push(id);
+  const [r] = (await pool.execute(`UPDATE users SET ${sets.join(', ')} WHERE id=?`, params)) as [{ affectedRows: number }, unknown];
+  return r.affectedRows > 0;
+}
 
 // ─────────────────────── Foto su disco (SSD) ───────────────────────
 // Le foto delle bolle vengono salvate come file (JPEG) su una cartella

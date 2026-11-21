@@ -338,3 +338,25 @@ export async function saveMarca(marca: string, sconto: number, ricarico: number)
   await requireApi();
   await jfetch(`${API}/marche/${encodeURIComponent(marca)}`, { method: 'PUT', body: JSON.stringify({ sconto, ricarico }) });
 }
+
+// ── Account / permessi (pagina admin) ──
+export interface Account {
+  id: number;
+  email: string;
+  role: string;
+  attivo: number;
+  permessi: Record<string, boolean>;
+}
+
+export async function listAccounts(): Promise<Account[]> {
+  await requireApi();
+  return jfetch(`${API}/accounts`);
+}
+export async function createAccount(email: string, password: string, permessi: Record<string, boolean>, role: string): Promise<{ id: number }> {
+  await requireApi();
+  return jfetch(`${API}/accounts`, { method: 'POST', body: JSON.stringify({ email, password, permessi, role }) });
+}
+export async function updateAccount(id: number, d: { attivo?: number; permessi?: Record<string, boolean>; role?: string; password?: string }): Promise<void> {
+  await requireApi();
+  await jfetch(`${API}/accounts/${id}`, { method: 'PUT', body: JSON.stringify(d) });
+}

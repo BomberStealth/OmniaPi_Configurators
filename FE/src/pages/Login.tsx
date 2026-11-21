@@ -19,11 +19,11 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      const session = await login(email, password);
+      const { session, error } = await login(email, password);
       if (session) {
         navigate('/', { replace: true });
       } else {
-        setError('Email o password non validi');
+        setError(error || 'Email o password non validi');
       }
     } catch {
       setError('Server non raggiungibile. Riprova.');

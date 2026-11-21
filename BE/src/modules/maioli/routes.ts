@@ -1,52 +1,57 @@
 import { Router } from 'express';
 import * as c from './controller';
 import { requireAuth } from '../../middleware/auth';
+import { loadAccount, requirePerm, requireAdminRole } from '../../middleware/maioliPerm';
 
 const router = Router();
 
-// Serve-foto: deve stare PRIMA del requireAuth globale perché le <img> del
-// browser non inviano l'header Authorization. Valida il token da sé (anche
-// via query param ?t=...).
+// Serve-foto: PRIMA dell'auth globale (le <img> non mandano header; valida ?t=).
 router.get('/foto/:year/:name', c.fotoServe);
 
-// Da qui in poi tutto richiede login (JWT Bearer).
+// Da qui tutto richiede login + account attivo (permessi freschi dal DB).
 router.use(requireAuth);
+router.use(loadAccount);
 
-// Riferimenti (autocomplete per cliente)
+// Profilo dell'utente corrente (ruolo + permessi) — serve alla FE per i tab.
+router.get('/me', c.me as never);
+
+// Riferimenti + lettura clienti/listino: servono per compilare le bolle, quindi
+// a qualsiasi account attivo. La SCRITTURA è protetta per sezione.
 router.get('/riferimenti', c.riferimentiList as never);
-
-// Clienti
 router.get('/clienti', c.clientiList as never);
 router.get('/clienti/:id', c.clientiGet as never);
-router.post('/clienti', c.clientiCreate as never);
-router.put('/clienti/:id', c.clientiUpdate as never);
-router.delete('/clienti/:id', c.clientiDelete as never);
+router.post('/clienti', requirePerm('clienti'), c.clientiCreate as never);
+router.put('/clienti/:id', requirePerm('clienti'), c.clientiUpdate as never);
+router.delete('/clienti/:id', requirePerm('clienti'), c.clientiDelete as never);
 
-// Bolle
-router.get('/bolle', c.bolleList as never);
-router.get('/bolle/cancellate', c.bolleCancellate as never); // prima di /bolle/:id
-router.get('/bolle/:id', c.bolleGet as never);
-router.post('/bolle', c.bolleCreate as never);
-router.put('/bolle/:id', c.bolleUpdate as never);
-router.post('/bolle/:id/restore', c.bolleRestore as never);
-router.post('/bolle/:id/consegna', c.bolleConsegna as never);
-router.post('/bolle/:id/lock', c.bolleLock as never);
-router.post('/bolle/:id/unlock', c.bolleUnlock as never);
-router.delete('/bolle/:id/permanent', c.bollePurge as never);
-router.delete('/bolle/:id', c.bolleDelete as never);
+// Bolle: lettura/stato = "storico"; creazione/modifica = "nuova".
+router.get('/bolle', requirePerm('storico'), c.bolleList as never);
+router.get('/bolle/cancellate', requirePerm('storico'), c.bolleCancellate as never);
+router.get('/bolle/:id', requirePerm('storico'), c.bolleGet as never);
+router.post('/bolle', requirePerm('nuova'), c.bolleCreate as never);
+router.put('/bolle/:id', requirePerm('nuova'), c.bolleUpdate as never);
+router.post('/bolle/:id/restore', requirePerm('storico'), c.bolleRestore as never);
+router.post('/bolle/:id/consegna', requirePerm('storico'), c.bolleConsegna as never);
+router.post('/bolle/:id/lock', requirePerm('storico'), c.bolleLock as never);
+router.post('/bolle/:id/unlock', requirePerm('storico'), c.bolleUnlock as never);
+router.delete('/bolle/:id/permanent', requirePerm('storico'), c.bollePurge as never);
+router.delete('/bolle/:id', requirePerm('storico'), c.bolleDelete as never);
 
-// Foto (upload file su SSD)
-router.post('/foto', c.fotoUpload as never);
+// Foto upload = compilare una bolla → "nuova".
+router.post('/foto', requirePerm('nuova'), c.fotoUpload as never);
 
-// Marche (sconto installatore / ricarico azienda)
-router.get('/marche', c.marcheList as never);
-router.put('/marche/:marca', c.marcaUpdate as never);
-
-// Listino
+// Listino: lettura libera (serve ai materiali); scrittura = "listino".
 router.get('/listino', c.listinoList as never);
-router.post('/listino', c.listinoCreate as never);
-router.put('/listino/:id', c.listinoUpdate as never);
-router.delete('/listino/:id', c.listinoDelete as never);
-router.post('/listino/import', c.listinoImport as never);
+router.post('/listino', requirePerm('listino'), c.listinoCreate as never);
+router.put('/listino/:id', requirePerm('listino'), c.listinoUpdate as never);
+router.delete('/listino/:id', requirePerm('listino'), c.listinoDelete as never);
+router.post('/listino/import', requirePerm('listino'), c.listinoImport as never);
+router.get('/marche', c.marcheList as never);
+router.put('/marche/:marca', requirePerm('listino'), c.marcaUpdate as never);
+
+// Account (gestione permessi): SOLO admin.
+router.get('/accounts', requireAdminRole, c.accountsList as never);
+router.post('/accounts', requireAdminRole, c.accountCreate as never);
+router.put('/accounts/:id', requireAdminRole, c.accountUpdate as never);
 
 export default router;

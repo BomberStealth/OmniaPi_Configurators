@@ -106,15 +106,21 @@ foglio + ricerca). **Firma in finestra** grande (no segni per sbaglio). Bolla
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.17.1**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.18.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
-(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **27**.
+(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **28**.
 
 ## In sospeso / idee
-- 🛠 **RUOLI/PERMESSI (in progettazione, non ancora implementato)**. La tabella
-  `users` ha già `role`. Schema voluto da Edoardo: 4 ruoli **Dipendente /
-  Amministrazione / Titolare / ADMIN** (ADMIN = edoardo2846@gmail.com, tutti i
-  permessi). **Dipendente**: solo Nuova Bolla + Storico bolle, e dentro Storico
+- ✅ **RUOLI/PERMESSI: FATTO (base)**. Non 4 ruoli fissi ma **permessi per
+  sezione** gestiti dalla pagina **Account** (solo admin, tab 👤). `users` ha
+  ora `attivo` (0/1) + `permessi` (JSON {nuova,storico,clienti,listino,
+  fatturate}). ADMIN (role=admin) ha sempre tutto. Login rifiuta account
+  disattivati. Enforcement **lato BE**: `loadAccount` (carica attivo+permessi
+  freschi ad ogni richiesta) + `requirePerm(cap)` sulle rotte + `requireAdminRole`
+  sulle rotte `/accounts`. FE: `can()`/`isAdmin()` in `auth.ts`, tab filtrati.
+  Rotte: `GET /me`, `GET/POST /accounts`, `PUT /accounts/:id` (migrazione 026).
+  DA FARE ancora: lo spostamento a "Fatturate" (permesso `fatturate`) quando
+  esisterà lo stato. Mapping storico (resta per riferimento): **Dipendente**: solo Nuova Bolla + Storico bolle, e dentro Storico
   solo "In sospeso" e "Da fatturare" (no Listino, no Fatturate/Cancellate). Il
   Dipendente può spostare **In sospeso ↔ Da fatturare** (nei due sensi), ma NON
   "Da fatturare → Fatturate" (quello solo **Admin + Amministrazione**).
