@@ -31,9 +31,19 @@ Stato: ❓ da decidere · ✅ deciso · 💤 rimandata.
 ## Permessi / sicurezza
 9. ❓ **Permessi di default** per un nuovo account creato dalla pagina Account:
    ora propongo Nuova Bolla + Storico. Va bene?
-10. ❓ **Cestino (bolle cancellate)**: chi può vederlo/svuotarlo? Ora chiunque ha
-    "storico". Lo restringiamo (es. solo admin/amministrazione)?
+10. ✅ **Cestino**: lo vedono tutti (deciso).
 
 ## Infrastruttura
 11. 💤 **Backup su Google aziendale** (off-site): quando lo facciamo?
-12. ❓ **Numero bolla sul foglio stampato**: ora è nascosto. Rimetterlo?
+12. ✅ **Numero bolla sul foglio**: resta nascosto (deciso).
+
+## Reparti Elettrico / Idraulico (epica grossa — in definizione)
+- Ogni account ha un **settore** (Elettrico / Idraulico / Entrambi). Entrambi =
+  Amministrazione/Titolare (vede e modifica tutto). Admin = tutto + account.
+- **Operai/dipendenti**: lista gestibile (nome, cognome, foto) separata dagli
+  account di login, usata nella manodopera (sostituisce i 3 fissi).
+- **Filtro articoli**: ogni articolo di listino ha un settore; in "aggiungi
+  materiale" la tendina mostra solo gli articoli del settore dell'utente (+ Entrambi).
+- **Bolle**: ogni bolla ha il settore del creatore → icona ⚡/💧 nella lista,
+  filtro per settore nello storico, modifica solo stesso settore + Entrambi/Admin
+  (ma tutti possono VEDERE tutte le bolle). Da confermare i dettagli con Edoardo.
