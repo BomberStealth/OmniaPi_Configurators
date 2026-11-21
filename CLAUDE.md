@@ -110,6 +110,19 @@ correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.19.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
 (BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **29**.
 
+## ⚡ DA FARE SUBITO (prossima sessione — richiesti da Edoardo, TASSATIVI)
+1. **BUG: non si può TOGLIERE amministratore.** In `Account.tsx` un account con
+   role=admin mostra solo il badge, niente modo per declassarlo a user. Edoardo
+   ha fatto admin "melettrico" per sbaglio e non riesce a toglierlo. → aggiungere
+   un controllo per rimuovere l'admin (demote a user) sugli account non-propri.
+2. **Dirty visibile sulle card account**: quando cambio ruolo/permessi/settore,
+   la card deve diventare **rossa** e mostrare **"modifiche non salvate"** (ora
+   c'è solo il bottone Salva che si abilita).
+3. **Salva multiplo operai (e account)**: se modifico più operai/dipendenti,
+   premendo **Salva su uno** deve salvare **tutti** quelli modificati (ora è uno
+   alla volta). Mettere un "Salva tutto" / salvataggio di tutti i dirty.
+Poi continuare con la **Tappa 2** (filtro articoli listino per settore).
+
 ## In sospeso / idee
 - ✅ **RUOLI/PERMESSI: FATTO (base)**. Non 4 ruoli fissi ma **permessi per
   sezione** gestiti dalla pagina **Account** (solo admin, tab 👤). `users` ha
