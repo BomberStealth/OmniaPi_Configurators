@@ -28,9 +28,10 @@ interface Props {
   data: RapportoData;
   setData: React.Dispatch<React.SetStateAction<RapportoData>>;
   onSaved?: (saved?: RapportoData) => void;
+  onReset?: () => void; // rilascia il lock della bolla aperta (quando si fa "Nuovo")
 }
 
-export default function NuovaBolla({ data, setData, onSaved }: Props) {
+export default function NuovaBolla({ data, setData, onSaved, onReset }: Props) {
   const confirm = useConfirm();
   const [mobileTab, setMobileTab] = useState<'compila' | 'anteprima'>('compila');
   const [saving, setSaving] = useState(false);
@@ -92,8 +93,8 @@ export default function NuovaBolla({ data, setData, onSaved }: Props) {
 
   const nuovo = useCallback(async () => {
     const ok = await confirm({ title: 'Nuova bolla?', message: 'I dati non ancora salvati andranno persi.', confirmLabel: 'Nuova bolla', danger: true });
-    if (ok) setData(datiVuoti());
-  }, [confirm, setData]);
+    if (ok) { onReset?.(); setData(datiVuoti()); }
+  }, [confirm, setData, onReset]);
 
   const puoStampare = data.cliente.trim() !== '' && data.dataChiamata !== '';
   const stampa = () => setPendingPrint(true); // ristampa senza salvare (bolla bloccata)

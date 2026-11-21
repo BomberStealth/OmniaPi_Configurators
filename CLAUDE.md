@@ -72,8 +72,9 @@ e build+pubblicazione della FE. Non serve più fare niente a mano.
 ## Struttura progetto
 - `FE/` — React + Vite + TS, `base: '/configuratori/'`, pagine in `FE/src/pages/*`.
   - `FE/src/pages/maioli/` — sezione **Maioli Idrotermica** (`/configuratori/maioli`):
-    tab Nuova Bolla / Bolle già fatte (con cestino) / Listino prezzi. Store con
-    fallback localStorage (`store.ts`): se il BE non risponde lavora in "Demo locale".
+    tab Nuova Bolla / Storico bolle / Clienti / Listino. **SOLO ONLINE**:
+    `store.ts` è solo-API; se il BE non risponde la pagina mostra "Offline" e si
+    blocca (la vecchia "Demo locale" localStorage è stata RIMOSSA).
   - `FE/src/auth.ts` — login reale (JWT), token, `authHeaders()`, `onAuthExpired()`.
 - `BE/` — Express + TS + MariaDB, moduli in `BE/src/modules/*`.
   - Modulo `maioli`: rotte `/api/maioli/*` (clienti, bolle, foto, listino, marche),
@@ -105,16 +106,18 @@ foglio + ricerca). **Firma in finestra** grande (no segni per sbaglio). Bolla
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.16.0**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.17.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
-(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **25**.
+(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **26**.
 
 ## In sospeso / idee
 - 🛠 **RUOLI/PERMESSI (in progettazione, non ancora implementato)**. La tabella
   `users` ha già `role`. Schema voluto da Edoardo: 4 ruoli **Dipendente /
   Amministrazione / Titolare / ADMIN** (ADMIN = edoardo2846@gmail.com, tutti i
   permessi). **Dipendente**: solo Nuova Bolla + Storico bolle, e dentro Storico
-  solo "In sospeso" e "Da fatturare" (no Listino, no Fatturate/Cancellate).
+  solo "In sospeso" e "Da fatturare" (no Listino, no Fatturate/Cancellate). Il
+  Dipendente può spostare **In sospeso ↔ Da fatturare** (nei due sensi), ma NON
+  "Da fatturare → Fatturate" (quello solo **Admin + Amministrazione**).
   **Amministrazione/Titolare/ADMIN**: tutto, e potranno spostare le bolle da "Da
   fatturare" a "Fatturate". Flusso stati ancora in definizione: In sospeso →
   Pronto fattura (= "Da fatturare") → Fatturate → (pagate / non pagate). NB: va
@@ -134,9 +137,13 @@ Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
   click sul cliente → suo storico interventi; validazioni/avvisi dati mancanti;
   storico versioni di una bolla; (già fatti: conferme azioni, blocco post-salva,
   avviso modifiche non salvate, backup locale).
-- ⚠️ **DEMO LOCALE** — a inizio prossima sessione CHIEDERE a Edoardo: vuole
-  parlare della modalità fallback localStorage ("Demo locale" in `store.ts`,
-  quando il BE non risponde). Da chiarire con lui prima di toccarla.
+- ✅ **DEMO LOCALE: RISOLTO** — Edoardo ha deciso tutti online, niente offline.
+  La "Demo locale" è stata rimossa: ora solo-online, se il BE non c'è la pagina
+  si blocca con schermata "Offline".
+- ✅ **LOCK BOLLA** fatto: aprendo una bolla la si "prende in carico" (campi
+  `editing_by`/`editing_at` su maioli_bolle, TTL 15 min + heartbeat FE 5 min);
+  da un altro dispositivo → "LA BOLLA È SOTTO MANUTENZIONE da: <email>".
+  Endpoint `POST /bolle/:id/lock` (409 se occupata) e `/unlock`.
 - `schema_migrations` table: far girare ogni migrazione una sola volta (ora
   rigirano tutte ad ogni boot; funziona ma è fragile per le UPDATE).
 - Riepiloghi/totali mensili (bolle del mese, incassato).

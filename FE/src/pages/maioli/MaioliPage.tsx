@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import NuovaBolla from './views/NuovaBolla';
 import BolleFatte from './views/BolleFatte';
 import Clienti from './views/Clienti';
@@ -7,7 +7,7 @@ import { LOGO } from './azienda';
 import { MAIOLI_VERSION } from './version';
 import { datiVuoti, rigaHaContenuto } from './model';
 import type { RapportoData } from './model';
-import { initStore, storeMode, getBolla, beVersionStatus } from './store';
+import { initStore, storeMode, resetStore, getBolla, beVersionStatus, lockBolla, unlockBolla } from './store';
 import { ConfirmProvider, useConfirm } from './components/ConfirmDialog';
 import './MaioliPage.css';
 
@@ -31,22 +31,46 @@ function MaioliInner() {
   const confirm = useConfirm();
   const [tab, setTab] = useState<Tab>('nuova');
   const [data, setData] = useState<RapportoData>(datiVuoti);
-  const [mode, setMode] = useState<'api' | 'local'>('local');
+  const [conn, setConn] = useState<'checking' | 'api' | 'offline'>('checking');
   const [beOutdated, setBeOutdated] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const baseline = useRef<string>(snap(datiVuoti()));
 
-  useEffect(() => {
-    initStore().then(() => setMode(storeMode()));
+  const checkConn = useCallback(() => {
+    resetStore();
+    setConn('checking');
+    initStore().then(() => setConn(storeMode()));
     beVersionStatus().then(s => setBeOutdated(s.outdated));
   }, []);
+  useEffect(() => { checkConn(); }, [checkConn]);
 
   // "modificata" = diversa dall'ultimo salvataggio/apertura E non è una bolla vuota
   const cur = snap(data);
   const dirty = cur !== baseline.current && cur !== snap(datiVuoti());
 
+  // ── Lock "bolla in modifica" (una sola persona per volta) ──
+  const editingRef = useRef<number | null>(null);
+  const releaseLock = useCallback(async () => {
+    const id = editingRef.current;
+    editingRef.current = null;
+    if (id) await unlockBolla(id);
+  }, []);
+  const manutenzione = async (lockedBy: string) => {
+    await confirm({ title: 'Bolla in uso', message: `LA BOLLA È SOTTO MANUTENZIONE da: ${lockedBy}`, confirmLabel: 'Ho capito' });
+  };
+  // heartbeat: tiene vivo il lock mentre la bolla è aperta
+  useEffect(() => {
+    const iv = setInterval(() => { if (editingRef.current) lockBolla(editingRef.current).catch(() => {}); }, 5 * 60 * 1000);
+    return () => clearInterval(iv);
+  }, []);
+
   const openBolla = async (id: number) => {
+    if (editingRef.current === id) { setTab('nuova'); return; }
     try {
+      const lock = await lockBolla(id);
+      if (!lock.ok) { await manutenzione(lock.lockedBy || 'un altro utente'); return; }
+      await releaseLock();               // rilascia la bolla precedente
+      editingRef.current = id;
       const d = await getBolla(id);
       setData(d);
       baseline.current = snap(d);
@@ -55,7 +79,10 @@ function MaioliInner() {
   };
 
   const onSaved = (saved?: RapportoData) => {
-    if (saved) baseline.current = snap(saved);
+    if (saved) {
+      baseline.current = snap(saved);
+      if (saved.id && editingRef.current !== saved.id) { editingRef.current = saved.id; lockBolla(saved.id).catch(() => {}); }
+    }
     setReloadKey(k => k + 1);
   };
 
@@ -69,6 +96,13 @@ function MaioliInner() {
       });
       if (!ok) return;
       setData(datiVuoti()); // azzera la bolla
+    }
+    if (tab === 'nuova') await releaseLock(); // lasciando Nuova Bolla rilascia il lock
+    // tornando su Nuova Bolla con una bolla ancora caricata, ri-acquisisce il lock
+    if (t === 'nuova' && data.id) {
+      const lock = await lockBolla(data.id);
+      if (!lock.ok) { await manutenzione(lock.lockedBy || 'un altro utente'); setData(datiVuoti()); editingRef.current = null; }
+      else editingRef.current = data.id;
     }
     setTab(t);
   };
@@ -86,8 +120,8 @@ function MaioliInner() {
           </div>
           <div className="maioli-head-right">
             <span className="maioli-ver" title="Versione">{MAIOLI_VERSION}</span>
-            <span className={`maioli-mode ${mode === 'api' ? 'on' : 'off'}`} title={mode === 'api' ? 'Collegato al database' : 'Modalità demo: dati salvati solo su questo dispositivo'}>
-              {mode === 'api' ? '● Database' : '● Demo locale'}
+            <span className={`maioli-mode ${conn === 'api' ? 'on' : 'off'}`} title={conn === 'api' ? 'Collegato al server' : 'Nessuna connessione al server'}>
+              {conn === 'api' ? '● Online' : conn === 'checking' ? '● …' : '● Offline'}
             </span>
           </div>
         </div>
@@ -99,22 +133,35 @@ function MaioliInner() {
           </div>
         )}
 
-        <nav className="maioli-nav">
-          {TABS.map(t => (
-            <button key={t.id} className={`maioli-nav-btn${tab === t.id ? ' active' : ''}`} onClick={() => goTab(t.id)}>
-              <span className="maioli-nav-ic">{t.icon}</span>{t.label}
-            </button>
-          ))}
-        </nav>
+        {conn === 'offline' ? (
+          <div className="maioli-offline">
+            <div className="maioli-offline-ic">📡</div>
+            <div className="maioli-offline-t">Nessuna connessione al server</div>
+            <div className="maioli-offline-s">Le bolle funzionano solo online. Controlla la rete (WiFi/dati) e riprova.</div>
+            <button className="btn btn-primary" onClick={checkConn}>Riprova</button>
+          </div>
+        ) : conn === 'checking' ? (
+          <div className="maioli-empty">Connessione al server…</div>
+        ) : (
+          <>
+            <nav className="maioli-nav">
+              {TABS.map(t => (
+                <button key={t.id} className={`maioli-nav-btn${tab === t.id ? ' active' : ''}`} onClick={() => goTab(t.id)}>
+                  <span className="maioli-nav-ic">{t.icon}</span>{t.label}
+                </button>
+              ))}
+            </nav>
 
-        {tab === 'nuova' && (
-          <NuovaBolla data={data} setData={setData} onSaved={onSaved} />
+            {tab === 'nuova' && (
+              <NuovaBolla data={data} setData={setData} onSaved={onSaved} onReset={releaseLock} />
+            )}
+            {tab === 'archivio' && (
+              <BolleFatte onOpen={openBolla} reloadKey={reloadKey} />
+            )}
+            {tab === 'clienti' && <Clienti />}
+            {tab === 'listino' && <Listino />}
+          </>
         )}
-        {tab === 'archivio' && (
-          <BolleFatte onOpen={openBolla} reloadKey={reloadKey} />
-        )}
-        {tab === 'clienti' && <Clienti />}
-        {tab === 'listino' && <Listino />}
       </div>
     </div>
   );

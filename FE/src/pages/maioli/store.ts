@@ -142,7 +142,41 @@ export function clienteToData(c: Cliente, base: RapportoData): RapportoData {
   };
 }
 
-// ───────── API layer ─────────
+// ───────── API layer (SOLO online: niente fallback demo locale) ─────────
+export type StoreMode = 'api' | 'offline';
+let MODE: StoreMode | null = null;
+
+export async function initStore(): Promise<StoreMode> {
+  if (MODE) return MODE;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 3000);
+    const res = await fetch(HEALTH, { signal: ctrl.signal });
+    clearTimeout(t);
+    if (res.ok) {
+      const probe = await fetch(`${API}/clienti?q=`, { headers: authHeaders() });
+      if (probe.ok) MODE = 'api';
+      else if (probe.status === 401) { onAuthExpired(); MODE = 'offline'; }
+      else MODE = 'offline';
+    } else {
+      MODE = 'offline';
+    }
+  } catch {
+    MODE = 'offline';
+  }
+  return MODE;
+}
+export function storeMode(): StoreMode { return MODE ?? 'offline'; }
+// forza un nuovo controllo della connessione (bottone "Riprova")
+export function resetStore(): void { MODE = null; }
+
+class OfflineError extends Error { constructor() { super('Server non raggiungibile'); this.name = 'OfflineError'; } }
+
+async function requireApi(): Promise<void> {
+  await initStore();
+  if (MODE !== 'api') throw new OfflineError();
+}
+
 async function jfetch(url: string, opts?: RequestInit) {
   const res = await fetch(url, {
     ...opts,
@@ -154,24 +188,18 @@ async function jfetch(url: string, opts?: RequestInit) {
   return res.json();
 }
 
-// ───────── Foto: upload file su SSD (con fallback inline) ─────────
-// Carica una dataURL e ritorna l'URL del file salvato dal BE. Se il BE non è
-// raggiungibile o è vecchio (endpoint assente), tiene la foto inline (base64)
-// così il salvataggio funziona comunque.
+// ───────── Foto ─────────
 export async function uploadFoto(dataUrl: string): Promise<string> {
-  await initStore();
-  if (MODE !== 'api') return dataUrl;
+  await requireApi();
   try {
     const r = await jfetch(`${API}/foto`, { method: 'POST', body: JSON.stringify({ dataUrl }) });
     return (r && typeof r.url === 'string') ? r.url : dataUrl;
   } catch {
-    return dataUrl;
+    return dataUrl; // fallback inline se l'endpoint foto ha un intoppo (la bolla si salva comunque)
   }
 }
 
-// Sorgente per <img>: le foto-file sono protette, quindi al path serve il
-// token in query string (le <img> non mandano l'header Authorization).
-// Le base64 (legacy/demo) si usano così come sono.
+// Sorgente per <img>: le foto-file sono protette, token in query (?t=).
 export function fotoSrc(v: string): string {
   if (!v) return v;
   if (v.startsWith('data:')) return v;
@@ -195,280 +223,118 @@ export async function beVersionStatus(): Promise<{ reachable: boolean; outdated:
   }
 }
 
-// ───────── localStorage layer (fallback demo) ─────────
-const LS = {
-  clienti: 'maioli_clienti_v1',
-  bolle: 'maioli_bolle_v1',
-  listino: 'maioli_listino_v1',
-  marche: 'maioli_marche_v1',
-  seq: 'maioli_seq_v1',
-};
-function lsGet<T>(k: string, def: T): T {
-  try { const r = localStorage.getItem(k); return r ? (JSON.parse(r) as T) : def; } catch { return def; }
-}
-function lsSet(k: string, v: unknown) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } }
-function nextId(kind: string): number {
-  const seq = lsGet<Record<string, number>>(LS.seq, {});
-  const id = (seq[kind] ?? 0) + 1;
-  seq[kind] = id; lsSet(LS.seq, seq);
-  return id;
-}
-
-// ───────── Store unificato ─────────
-export type StoreMode = 'api' | 'local';
-let MODE: StoreMode | null = null;
-
-export async function initStore(): Promise<StoreMode> {
-  if (MODE) return MODE;
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 2500);
-    const res = await fetch(HEALTH, { signal: ctrl.signal });
-    clearTimeout(t);
-    // api valida solo se il DB risponde: provo una query reale (con token)
-    if (res.ok) {
-      const probe = await fetch(`${API}/clienti?q=`, { headers: authHeaders() });
-      if (probe.ok) MODE = 'api';
-      else if (probe.status === 401) { onAuthExpired(); MODE = 'local'; }
-      else MODE = 'local';
-    } else {
-      MODE = 'local';
-    }
-  } catch {
-    MODE = 'local';
-  }
-  return MODE;
-}
-export function storeMode(): StoreMode { return MODE ?? 'local'; }
-
 // ── Clienti ──
 export async function searchClienti(q: string): Promise<Cliente[]> {
-  await initStore();
-  if (MODE === 'api') return jfetch(`${API}/clienti?q=${encodeURIComponent(q)}`);
-  const all = lsGet<Cliente[]>(LS.clienti, []);
-  const s = q.trim().toLowerCase();
-  const out = s ? all.filter(c => (c.nome + c.indirizzo + c.telefono).toLowerCase().includes(s)) : all;
-  return out.sort((a, b) => a.nome.localeCompare(b.nome)).slice(0, 20);
+  await requireApi();
+  return jfetch(`${API}/clienti?q=${encodeURIComponent(q)}`);
 }
 
-// ── gestione anagrafica clienti (sezione Clienti) ──
 export async function saveCliente(c: Partial<Cliente>): Promise<{ id: number }> {
-  await initStore();
-  if (MODE === 'api') {
-    if (c.id) { await jfetch(`${API}/clienti/${c.id}`, { method: 'PUT', body: JSON.stringify(c) }); return { id: c.id }; }
-    const r = await jfetch(`${API}/clienti`, { method: 'POST', body: JSON.stringify(c) });
-    return { id: r.id };
-  }
-  const all = lsGet<Cliente[]>(LS.clienti, []);
-  if (c.id) {
-    const i = all.findIndex(x => x.id === c.id);
-    if (i >= 0) { all[i] = { ...all[i], ...c } as Cliente; lsSet(LS.clienti, all); }
-    return { id: c.id };
-  }
-  const id = nextId('cliente');
-  all.push({ id, nome: c.nome ?? '', telefono: c.telefono ?? '', email: c.email ?? '', indirizzo: c.indirizzo ?? '', condominio: c.condominio ?? '', amministratore: c.amministratore ?? '' });
-  lsSet(LS.clienti, all);
-  return { id };
+  await requireApi();
+  if (c.id) { await jfetch(`${API}/clienti/${c.id}`, { method: 'PUT', body: JSON.stringify(c) }); return { id: c.id }; }
+  const r = await jfetch(`${API}/clienti`, { method: 'POST', body: JSON.stringify(c) });
+  return { id: r.id };
 }
 
 export async function removeCliente(id: number): Promise<void> {
-  await initStore();
-  if (MODE === 'api') { await jfetch(`${API}/clienti/${id}`, { method: 'DELETE' }); return; }
-  lsSet(LS.clienti, lsGet<Cliente[]>(LS.clienti, []).filter(x => x.id !== id));
+  await requireApi();
+  await jfetch(`${API}/clienti/${id}`, { method: 'DELETE' });
 }
 
-// riferimenti già usati per quel cliente (autocomplete nel campo Riferimento)
+// riferimenti già usati per quel cliente (autocomplete)
 export async function listRiferimenti(clienteId: number | null, q: string): Promise<string[]> {
-  await initStore();
   if (!clienteId) return [];
-  if (MODE === 'api') return jfetch(`${API}/riferimenti?cliente_id=${clienteId}&q=${encodeURIComponent(q)}`);
-  const all = lsGet<any[]>(LS.bolle, []).filter(b => !b.deleted_at && b.cliente_id === clienteId);
-  const s = q.trim().toLowerCase();
-  const set = new Set<string>();
-  for (const b of all) { const r = String(b.riferimento || '').trim(); if (r && (!s || r.toLowerCase().includes(s))) set.add(r); }
-  return [...set].sort().slice(0, 10);
-}
-
-function upsertClienteLocal(d: RapportoData): number | null {
-  const all = lsGet<Cliente[]>(LS.clienti, []);
-  const dati = {
-    nome: d.cliente, telefono: d.telefono, email: d.email,
-    indirizzo: d.indirizzo, condominio: d.condominio, amministratore: d.amministratore,
-  };
-  if (d.cliente_id) {
-    const i = all.findIndex(c => c.id === d.cliente_id);
-    if (i >= 0) { all[i] = { ...all[i], ...dati }; lsSet(LS.clienti, all); return d.cliente_id; }
-  }
-  if (!dati.nome.trim()) return null;
-  const id = nextId('cliente');
-  all.push({ id, ...dati });
-  lsSet(LS.clienti, all);
-  return id;
+  await requireApi();
+  return jfetch(`${API}/riferimenti?cliente_id=${clienteId}&q=${encodeURIComponent(q)}`);
 }
 
 // ── Bolle ──
 export type StatoBolla = 'sospeso' | 'consegnate';
 
 export async function listBolle(q: string, stato: StatoBolla = 'sospeso'): Promise<BollaSummary[]> {
-  await initStore();
-  if (MODE === 'api') return jfetch(`${API}/bolle?q=${encodeURIComponent(q)}&stato=${stato}`);
-  const all = lsGet<any[]>(LS.bolle, [])
-    .filter(b => !b.deleted_at)
-    .filter(b => (stato === 'consegnate' ? !!b.consegnata_at : !b.consegnata_at));
-  const s = q.trim().toLowerCase();
-  const rows = (s ? all.filter(b => (String(b.cliente) + (b.riferimento || '') + b.numero + b.indirizzo).toLowerCase().includes(s)) : all)
-    .sort((a, b) => stato === 'consegnate'
-      ? (b.consegnata_at || '').localeCompare(a.consegnata_at || '')
-      : (a.numero || '').localeCompare(b.numero || '', undefined, { numeric: true }));
-  return rows.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, riferimento: b.riferimento ?? '', indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at, consegnata_at: b.consegnata_at ?? null, n_foto: (b.foto || []).length, lavoro_incompleto: b.lavoro_incompleto ? 1 : 0 }));
+  await requireApi();
+  return jfetch(`${API}/bolle?q=${encodeURIComponent(q)}&stato=${stato}`);
 }
 
 export async function getBolla(id: number): Promise<RapportoData> {
-  await initStore();
-  if (MODE === 'api') return fromBolla(await jfetch(`${API}/bolle/${id}`));
-  const all = lsGet<any[]>(LS.bolle, []);
-  const b = all.find(x => x.id === id);
-  if (!b) throw new Error('Non trovata');
-  return fromBolla(b);
+  await requireApi();
+  return fromBolla(await jfetch(`${API}/bolle/${id}`));
 }
 
 export async function saveBolla(d: RapportoData): Promise<{ id: number; numero: string }> {
-  await initStore();
+  await requireApi();
   const payload = toPayload(d);
-  if (MODE === 'api') {
-    if (d.id) { await jfetch(`${API}/bolle/${d.id}`, { method: 'PUT', body: JSON.stringify(payload) }); return { id: d.id, numero: d.numero }; }
-    const r = await jfetch(`${API}/bolle`, { method: 'POST', body: JSON.stringify(payload) });
-    return { id: r.id, numero: r.numero };
-  }
-  // local
-  const clienteId = upsertClienteLocal(d);
-  const all = lsGet<any[]>(LS.bolle, []);
-  const now = new Date().toISOString();
-  if (d.id) {
-    const i = all.findIndex(x => x.id === d.id);
-    const numero = i >= 0 ? all[i].numero : newNumeroLocal();
-    const rec = { ...payload, id: d.id, cliente_id: clienteId, numero, updated_at: now, created_at: i >= 0 ? all[i].created_at : now };
-    if (i >= 0) all[i] = rec; else all.push(rec);
-    lsSet(LS.bolle, all);
-    return { id: d.id, numero };
-  }
-  const id = nextId('bolla');
-  const numero = newNumeroLocal();
-  all.push({ ...payload, id, cliente_id: clienteId, numero, updated_at: now, created_at: now });
-  lsSet(LS.bolle, all);
-  return { id, numero };
+  if (d.id) { await jfetch(`${API}/bolle/${d.id}`, { method: 'PUT', body: JSON.stringify(payload) }); return { id: d.id, numero: d.numero }; }
+  const r = await jfetch(`${API}/bolle`, { method: 'POST', body: JSON.stringify(payload) });
+  return { id: r.id, numero: r.numero };
 }
 
-function newNumeroLocal(): string {
-  const anno = new Date().getFullYear();
-  const seq = lsGet<Record<string, number>>(LS.seq, {});
-  const key = `num_${anno}`;
-  const prog = (seq[key] ?? 0) + 1;
-  seq[key] = prog; lsSet(LS.seq, seq);
-  return `${anno}/${String(prog).padStart(4, '0')}`;
-}
-
-// soft-delete: sposta nel cestino
 export async function deleteBolla(id: number): Promise<void> {
-  await initStore();
-  if (MODE === 'api') { await jfetch(`${API}/bolle/${id}`, { method: 'DELETE' }); return; }
-  const all = lsGet<any[]>(LS.bolle, []);
-  const i = all.findIndex(x => x.id === id);
-  if (i >= 0) { all[i].deleted_at = new Date().toISOString(); lsSet(LS.bolle, all); }
+  await requireApi();
+  await jfetch(`${API}/bolle/${id}`, { method: 'DELETE' });
 }
 
 export async function listBolleCancellate(q: string): Promise<BollaSummary[]> {
-  await initStore();
-  if (MODE === 'api') return jfetch(`${API}/bolle/cancellate?q=${encodeURIComponent(q)}`);
-  const all = lsGet<any[]>(LS.bolle, []);
-  const cutoff = Date.now() - 30 * 86400000;
-  const kept = all.filter(b => !b.deleted_at || Date.parse(b.deleted_at) >= cutoff);
-  if (kept.length !== all.length) lsSet(LS.bolle, kept);
-  const s = q.trim().toLowerCase();
-  const trashed = kept.filter(b => b.deleted_at)
-    .filter(b => !s || (String(b.cliente) + (b.riferimento || '') + b.numero + b.indirizzo).toLowerCase().includes(s))
-    .sort((a, b) => (b.deleted_at || '').localeCompare(a.deleted_at || ''));
-  return trashed.map(b => ({ id: b.id, numero: b.numero, cliente: b.cliente, riferimento: b.riferimento ?? '', indirizzo: b.indirizzo, data_intervento: b.data_intervento, totale: b.totale, updated_at: b.updated_at, deleted_at: b.deleted_at, consegnata_at: b.consegnata_at ?? null, n_foto: (b.foto || []).length }));
+  await requireApi();
+  return jfetch(`${API}/bolle/cancellate?q=${encodeURIComponent(q)}`);
 }
 
 export async function restoreBolla(id: number): Promise<void> {
-  await initStore();
-  if (MODE === 'api') { await jfetch(`${API}/bolle/${id}/restore`, { method: 'POST' }); return; }
-  const all = lsGet<any[]>(LS.bolle, []);
-  const i = all.findIndex(x => x.id === id);
-  if (i >= 0) { delete all[i].deleted_at; lsSet(LS.bolle, all); }
+  await requireApi();
+  await jfetch(`${API}/bolle/${id}/restore`, { method: 'POST' });
 }
 
 export async function deleteBollaPermanent(id: number): Promise<void> {
-  await initStore();
-  if (MODE === 'api') { await jfetch(`${API}/bolle/${id}/permanent`, { method: 'DELETE' }); return; }
-  lsSet(LS.bolle, lsGet<any[]>(LS.bolle, []).filter(x => x.id !== id));
+  await requireApi();
+  await jfetch(`${API}/bolle/${id}/permanent`, { method: 'DELETE' });
 }
 
 export async function markConsegnata(id: number, consegnata: boolean): Promise<void> {
-  await initStore();
-  if (MODE === 'api') { await jfetch(`${API}/bolle/${id}/consegna`, { method: 'POST', body: JSON.stringify({ consegnata }) }); return; }
-  const all = lsGet<any[]>(LS.bolle, []);
-  const i = all.findIndex(x => x.id === id);
-  if (i >= 0) { all[i].consegnata_at = consegnata ? new Date().toISOString() : null; lsSet(LS.bolle, all); }
+  await requireApi();
+  await jfetch(`${API}/bolle/${id}/consegna`, { method: 'POST', body: JSON.stringify({ consegnata }) });
+}
+
+// ── Lock bolla (modifica contemporanea) ──
+export async function lockBolla(id: number): Promise<{ ok: boolean; lockedBy?: string }> {
+  await requireApi();
+  const res = await fetch(`${API}/bolle/${id}/lock`, { method: 'POST', headers: { ...authHeaders() } });
+  if (res.status === 401) { onAuthExpired(); throw new Error('HTTP 401'); }
+  if (res.status === 409) {
+    const j = await res.json().catch(() => ({} as any));
+    return { ok: false, lockedBy: j.lockedBy || 'un altro utente' };
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return { ok: true };
+}
+export async function unlockBolla(id: number): Promise<void> {
+  try { await fetch(`${API}/bolle/${id}/unlock`, { method: 'POST', headers: { ...authHeaders() } }); }
+  catch { /* best-effort */ }
 }
 
 // ── Listino ──
 export async function listListino(q: string, marca = ''): Promise<ListinoItem[]> {
-  await initStore();
-  if (MODE === 'api') return jfetch(`${API}/listino?q=${encodeURIComponent(q)}&marca=${encodeURIComponent(marca)}`);
-  const all = lsGet<ListinoItem[]>(LS.listino, []);
-  const marche = lsGet<Record<string, { sconto: number; ricarico: number }>>(LS.marche, {});
-  const tokens = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  return all
-    .filter(it => {
-      if (marca && it.marca !== marca) return false;
-      if (!tokens.length) return true;
-      const hay = `${it.codice} ${it.descrizione} ${it.categoria ?? ''}`.toLowerCase();
-      return tokens.every(t => hay.includes(t));
-    })
-    .map(it => ({ ...it, sconto: marche[it.marca]?.sconto ?? 0, ricarico: marche[it.marca]?.ricarico ?? 0 }))
-    .sort((a, b) => (a.marca + a.descrizione).localeCompare(b.marca + b.descrizione));
+  await requireApi();
+  return jfetch(`${API}/listino?q=${encodeURIComponent(q)}&marca=${encodeURIComponent(marca)}`);
 }
 
 export async function saveListino(item: Partial<ListinoItem>): Promise<{ id: number }> {
-  await initStore();
-  if (MODE === 'api') {
-    if (item.id) { await jfetch(`${API}/listino/${item.id}`, { method: 'PUT', body: JSON.stringify(item) }); return { id: item.id }; }
-    return jfetch(`${API}/listino`, { method: 'POST', body: JSON.stringify(item) });
-  }
-  const all = lsGet<ListinoItem[]>(LS.listino, []);
-  if (item.id) {
-    const i = all.findIndex(x => x.id === item.id);
-    if (i >= 0) { all[i] = { ...all[i], ...item } as ListinoItem; lsSet(LS.listino, all); return { id: item.id }; }
-  }
-  const id = nextId('listino');
-  all.push({ id, marca: item.marca ?? 'Generico', codice: item.codice ?? '', descrizione: item.descrizione ?? '', um: item.um ?? '', prezzo: n2(item.prezzo), ricarico: n2(item.ricarico), sconto: n2(item.sconto), attivo: item.attivo === 0 ? 0 : 1 });
-  lsSet(LS.listino, all);
-  return { id };
+  await requireApi();
+  if (item.id) { await jfetch(`${API}/listino/${item.id}`, { method: 'PUT', body: JSON.stringify(item) }); return { id: item.id }; }
+  return jfetch(`${API}/listino`, { method: 'POST', body: JSON.stringify(item) });
 }
 
 export async function deleteListino(id: number): Promise<void> {
-  await initStore();
-  if (MODE === 'api') { await jfetch(`${API}/listino/${id}`, { method: 'DELETE' }); return; }
-  lsSet(LS.listino, lsGet<ListinoItem[]>(LS.listino, []).filter(x => x.id !== id));
+  await requireApi();
+  await jfetch(`${API}/listino/${id}`, { method: 'DELETE' });
 }
 
-// ── Marche: sconto installatore / ricarico azienda ──
+// ── Marche ──
 export async function listMarche(): Promise<Marca[]> {
-  await initStore();
-  if (MODE === 'api') return jfetch(`${API}/marche`);
-  const m = lsGet<Record<string, { sconto: number; ricarico: number }>>(LS.marche, {});
-  return Object.entries(m).map(([marca, v]) => ({ marca, sconto: v.sconto, ricarico: v.ricarico }));
+  await requireApi();
+  return jfetch(`${API}/marche`);
 }
 
 export async function saveMarca(marca: string, sconto: number, ricarico: number): Promise<void> {
-  await initStore();
-  if (MODE === 'api') {
-    await jfetch(`${API}/marche/${encodeURIComponent(marca)}`, { method: 'PUT', body: JSON.stringify({ sconto, ricarico }) });
-    return;
-  }
-  const m = lsGet<Record<string, { sconto: number; ricarico: number }>>(LS.marche, {});
-  m[marca] = { sconto, ricarico };
-  lsSet(LS.marche, m);
+  await requireApi();
+  await jfetch(`${API}/marche/${encodeURIComponent(marca)}`, { method: 'PUT', body: JSON.stringify({ sconto, ricarico }) });
 }

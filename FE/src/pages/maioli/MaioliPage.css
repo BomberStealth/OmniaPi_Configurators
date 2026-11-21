@@ -387,6 +387,13 @@
 .maioli-lock-overlay { position: absolute; inset: 0; z-index: 20; display: flex; align-items: flex-start; justify-content: center; padding-top: 14px; background: rgba(148,163,184,0.06); border-radius: 14px; cursor: pointer; }
 .maioli-lock-pill { position: sticky; top: 14px; background: #1e293b; color: #fff; font-size: 12.5px; font-weight: 700; padding: 8px 14px; border-radius: 99px; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
 
+/* schermata "offline / server non raggiungibile" */
+.maioli-offline { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 48px 20px; }
+.maioli-offline-ic { font-size: 44px; }
+.maioli-offline-t { font-size: 18px; font-weight: 800; color: var(--text); }
+.maioli-offline-s { font-size: 13.5px; color: var(--text-muted); max-width: 420px; line-height: 1.5; }
+.maioli-offline .btn { margin-top: 8px; }
+
 /* banner "backend da aggiornare" */
 .maioli-be-warn { display: flex; align-items: flex-start; gap: 9px; margin: 2px 0 10px; padding: 10px 13px; background: #fff7ed; border: 1px solid #fdba74; border-radius: 10px; color: #9a3412; font-size: 12.5px; line-height: 1.45; }
 .maioli-be-warn-ic { font-size: 15px; line-height: 1.2; }

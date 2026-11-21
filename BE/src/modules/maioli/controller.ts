@@ -75,6 +75,18 @@ export async function bolleConsegna(req: Request, res: Response): Promise<void> 
   try { const ok = await s.setConsegnata(id, consegnata); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true }); } catch { err(res); }
 }
 
+// ── Lock bolla (modifica contemporanea) ──
+export async function bolleLock(req: Request, res: Response): Promise<void> {
+  const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
+  const user = (req as { user?: { email?: string } }).user?.email || 'utente';
+  try { const r = await s.lockBolla(id, user); if (r.ok) res.json({ ok: true }); else res.status(409).json({ lockedBy: r.lockedBy }); } catch { err(res); }
+}
+export async function bolleUnlock(req: Request, res: Response): Promise<void> {
+  const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
+  const user = (req as { user?: { email?: string } }).user?.email || 'utente';
+  try { await s.unlockBolla(id, user); res.json({ ok: true }); } catch { err(res); }
+}
+
 // ── Listino ──
 export async function listinoList(req: Request, res: Response): Promise<void> {
   try { res.json(await s.listListino(String(req.query.q ?? ''), String(req.query.marca ?? ''))); } catch { err(res); }

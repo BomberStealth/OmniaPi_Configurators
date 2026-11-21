@@ -443,6 +443,33 @@ export async function setConsegnata(id: number, consegnata: boolean): Promise<bo
   return r.affectedRows > 0;
 }
 
+// ─────────────── Lock bolla (modifica contemporanea) ───────────────
+// Un lock è "attivo" se aggiornato negli ultimi 15 minuti (heartbeat dalla FE);
+// oltre, è considerato scaduto (sessione chiusa/crashata) e riutilizzabile.
+export async function lockBolla(id: number, user: string): Promise<{ ok: boolean; lockedBy?: string }> {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [rows] = (await conn.execute(
+      `SELECT editing_by, (editing_at IS NOT NULL AND editing_at > NOW() - INTERVAL 15 MINUTE) AS active
+       FROM maioli_bolle WHERE id=? FOR UPDATE`, [id],
+    )) as [{ editing_by: string | null; active: number }[], unknown];
+    if (!rows[0]) { await conn.rollback(); return { ok: true }; }
+    const cur = rows[0];
+    if (Number(cur.active) === 1 && cur.editing_by && cur.editing_by !== user) {
+      await conn.commit();
+      return { ok: false, lockedBy: cur.editing_by };
+    }
+    await conn.execute('UPDATE maioli_bolle SET editing_by=?, editing_at=NOW() WHERE id=?', [user, id]);
+    await conn.commit();
+    return { ok: true };
+  } catch (e) { await conn.rollback(); throw e; } finally { conn.release(); }
+}
+
+export async function unlockBolla(id: number, user: string): Promise<void> {
+  await pool.execute('UPDATE maioli_bolle SET editing_by=NULL, editing_at=NULL WHERE id=? AND editing_by=?', [id, user]);
+}
+
 // ─────────────────────────── Listino ───────────────────────────
 export async function listListino(q: string, marca: string, limit = 500): Promise<ListinoItem[]> {
   const where: string[] = [];
