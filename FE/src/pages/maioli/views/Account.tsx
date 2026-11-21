@@ -3,6 +3,7 @@ import { listAccounts, createAccount, updateAccount } from '../store';
 import type { Account as Acc } from '../store';
 import { getSession } from '../../../auth';
 import { useConfirm } from '../components/ConfirmDialog';
+import OperaiManage from './OperaiManage';
 
 const PERMS: { key: string; label: string }[] = [
   { key: 'nuova', label: 'Nuova Bolla' },
@@ -10,6 +11,11 @@ const PERMS: { key: string; label: string }[] = [
   { key: 'clienti', label: 'Clienti' },
   { key: 'listino', label: 'Listino' },
   { key: 'fatturate', label: 'Segna "Fatturate"' },
+];
+const SETTORI = [
+  { v: 'elettrico', l: '⚡ Elettrico' },
+  { v: 'idraulico', l: '💧 Idraulico' },
+  { v: 'entrambi', l: 'Entrambi (amministrazione)' },
 ];
 
 type Row = Acc & { _dirty?: boolean };
@@ -23,6 +29,7 @@ export default function Account() {
   const [nEmail, setNEmail] = useState('');
   const [nPass, setNPass] = useState('');
   const [nPermessi, setNPermessi] = useState<Record<string, boolean>>({ nuova: true, storico: true });
+  const [nSettore, setNSettore] = useState('idraulico');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -36,7 +43,7 @@ export default function Account() {
 
   const salva = async (r: Row) => {
     try {
-      await updateAccount(r.id, { attivo: r.attivo, permessi: r.permessi, role: r.role });
+      await updateAccount(r.id, { attivo: r.attivo, permessi: r.permessi, role: r.role, settore: r.settore });
       setRows(rs => rs.map(x => (x.id === r.id ? { ...x, _dirty: false } : x)));
     } catch { alert('Salvataggio non riuscito.'); }
   };
@@ -51,8 +58,8 @@ export default function Account() {
   const creaNuovo = async () => {
     if (!nEmail.trim() || nPass.length < 6) { alert('Email e password (min 6 caratteri) obbligatorie.'); return; }
     try {
-      await createAccount(nEmail.trim(), nPass, nPermessi, 'user');
-      setNEmail(''); setNPass(''); setNPermessi({ nuova: true, storico: true }); setShowNew(false);
+      await createAccount(nEmail.trim(), nPass, nPermessi, 'user', nSettore);
+      setNEmail(''); setNPass(''); setNPermessi({ nuova: true, storico: true }); setNSettore('idraulico'); setShowNew(false);
       load();
     } catch { alert('Creazione non riuscita (email già esistente?).'); }
   };
@@ -66,6 +73,7 @@ export default function Account() {
   };
 
   return (
+    <>
     <div className="card maioli-card">
       <div className="maioli-sec-title">
         Account
@@ -77,6 +85,9 @@ export default function Account() {
         <div className="maioli-acc-new">
           <input placeholder="Email" value={nEmail} onChange={e => setNEmail(e.target.value)} />
           <input placeholder="Password (min 6)" type="text" value={nPass} onChange={e => setNPass(e.target.value)} />
+          <select value={nSettore} onChange={e => setNSettore(e.target.value)}>
+            {SETTORI.map(s => <option key={s.v} value={s.v}>{s.l}</option>)}
+          </select>
           <div className="maioli-acc-perms">
             {PERMS.map(p => (
               <label key={p.key} className="maioli-acc-perm">
@@ -111,8 +122,15 @@ export default function Account() {
                 </div>
 
                 {isAdmin ? (
-                  <div className="maioli-acc-adminbadge">👑 Amministratore — tutti i permessi</div>
+                  <div className="maioli-acc-adminbadge">👑 Amministratore — tutti i permessi e settori</div>
                 ) : (
+                  <>
+                  <div className="maioli-acc-settore">
+                    <span>Settore:</span>
+                    <select value={r.settore} onChange={e => patch(r.id, { settore: e.target.value })}>
+                      {SETTORI.map(s => <option key={s.v} value={s.v}>{s.l}</option>)}
+                    </select>
+                  </div>
                   <div className="maioli-acc-perms">
                     {PERMS.map(p => (
                       <label key={p.key} className="maioli-acc-perm">
@@ -125,6 +143,7 @@ export default function Account() {
                       <span>Rendi Amministratore</span>
                     </label>
                   </div>
+                  </>
                 )}
 
                 <div className="maioli-acc-actions">
@@ -137,5 +156,7 @@ export default function Account() {
         </div>
       )}
     </div>
+    <OperaiManage />
+    </>
   );
 }

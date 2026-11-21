@@ -345,6 +345,7 @@ export interface Account {
   email: string;
   role: string;
   attivo: number;
+  settore: string;
   permessi: Record<string, boolean>;
 }
 
@@ -352,11 +353,36 @@ export async function listAccounts(): Promise<Account[]> {
   await requireApi();
   return jfetch(`${API}/accounts`);
 }
-export async function createAccount(email: string, password: string, permessi: Record<string, boolean>, role: string): Promise<{ id: number }> {
+export async function createAccount(email: string, password: string, permessi: Record<string, boolean>, role: string, settore?: string): Promise<{ id: number }> {
   await requireApi();
-  return jfetch(`${API}/accounts`, { method: 'POST', body: JSON.stringify({ email, password, permessi, role }) });
+  return jfetch(`${API}/accounts`, { method: 'POST', body: JSON.stringify({ email, password, permessi, role, settore }) });
 }
-export async function updateAccount(id: number, d: { attivo?: number; permessi?: Record<string, boolean>; role?: string; password?: string }): Promise<void> {
+export async function updateAccount(id: number, d: { attivo?: number; permessi?: Record<string, boolean>; role?: string; settore?: string; password?: string }): Promise<void> {
   await requireApi();
   await jfetch(`${API}/accounts/${id}`, { method: 'PUT', body: JSON.stringify(d) });
+}
+
+// ── Operai (manodopera) ──
+export interface Operaio {
+  id: number;
+  nome: string;
+  cognome: string;
+  settore: string;
+  foto: string | null;
+  attivo: number;
+}
+
+// manage=true → tutti (pagina admin); altrimenti solo attivi filtrati per settore
+export async function listOperai(manage = false): Promise<Operaio[]> {
+  await requireApi();
+  return jfetch(`${API}/operai${manage ? '?manage=1' : ''}`);
+}
+export async function saveOperaio(o: Partial<Operaio>): Promise<{ id: number }> {
+  await requireApi();
+  if (o.id) { await jfetch(`${API}/operai/${o.id}`, { method: 'PUT', body: JSON.stringify(o) }); return { id: o.id }; }
+  return jfetch(`${API}/operai`, { method: 'POST', body: JSON.stringify(o) });
+}
+export async function removeOperaio(id: number): Promise<void> {
+  await requireApi();
+  await jfetch(`${API}/operai/${id}`, { method: 'DELETE' });
 }

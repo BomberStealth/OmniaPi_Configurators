@@ -106,9 +106,9 @@ foglio + ricerca). **Firma in finestra** grande (no segni per sbaglio). Bolla
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.18.0**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.19.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
-(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **28**.
+(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **29**.
 
 ## In sospeso / idee
 - ✅ **RUOLI/PERMESSI: FATTO (base)**. Non 4 ruoli fissi ma **permessi per

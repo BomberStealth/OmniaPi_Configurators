@@ -241,6 +241,20 @@
 .maioli-acc-adminrole { color: #a16207; }
 .maioli-acc-adminbadge { font-size: 13px; font-weight: 700; color: #a16207; background: rgba(234,179,8,0.14); border-radius: 8px; padding: 8px 11px; margin-bottom: 10px; }
 .maioli-acc-actions { display: flex; gap: 8px; }
+.maioli-acc-new select, .maioli-acc-settore select, .maioli-op-fields select { padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; color: var(--text); font-size: 14px; }
+.maioli-acc-settore { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 12.5px; font-weight: 700; color: var(--text-muted); }
+
+/* gestione operai */
+.maioli-op-list { display: flex; flex-direction: column; gap: 9px; }
+.maioli-op-row { display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; background: var(--card-gradient); flex-wrap: wrap; }
+.maioli-op-row.off { opacity: 0.6; }
+.maioli-op-fields { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.maioli-op-nome { width: 120px; padding: 7px 9px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; color: var(--text); font-size: 13.5px; }
+.maioli-op-attivo { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--text-muted); cursor: pointer; }
+.maioli-op-attivo input { width: 17px; height: 17px; accent-color: #16a34a; }
+.maioli-op-avatar { position: relative; width: 44px; height: 44px; flex: none; border-radius: 50%; border: 2px solid var(--border); background: var(--glass); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; font-weight: 800; color: var(--text-muted); font-size: 15px; padding: 0; }
+.maioli-op-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.maioli-op-foto { display: flex; align-items: center; gap: 10px; }
 
 /* campo Riferimento con autocomplete */
 .maioli-rif-wrap { position: relative; }

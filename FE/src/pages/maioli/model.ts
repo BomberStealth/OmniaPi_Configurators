@@ -1,4 +1,4 @@
-import { DEFAULT_TARIFFA_ORARIA, OPERAI } from './azienda';
+import { DEFAULT_TARIFFA_ORARIA } from './azienda';
 
 export interface MaterialeRiga {
   qta: string;
@@ -153,7 +153,10 @@ export function calcola(d: RapportoData): Totali {
   return { manodopera, materiali, imponibile, aliquota, iva, totale: imponibile + iva };
 }
 
-export const nomeOperaio = (id: string): string => OPERAI.find(o => o.id === id)?.nome ?? id;
+// la manodopera ora salva il NOME dell'operaio (snapshot). Mappo i 3 vecchi id
+// (edoardo/daniele/sandro) per compatibilità con le bolle vecchie.
+const OPERAI_LEGACY: Record<string, string> = { edoardo: 'Edoardo', daniele: 'Daniele', sandro: 'Sandro' };
+export const nomeOperaio = (s: string): string => OPERAI_LEGACY[s] ?? s;
 
 export function defaultManoRiga(operaio: string): ManoRiga {
   return { operaio, ore: '', tariffa: String(DEFAULT_TARIFFA_ORARIA) };

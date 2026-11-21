@@ -123,19 +123,44 @@ export async function listinoImport(req: Request, res: Response): Promise<void> 
 }
 
 // ── Account / permessi ──
-type WithAcc = Request & { account?: { role: string; attivo: number; permessi: Record<string, boolean> }; user?: { email?: string } };
+type WithAcc = Request & { account?: { role: string; attivo: number; settore: string; permessi: Record<string, boolean> }; user?: { email?: string } };
 
 export async function me(req: Request, res: Response): Promise<void> {
   const r = req as WithAcc;
-  res.json({ email: r.user?.email, role: r.account?.role, attivo: r.account?.attivo, permessi: r.account?.permessi });
+  res.json({ email: r.user?.email, role: r.account?.role, attivo: r.account?.attivo, settore: r.account?.settore, permessi: r.account?.permessi });
+}
+
+// ── Operai (manodopera) ──
+export async function operaiList(req: Request, res: Response): Promise<void> {
+  const r = req as WithAcc;
+  const manage = String(req.query.manage ?? '') === '1';
+  if (manage) {
+    if (r.account?.role !== 'admin') { res.status(403).json({ message: 'Solo amministratore' }); return; }
+    try { res.json(await s.listOperai(undefined, false)); } catch { err(res); }
+    return;
+  }
+  const settore = r.account?.role === 'admin' ? undefined : r.account?.settore;
+  try { res.json(await s.listOperai(settore, true)); } catch { err(res); }
+}
+export async function operaiCreate(req: Request, res: Response): Promise<void> {
+  if (!req.body?.nome?.trim()) { res.status(400).json({ message: 'Nome obbligatorio' }); return; }
+  try { res.status(201).json(await s.createOperaio(req.body)); } catch { err(res); }
+}
+export async function operaiUpdate(req: Request, res: Response): Promise<void> {
+  const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
+  try { const ok = await s.updateOperaio(id, req.body || {}); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true }); } catch { err(res); }
+}
+export async function operaiDelete(req: Request, res: Response): Promise<void> {
+  const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
+  try { await s.deleteOperaio(id); res.status(204).end(); } catch { err(res); }
 }
 export async function accountsList(_req: Request, res: Response): Promise<void> {
   try { res.json(await s.listAccounts()); } catch { err(res); }
 }
 export async function accountCreate(req: Request, res: Response): Promise<void> {
-  const { email, password, permessi, role } = req.body ?? {};
+  const { email, password, permessi, role, settore } = req.body ?? {};
   if (!email || !password || String(password).length < 6) { res.status(400).json({ message: 'Email e password (min 6 caratteri) obbligatorie' }); return; }
-  try { res.status(201).json(await s.createAccount(String(email), String(password), permessi || {}, role)); }
+  try { res.status(201).json(await s.createAccount(String(email), String(password), permessi || {}, role, settore)); }
   catch { res.status(409).json({ message: 'Email già esistente o dati non validi' }); }
 }
 export async function accountUpdate(req: Request, res: Response): Promise<void> {

@@ -18,38 +18,77 @@ function parsePermessi(raw: string | null): Permessi {
   try { return sanitizePermessi(raw ? JSON.parse(raw) : {}); } catch { return sanitizePermessi(null); }
 }
 
-export interface Account { id: number; email: string; role: string; attivo: number; permessi: Permessi; }
+export const SETTORI = ['elettrico', 'idraulico', 'entrambi'] as const;
+export function sanitizeSettore(s: string | undefined | null): string {
+  return (SETTORI as readonly string[]).includes(String(s)) ? String(s) : 'entrambi';
+}
+
+export interface Account { id: number; email: string; role: string; attivo: number; settore: string; permessi: Permessi; }
 
 export async function listAccounts(): Promise<Account[]> {
-  const [rows] = (await pool.execute('SELECT id, email, role, attivo, permessi FROM users ORDER BY id ASC')) as [any[], unknown];
-  return rows.map(r => ({ id: r.id, email: r.email, role: r.role, attivo: r.attivo, permessi: parsePermessi(r.permessi) }));
+  const [rows] = (await pool.execute('SELECT id, email, role, attivo, settore, permessi FROM users ORDER BY id ASC')) as [any[], unknown];
+  return rows.map(r => ({ id: r.id, email: r.email, role: r.role, attivo: r.attivo, settore: r.settore || 'entrambi', permessi: parsePermessi(r.permessi) }));
 }
 
-export async function getUserRow(id: number): Promise<{ attivo: number; role: string; permessi: Permessi } | null> {
-  const [rows] = (await pool.execute('SELECT attivo, role, permessi FROM users WHERE id=? LIMIT 1', [id])) as [any[], unknown];
+export async function getUserRow(id: number): Promise<{ attivo: number; role: string; settore: string; permessi: Permessi } | null> {
+  const [rows] = (await pool.execute('SELECT attivo, role, settore, permessi FROM users WHERE id=? LIMIT 1', [id])) as [any[], unknown];
   if (!rows[0]) return null;
-  return { attivo: rows[0].attivo, role: rows[0].role, permessi: parsePermessi(rows[0].permessi) };
+  return { attivo: rows[0].attivo, role: rows[0].role, settore: rows[0].settore || 'entrambi', permessi: parsePermessi(rows[0].permessi) };
 }
 
-export async function createAccount(email: string, password: string, permessi: Permessi, role = 'user'): Promise<{ id: number }> {
+export async function createAccount(email: string, password: string, permessi: Permessi, role = 'user', settore = 'entrambi'): Promise<{ id: number }> {
   const hash = await bcrypt.hash(password, 10);
   const [r] = (await pool.execute(
-    'INSERT INTO users (email, password_hash, role, attivo, permessi) VALUES (?, ?, ?, 1, ?)',
-    [email.toLowerCase().trim(), hash, role === 'admin' ? 'admin' : 'user', JSON.stringify(sanitizePermessi(permessi))],
+    'INSERT INTO users (email, password_hash, role, attivo, settore, permessi) VALUES (?, ?, ?, 1, ?, ?)',
+    [email.toLowerCase().trim(), hash, role === 'admin' ? 'admin' : 'user', sanitizeSettore(settore), JSON.stringify(sanitizePermessi(permessi))],
   )) as [{ insertId: number }, unknown];
   return { id: r.insertId };
 }
 
-export async function updateAccount(id: number, d: { attivo?: number; permessi?: Permessi; role?: string; password?: string }): Promise<boolean> {
+export async function updateAccount(id: number, d: { attivo?: number; permessi?: Permessi; role?: string; settore?: string; password?: string }): Promise<boolean> {
   const sets: string[] = [];
   const params: (string | number)[] = [];
   if (d.attivo !== undefined) { sets.push('attivo=?'); params.push(d.attivo ? 1 : 0); }
   if (d.permessi !== undefined) { sets.push('permessi=?'); params.push(JSON.stringify(sanitizePermessi(d.permessi))); }
+  if (d.settore !== undefined) { sets.push('settore=?'); params.push(sanitizeSettore(d.settore)); }
   if (d.role === 'admin' || d.role === 'user') { sets.push('role=?'); params.push(d.role); }
   if (d.password && String(d.password).length >= 6) { sets.push('password_hash=?'); params.push(await bcrypt.hash(String(d.password), 10)); }
   if (!sets.length) return false;
   params.push(id);
   const [r] = (await pool.execute(`UPDATE users SET ${sets.join(', ')} WHERE id=?`, params)) as [{ affectedRows: number }, unknown];
+  return r.affectedRows > 0;
+}
+
+// ─────────────────────────── Operai (manodopera) ───────────────────────────
+export interface Operaio { id: number; nome: string; cognome: string; settore: string; foto: string | null; attivo: number; }
+
+export async function listOperai(settore?: string, soloAttivi = true): Promise<Operaio[]> {
+  const cond: string[] = [];
+  const params: string[] = [];
+  if (soloAttivi) cond.push('attivo=1');
+  if (settore && settore !== 'entrambi') { cond.push("(settore=? OR settore='entrambi')"); params.push(sanitizeSettore(settore)); }
+  const where = cond.length ? 'WHERE ' + cond.join(' AND ') : '';
+  const [rows] = (await pool.execute(
+    `SELECT id, nome, cognome, settore, foto, attivo FROM maioli_operai ${where} ORDER BY nome ASC, cognome ASC`, params,
+  )) as [Operaio[], unknown];
+  return rows;
+}
+export async function createOperaio(d: Partial<Operaio>): Promise<{ id: number }> {
+  const [r] = (await pool.execute(
+    'INSERT INTO maioli_operai (nome, cognome, settore, foto, attivo) VALUES (?, ?, ?, ?, ?)',
+    [d.nome ?? '', d.cognome ?? '', sanitizeSettore(d.settore), d.foto ?? null, d.attivo === 0 ? 0 : 1],
+  )) as [{ insertId: number }, unknown];
+  return { id: r.insertId };
+}
+export async function updateOperaio(id: number, d: Partial<Operaio>): Promise<boolean> {
+  const [r] = (await pool.execute(
+    'UPDATE maioli_operai SET nome=?, cognome=?, settore=?, foto=?, attivo=? WHERE id=?',
+    [d.nome ?? '', d.cognome ?? '', sanitizeSettore(d.settore), d.foto ?? null, d.attivo === 0 ? 0 : 1, id],
+  )) as [{ affectedRows: number }, unknown];
+  return r.affectedRows > 0;
+}
+export async function deleteOperaio(id: number): Promise<boolean> {
+  const [r] = (await pool.execute('DELETE FROM maioli_operai WHERE id=?', [id])) as [{ affectedRows: number }, unknown];
   return r.affectedRows > 0;
 }
 

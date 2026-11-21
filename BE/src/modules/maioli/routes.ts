@@ -49,6 +49,13 @@ router.post('/listino/import', requirePerm('listino'), c.listinoImport as never)
 router.get('/marche', c.marcheList as never);
 router.put('/marche/:marca', requirePerm('listino'), c.marcaUpdate as never);
 
+// Operai (manodopera): lettura a qualsiasi account (serve per le bolle);
+// gestione (crea/modifica/elimina) SOLO admin.
+router.get('/operai', c.operaiList as never);
+router.post('/operai', requireAdminRole, c.operaiCreate as never);
+router.put('/operai/:id', requireAdminRole, c.operaiUpdate as never);
+router.delete('/operai/:id', requireAdminRole, c.operaiDelete as never);
+
 // Account (gestione permessi): SOLO admin.
 router.get('/accounts', requireAdminRole, c.accountsList as never);
 router.post('/accounts', requireAdminRole, c.accountCreate as never);

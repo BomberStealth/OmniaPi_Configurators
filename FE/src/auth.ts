@@ -13,6 +13,7 @@ export interface Session {
   email: string;
   name: string;
   role: string;
+  settore: string;
   permessi: Permessi;
 }
 
@@ -34,10 +35,10 @@ export async function login(email: string, pass: string): Promise<{ session?: Se
       return { error: j.message || 'Account disattivato' };
     }
     if (!res.ok) return { error: 'Email o password non validi' };
-    const data = await res.json() as { token?: string; user?: { email?: string; role?: string; permessi?: Permessi } };
+    const data = await res.json() as { token?: string; user?: { email?: string; role?: string; settore?: string; permessi?: Permessi } };
     if (!data?.token) return { error: 'Email o password non validi' };
     const em = data.user?.email ?? email.trim();
-    const s: Session = { email: em, name: displayName(em), role: data.user?.role ?? 'user', permessi: data.user?.permessi ?? {} };
+    const s: Session = { email: em, name: displayName(em), role: data.user?.role ?? 'user', settore: data.user?.settore ?? 'entrambi', permessi: data.user?.permessi ?? {} };
     localStorage.setItem(TOKEN_KEY, data.token);
     localStorage.setItem(SESSION_KEY, JSON.stringify(s));
     return { session: s };
@@ -76,6 +77,10 @@ export function isAdmin(): boolean {
   return getSession()?.role === 'admin';
 }
 
+export function getSettore(): string {
+  return getSession()?.settore || 'entrambi';
+}
+
 // permesso per sezione: l'admin ha sempre tutto.
 export function can(cap: string): boolean {
   const s = getSession();
@@ -92,8 +97,8 @@ export async function refreshMe(): Promise<Session | null> {
     const res = await fetch(ME_API, { headers: authHeaders() });
     if (res.status === 401 || res.status === 403) { onAuthExpired(); return null; }
     if (!res.ok) return s;
-    const j = await res.json() as { role?: string; permessi?: Permessi };
-    const ns: Session = { ...s, role: j.role ?? s.role, permessi: j.permessi ?? s.permessi };
+    const j = await res.json() as { role?: string; settore?: string; permessi?: Permessi };
+    const ns: Session = { ...s, role: j.role ?? s.role, settore: j.settore ?? s.settore, permessi: j.permessi ?? s.permessi };
     localStorage.setItem(SESSION_KEY, JSON.stringify(ns));
     return ns;
   } catch { return s; }

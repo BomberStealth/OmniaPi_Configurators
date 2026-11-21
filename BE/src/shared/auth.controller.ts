@@ -13,9 +13,9 @@ export async function login(req: Request, res: Response): Promise<void> {
 
   try {
     const [rows] = await pool.execute(
-      'SELECT id, email, password_hash, role, attivo, permessi FROM users WHERE email = ? LIMIT 1',
+      'SELECT id, email, password_hash, role, attivo, settore, permessi FROM users WHERE email = ? LIMIT 1',
       [email],
-    ) as [{ id: number; email: string; password_hash: string; role: string; attivo?: number; permessi?: string | null }[], unknown];
+    ) as [{ id: number; email: string; password_hash: string; role: string; attivo?: number; settore?: string; permessi?: string | null }[], unknown];
 
     if (!rows.length) {
       res.status(401).json({ message: 'Credenziali non valide' });
@@ -37,7 +37,7 @@ export async function login(req: Request, res: Response): Promise<void> {
     try { permessi = user.permessi ? JSON.parse(user.permessi) : {}; } catch { permessi = {}; }
 
     const token = signToken({ userId: user.id, email: user.email, role: user.role });
-    res.json({ token, user: { id: user.id, email: user.email, role: user.role, permessi } });
+    res.json({ token, user: { id: user.id, email: user.email, role: user.role, settore: user.settore || 'entrambi', permessi } });
   } catch (err) {
     res.status(500).json({ message: 'Errore del server' });
   }
