@@ -325,11 +325,16 @@ export async function getBolla(id: number): Promise<Record<string, unknown> | nu
 
 async function nextNumero(conn: PoolConnection): Promise<{ numero: string; anno: number; progressivo: number }> {
   const anno = new Date().getFullYear();
-  const [rows] = (await conn.execute(
-    'SELECT COALESCE(MAX(progressivo),0) AS maxp FROM maioli_bolle WHERE anno=?',
+  // Incremento ATOMICO del contatore per anno: la riga viene lockata per la
+  // durata della transazione, quindi due salvataggi contemporanei ottengono
+  // numeri diversi (niente doppioni). LAST_INSERT_ID() riporta il valore nuovo.
+  await conn.execute(
+    `INSERT INTO maioli_contatori (anno, progressivo) VALUES (?, LAST_INSERT_ID(1))
+     ON DUPLICATE KEY UPDATE progressivo = LAST_INSERT_ID(progressivo + 1)`,
     [anno],
-  )) as [{ maxp: number }[], unknown];
-  const progressivo = Number(rows[0].maxp) + 1;
+  );
+  const [r] = (await conn.execute('SELECT LAST_INSERT_ID() AS p')) as [{ p: number }[], unknown];
+  const progressivo = Number(r[0].p);
   const numero = `${anno}/${String(progressivo).padStart(4, '0')}`;
   return { numero, anno, progressivo };
 }
