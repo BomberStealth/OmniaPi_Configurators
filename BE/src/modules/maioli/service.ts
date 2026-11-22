@@ -59,6 +59,16 @@ export async function updateAccount(id: number, d: { attivo?: number; permessi?:
   return r.affectedRows > 0;
 }
 
+export async function accountEmail(id: number): Promise<string | null> {
+  const [rows] = (await pool.execute('SELECT email FROM users WHERE id=? LIMIT 1', [id])) as [{ email: string }[], unknown];
+  return rows[0]?.email ?? null;
+}
+
+export async function deleteAccount(id: number): Promise<boolean> {
+  const [r] = (await pool.execute('DELETE FROM users WHERE id=?', [id])) as [{ affectedRows: number }, unknown];
+  return r.affectedRows > 0;
+}
+
 // ─────────────────────────── Operai (manodopera) ───────────────────────────
 export interface Operaio { id: number; nome: string; cognome: string; settore: string; foto: string | null; attivo: number; }
 
@@ -366,9 +376,14 @@ const SUMMARY_COLS = 'id, numero, cliente, riferimento, indirizzo, data_interven
 export async function listBolle(q: string, stato = 'sospeso', settore?: string, limit = 50): Promise<BollaSummary[]> {
   const cond: string[] = ['deleted_at IS NULL'];
   const params: string[] = [];
-  // sospeso = non consegnata; consegnate = consegnate; sopralluoghi = flag sopralluogo
+  // sospeso = non consegnata; consegnate = consegnate; sopralluoghi = flag sopralluogo.
+  // I sopralluoghi vivono SOLO nella loro categoria (di solito non si fatturano),
+  // quindi vanno esclusi da "In sospeso" e "Da fatturare".
   if (stato === 'sopralluoghi') cond.push('sopralluogo = 1');
-  else cond.push(stato === 'consegnate' ? 'consegnata_at IS NOT NULL' : 'consegnata_at IS NULL');
+  else {
+    cond.push(stato === 'consegnate' ? 'consegnata_at IS NOT NULL' : 'consegnata_at IS NULL');
+    cond.push('sopralluogo = 0');
+  }
   if (settore && settore !== 'entrambi') { cond.push('settore = ?'); params.push(settore); } // filtro ⚡/💧
   if (q && q.trim()) {
     const like = `%${q.trim()}%`;
@@ -552,14 +567,15 @@ export async function setConsegnata(id: number, consegnata: boolean): Promise<bo
 }
 
 // ─────────────── Lock bolla (modifica contemporanea) ───────────────
-// Un lock è "attivo" se aggiornato negli ultimi 15 minuti (heartbeat dalla FE);
-// oltre, è considerato scaduto (sessione chiusa/crashata) e riutilizzabile.
+// Un lock è "attivo" se aggiornato negli ultimi 90 secondi (la FE manda un
+// heartbeat ogni 30s mentre la bolla è in modifica); oltre, è considerato
+// scaduto (pagina chiusa / telefono spento) e la bolla si libera da sola.
 export async function lockBolla(id: number, user: string): Promise<{ ok: boolean; lockedBy?: string }> {
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
     const [rows] = (await conn.execute(
-      `SELECT editing_by, (editing_at IS NOT NULL AND editing_at > NOW() - INTERVAL 15 MINUTE) AS active
+      `SELECT editing_by, (editing_at IS NOT NULL AND editing_at > NOW() - INTERVAL 90 SECOND) AS active
        FROM maioli_bolle WHERE id=? FOR UPDATE`, [id],
     )) as [{ editing_by: string | null; active: number }[], unknown];
     if (!rows[0]) { await conn.rollback(); return { ok: true }; }
@@ -639,6 +655,15 @@ export async function updateListino(id: number, d: Partial<ListinoItem>): Promis
     [d.marca ?? 'Generico', d.codice ?? '', d.descrizione ?? '', d.um ?? '', d.prezzo ?? 0, d.ricarico ?? 0, d.attivo === 0 ? 0 : 1, sanitizeSettore(d.settore), id],
   )) as [{ affectedRows: number }, unknown];
   return r.affectedRows > 0;
+}
+
+// Imposta il settore (reparto) di TUTTI gli articoli di una marca in un colpo.
+export async function setMarcaSettore(marca: string, settore: string): Promise<number> {
+  const [r] = (await pool.execute(
+    'UPDATE maioli_listino SET settore=? WHERE marca=?',
+    [sanitizeSettore(settore), marca],
+  )) as [{ affectedRows: number }, unknown];
+  return r.affectedRows;
 }
 
 export async function deleteListino(id: number): Promise<boolean> {

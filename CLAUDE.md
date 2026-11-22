@@ -106,9 +106,19 @@ foglio + ricerca). **Firma in finestra** grande (no segni per sbaglio). Bolla
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.21.0**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.22.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
-(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **31**.
+(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **32**.
+
+## 🔒 Lock bolla (v1.22.0 — comportamento aggiornato)
+Il lock si prende **SOLO al tap su "Modifica"**, non all'apertura (aprire per
+vedere/stampare NON blocca). TTL ridotto a **90 secondi** con heartbeat FE ogni
+**30s**: se la pagina si chiude la bolla si libera da sola entro ~1 minuto (prima
+restava "inchiodata" 15 min). Dopo il salvataggio il lock si rilascia; per
+rimodificare si ri-clicca "Modifica". "LA BOLLA È SOTTO MANUTENZIONE da: <email>"
+compare solo quando si tenta di modificare una bolla occupata da un altro.
+→ FUTURO: l'amministrazione, al click su "fattura", blocca la bolla per tutti
+tranne che per l'amministrazione (lock di fatturazione).
 
 ## ✅ Reparti Elettrico/Idraulico (Tappe 1-3 FATTE)
 - **Tappa 1**: operai gestibili (tabella `maioli_operai`, nome/cognome/foto/
@@ -126,8 +136,18 @@ Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
   di altro reparto si aprono in **sola lettura** (nessun lock, solo Stampa).
   Spunta **Sopralluogo** sotto la data chiamata. Nomi operai abbreviati
   "Nome C." in bolla per risparmiare spazio.
+- **Rifiniture (v1.22.0)**: i **sopralluoghi** NON compaiono più in "In sospeso"/
+  "Da fatturare" (solo nella loro categoria — di solito non si fatturano,
+  migrazione listBolle `sopralluogo=0`). **Listino**: su ogni marca tre bottoni
+  ⚡/💧/⚡💧 che mettono TUTTI gli articoli di quella marca in un reparto
+  (`PUT /listino/marca/:marca/settore`). **Account**: anche gli admin hanno il
+  selettore di settore; aggiunto **elimina account** (`DELETE /accounts/:id`,
+  non puoi eliminare te stesso). Bolle esistenti convertite a `elettrico`
+  (migrazione 030, una-tantum con flag `maioli_flags`). Operaio selezionato in
+  bolla racchiuso in una **cornice** (foto + ore + €/h).
 → **PROSSIMO** (da decidere con Edoardo): stato **Fatturate** (flusso In sospeso
-  → Da fatturare → Fatturate → pagate/non pagate) e **audit log**.
+  → Da fatturare → Fatturate → pagate/non pagate) + lock di fatturazione
+  (amministrazione) e **audit log**.
 
 ## In sospeso / idee
 - ✅ **RUOLI/PERMESSI: FATTO (base)**. Non 4 ruoli fissi ma **permessi per

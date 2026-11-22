@@ -335,6 +335,12 @@ export async function deleteListino(id: number): Promise<void> {
   await jfetch(`${API}/listino/${id}`, { method: 'DELETE' });
 }
 
+// imposta il reparto (settore) di TUTTI gli articoli di una marca in un colpo
+export async function setMarcaSettore(marca: string, settore: string): Promise<void> {
+  await requireApi();
+  await jfetch(`${API}/listino/marca/${encodeURIComponent(marca)}/settore`, { method: 'PUT', body: JSON.stringify({ settore }) });
+}
+
 // ── Marche ──
 export async function listMarche(): Promise<Marca[]> {
   await requireApi();
@@ -367,6 +373,10 @@ export async function createAccount(email: string, password: string, permessi: R
 export async function updateAccount(id: number, d: { attivo?: number; permessi?: Record<string, boolean>; role?: string; settore?: string; password?: string }): Promise<void> {
   await requireApi();
   await jfetch(`${API}/accounts/${id}`, { method: 'PUT', body: JSON.stringify(d) });
+}
+export async function deleteAccount(id: number): Promise<void> {
+  await requireApi();
+  await jfetch(`${API}/accounts/${id}`, { method: 'DELETE' });
 }
 
 // ── Operai (manodopera) ──

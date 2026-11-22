@@ -103,7 +103,9 @@
 /* ── operai manodopera ── */
 .op-wrap { display: flex; flex-direction: column; gap: 10px; }
 .op-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.op-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.op-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 8px 4px; border: 2px solid transparent; border-radius: 14px; transition: border-color 0.15s, background 0.15s; }
+/* operaio selezionato: cornice che raccoglie foto + ore + €/h */
+.op-item.op-active { border-color: var(--opc); background: var(--glass); }
 .op-avatar {
   position: relative; width: 46px; height: 46px; border-radius: 50%;
   border: 2px solid var(--border); background: var(--glass); cursor: pointer;
@@ -391,6 +393,14 @@
 
 /* nota "sola lettura (altro reparto)" nella barra della bolla */
 .maioli-readonly-note { font-size: 13px; font-weight: 700; color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px; }
+
+/* bulk reparto per marca nel Listino */
+.maioli-marca-sett { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: -4px 0 10px; }
+.maioli-marca-sett > span { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+
+/* pulsante elimina account (rosso) */
+.maioli-acc-del { color: #e11d2a; border-color: rgba(225,29,42,0.4); }
+.maioli-acc-del:hover { background: rgba(225,29,42,0.08); }
 
 /* "Informazioni aggiuntive" (accordion) */
 .maioli-extra { margin-bottom: 10px; }

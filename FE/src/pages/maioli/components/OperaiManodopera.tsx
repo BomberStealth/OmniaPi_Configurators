@@ -44,8 +44,8 @@ export default function OperaiManodopera({ value, onChange }: Props) {
             const mano = byName(op.name);
             const active = !!mano;
             return (
-              <div className={`op-item${active ? ' op-active' : ''}`} key={op.name}>
-                <button type="button" className="op-avatar" style={{ '--opc': COLORI[i % COLORI.length] } as React.CSSProperties}
+              <div className={`op-item${active ? ' op-active' : ''}`} key={op.name} style={{ '--opc': COLORI[i % COLORI.length] } as React.CSSProperties}>
+                <button type="button" className="op-avatar"
                   onClick={() => toggle(op.name)} title={active ? `Rimuovi ${op.name}` : `Aggiungi ${op.name}`}>
                   {op.foto ? <img src={fotoSrc(op.foto)} alt={op.name} /> : <span className="op-initials">{initials(op.name)}</span>}
                   <span className="op-check">{active ? '✓' : '+'}</span>

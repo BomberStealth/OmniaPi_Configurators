@@ -74,21 +74,18 @@ function MaioliInner() {
   const manutenzione = async (lockedBy: string) => {
     await confirm({ title: 'Bolla in uso', message: `LA BOLLA È SOTTO MANUTENZIONE da: ${lockedBy}`, confirmLabel: 'Ho capito' });
   };
-  // heartbeat: tiene vivo il lock mentre la bolla è aperta
+  // heartbeat: tiene vivo il lock SOLO mentre si sta modificando (ogni 30s;
+  // il BE libera la bolla dopo 90s senza heartbeat)
   useEffect(() => {
-    const iv = setInterval(() => { if (editingRef.current) lockBolla(editingRef.current).catch(() => {}); }, 5 * 60 * 1000);
+    const iv = setInterval(() => { if (editingRef.current) lockBolla(editingRef.current).catch(() => {}); }, 30 * 1000);
     return () => clearInterval(iv);
   }, []);
 
+  // Apre una bolla: NON prende il lock (solo "Modifica" lo prende).
   const openBolla = async (id: number, canEdit = true) => {
-    if (editingRef.current === id) { setTab('nuova'); return; }
     try {
-      if (canEdit) {
-        const lock = await lockBolla(id);
-        if (!lock.ok) { await manutenzione(lock.lockedBy || 'un altro utente'); return; }
-      }
-      await releaseLock();               // rilascia la bolla precedente
-      editingRef.current = canEdit ? id : null; // sola lettura: nessun lock
+      await releaseLock();               // rilascia l'eventuale lock precedente
+      editingRef.current = null;
       setReadOnly(!canEdit);
       const d = await getBolla(id);
       setData(d);
@@ -97,13 +94,22 @@ function MaioliInner() {
     } catch { alert('Impossibile aprire la bolla.'); }
   };
 
+  // Tasto "Modifica": prova a prendere il lock. false = occupata da un altro
+  // (viene mostrato "sotto manutenzione" e la bolla resta in sola lettura).
+  const requestEdit = async (): Promise<boolean> => {
+    const id = data.id;
+    if (!id) return true;                // nuova non ancora salvata: modificabile
+    const lock = await lockBolla(id);
+    if (!lock.ok) { await manutenzione(lock.lockedBy || 'un altro utente'); return false; }
+    editingRef.current = id;
+    return true;
+  };
+
   const nuovaBolla = () => { releaseLock(); setReadOnly(false); };
 
   const onSaved = (saved?: RapportoData) => {
-    if (saved) {
-      baseline.current = snap(saved);
-      if (saved.id && editingRef.current !== saved.id) { editingRef.current = saved.id; lockBolla(saved.id).catch(() => {}); }
-    }
+    if (saved) baseline.current = snap(saved);
+    releaseLock();                       // dopo il salvataggio il lock si libera (si riprende con "Modifica")
     setReloadKey(k => k + 1);
   };
 
@@ -119,13 +125,8 @@ function MaioliInner() {
       setData(datiVuoti()); // azzera la bolla
     }
     if (tab === 'nuova') await releaseLock(); // lasciando Nuova Bolla rilascia il lock
-    // tornando su Nuova Bolla con una bolla ancora caricata, ri-acquisisce il lock
-    // (solo se modificabile: le bolle in sola lettura non si bloccano)
-    if (t === 'nuova' && data.id && !readOnly) {
-      const lock = await lockBolla(data.id);
-      if (!lock.ok) { await manutenzione(lock.lockedBy || 'un altro utente'); setData(datiVuoti()); editingRef.current = null; }
-      else editingRef.current = data.id;
-    }
+    // tornando su Nuova Bolla la bolla si riapre "bloccata": il lock si riprende
+    // solo ri-cliccando "Modifica" (niente lock automatico).
     setTab(t);
   };
 
@@ -178,7 +179,7 @@ function MaioliInner() {
               <div className="maioli-empty">Nessun permesso assegnato. Contatta l'amministratore.</div>
             )}
             {tab === 'nuova' && can('nuova') && (
-              <NuovaBolla data={data} setData={setData} onSaved={onSaved} onReset={nuovaBolla} readOnly={readOnly} />
+              <NuovaBolla data={data} setData={setData} onSaved={onSaved} onReset={nuovaBolla} readOnly={readOnly} onRequestEdit={requestEdit} />
             )}
             {tab === 'archivio' && can('storico') && (
               <BolleFatte onOpen={openBolla} reloadKey={reloadKey} />

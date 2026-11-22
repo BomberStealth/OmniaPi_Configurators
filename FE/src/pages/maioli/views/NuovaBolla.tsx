@@ -30,9 +30,10 @@ interface Props {
   onSaved?: (saved?: RapportoData) => void;
   onReset?: () => void; // rilascia il lock della bolla aperta (quando si fa "Nuovo")
   readOnly?: boolean;   // bolla di un altro reparto: solo lettura/stampa
+  onRequestEdit?: () => Promise<boolean>; // "Modifica": prende il lock, false = occupata
 }
 
-export default function NuovaBolla({ data, setData, onSaved, onReset, readOnly }: Props) {
+export default function NuovaBolla({ data, setData, onSaved, onReset, readOnly, onRequestEdit }: Props) {
   const confirm = useConfirm();
   const [mobileTab, setMobileTab] = useState<'compila' | 'anteprima'>('compila');
   const [saving, setSaving] = useState(false);
@@ -48,7 +49,11 @@ export default function NuovaBolla({ data, setData, onSaved, onReset, readOnly }
       return;
     }
     const ok = await confirm({ title: 'Modificare la bolla?', message: 'La bolla è bloccata per non modificarla per sbaglio. Vuoi sbloccarla per modificarla?', confirmLabel: 'Sì, modifica' });
-    if (ok) setLocked(false);
+    if (!ok) return;
+    // prende il lock SOLO ora (non all'apertura): se è occupata da un altro
+    // dispositivo onRequestEdit mostra "sotto manutenzione" e torna false.
+    const got = onRequestEdit ? await onRequestEdit() : true;
+    if (got) setLocked(false);
   };
 
   // anteprima scalata

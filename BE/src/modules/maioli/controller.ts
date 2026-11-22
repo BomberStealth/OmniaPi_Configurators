@@ -116,6 +116,12 @@ export async function listinoUpdate(req: Request, res: Response): Promise<void> 
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
   try { const ok = await s.updateListino(id, req.body); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true }); } catch { err(res); }
 }
+export async function listinoMarcaSettore(req: Request, res: Response): Promise<void> {
+  const raw = req.params.marca;
+  const marca = (Array.isArray(raw) ? raw[0] : raw) ?? '';
+  if (!marca.trim()) { res.status(400).json({ message: 'Marca non valida' }); return; }
+  try { const n = await s.setMarcaSettore(marca, String(req.body?.settore ?? '')); res.json({ ok: true, updated: n }); } catch { err(res); }
+}
 export async function listinoDelete(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
   try { const ok = await s.deleteListino(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.status(204).end(); } catch { err(res); }
@@ -183,6 +189,16 @@ export async function accountCreate(req: Request, res: Response): Promise<void> 
 export async function accountUpdate(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
   try { const ok = await s.updateAccount(id, req.body || {}); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true }); } catch { err(res); }
+}
+export async function accountDelete(req: Request, res: Response): Promise<void> {
+  const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
+  try {
+    const email = await s.accountEmail(id);
+    if (!email) { res.status(404).json({ message: 'Non trovato' }); return; }
+    const me = ((req as WithAcc).user?.email || '').toLowerCase();
+    if (email.toLowerCase() === me) { res.status(400).json({ message: 'Non puoi eliminare il tuo account' }); return; }
+    await s.deleteAccount(id); res.status(204).end();
+  } catch { err(res); }
 }
 
 // ── Foto (file su SSD) ──

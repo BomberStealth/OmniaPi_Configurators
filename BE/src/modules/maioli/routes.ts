@@ -44,6 +44,7 @@ router.post('/foto', requirePerm('nuova'), c.fotoUpload as never);
 router.get('/listino', c.listinoList as never);
 router.post('/listino', requirePerm('listino'), c.listinoCreate as never);
 router.put('/listino/:id', requirePerm('listino'), c.listinoUpdate as never);
+router.put('/listino/marca/:marca/settore', requirePerm('listino'), c.listinoMarcaSettore as never);
 router.delete('/listino/:id', requirePerm('listino'), c.listinoDelete as never);
 router.post('/listino/import', requirePerm('listino'), c.listinoImport as never);
 router.get('/marche', c.marcheList as never);
@@ -60,5 +61,6 @@ router.delete('/operai/:id', requireAdminRole, c.operaiDelete as never);
 router.get('/accounts', requireAdminRole, c.accountsList as never);
 router.post('/accounts', requireAdminRole, c.accountCreate as never);
 router.put('/accounts/:id', requireAdminRole, c.accountUpdate as never);
+router.delete('/accounts/:id', requireAdminRole, c.accountDelete as never);
 
 export default router;

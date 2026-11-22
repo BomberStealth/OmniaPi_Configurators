@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { listListino, saveListino, deleteListino, listMarche, saveMarca } from '../store';
+import { listListino, saveListino, deleteListino, listMarche, saveMarca, setMarcaSettore } from '../store';
 import type { ListinoItem } from '../store';
 import { eur, n2, scontatoDa, finaleDa } from '../model';
 import { siglaMarca } from '../azienda';
@@ -79,6 +79,15 @@ export default function Listino() {
       setSett(prev => ({ ...prev, [marca]: { ...s, dirty: false } }));
       setRows(rs => rs.map(r => (r.marca === marca ? { ...r, sconto: n2(s.sconto), ricarico: n2(s.ricarico) } : r)));
     } catch { alert('Salvataggio marca non riuscito.'); }
+  };
+  // imposta il reparto di TUTTI gli articoli della marca in un colpo
+  const SETT_LBL: Record<string, string> = { elettrico: '⚡ elettrico', idraulico: '💧 idraulico', entrambi: '⚡💧 entrambi' };
+  const bulkSettore = async (marca: string, settore: string) => {
+    if (!window.confirm(`Mettere TUTTI gli articoli di "${marca}" nel reparto ${SETT_LBL[settore]}?`)) return;
+    try {
+      await setMarcaSettore(marca, settore);
+      setRows(rs => rs.map(r => (r.marca === marca ? { ...r, settore } : r)));
+    } catch { alert('Operazione non riuscita.'); }
   };
 
   const edit = (id: number, patch: Partial<ListinoItem>) =>
@@ -184,6 +193,12 @@ export default function Listino() {
                       <label><span>Ricarico azienda %</span>
                         <input inputMode="decimal" value={ms.ricarico} onChange={e => editSet(marca, 'ricarico', e.target.value)} /></label>
                       <button className="btn btn-primary btn-sm" disabled={!ms.dirty} onClick={() => saveSet(marca)}>Salva marca</button>
+                    </div>
+                    <div className="maioli-marca-sett">
+                      <span>Reparto di tutta la marca:</span>
+                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => bulkSettore(marca, 'elettrico')}>⚡ Elettrico</button>
+                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => bulkSettore(marca, 'idraulico')}>💧 Idraulico</button>
+                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => bulkSettore(marca, 'entrambi')}>⚡💧 Entrambi</button>
                     </div>
 
                     <div className="maioli-ltr maioli-lth">

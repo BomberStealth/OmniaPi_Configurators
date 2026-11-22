@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { listAccounts, createAccount, updateAccount } from '../store';
+import { listAccounts, createAccount, updateAccount, deleteAccount } from '../store';
 import type { Account as Acc } from '../store';
 import { getSession } from '../../../auth';
 import { useConfirm } from '../components/ConfirmDialog';
@@ -51,6 +51,12 @@ export default function Account() {
     } catch { alert('Salvataggio non riuscito.'); }
   };
   const dirtyCount = rows.filter(r => r._dirty).length;
+
+  const elimina = async (r: Row) => {
+    const ok = await confirm({ title: 'Eliminare l\'account?', message: `L'account "${r.email}" verrà eliminato definitivamente. L'operazione non è reversibile.`, confirmLabel: 'Elimina', danger: true });
+    if (!ok) return;
+    try { await deleteAccount(r.id); load(); } catch { alert('Eliminazione non riuscita (non puoi eliminare il tuo account).'); }
+  };
 
   const resetPwd = async (r: Row) => {
     const pwd = prompt(`Nuova password per "${r.email}" (min 6 caratteri):`);
@@ -129,10 +135,18 @@ export default function Account() {
                 </div>
 
                 {isAdmin ? (
+                  <>
                   <div className="maioli-acc-adminbadge">
-                    👑 Amministratore — tutti i permessi e settori
+                    👑 Amministratore — tutti i permessi
                     {!isSelf && <button className="btn btn-secondary btn-sm" onClick={() => patch(r.id, { role: 'user' })}>Rimuovi admin</button>}
                   </div>
+                  <div className="maioli-acc-settore">
+                    <span>Settore:</span>
+                    <select value={r.settore} onChange={e => patch(r.id, { settore: e.target.value })}>
+                      {SETTORI.map(s => <option key={s.v} value={s.v}>{s.l}</option>)}
+                    </select>
+                  </div>
+                  </>
                 ) : (
                   <>
                   <div className="maioli-acc-settore">
@@ -159,6 +173,7 @@ export default function Account() {
                 <div className="maioli-acc-actions">
                   <button className="btn btn-primary btn-sm" disabled={!r._dirty} onClick={salvaTutti}>Salva</button>
                   <button className="btn btn-secondary btn-sm" onClick={() => resetPwd(r)}>Cambia password</button>
+                  {!isSelf && <button className="btn btn-secondary btn-sm maioli-acc-del" onClick={() => elimina(r)}>🗑 Elimina</button>}
                 </div>
               </div>
             );
