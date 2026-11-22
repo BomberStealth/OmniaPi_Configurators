@@ -89,7 +89,13 @@ export async function bolleUnlock(req: Request, res: Response): Promise<void> {
 
 // ── Listino ──
 export async function listinoList(req: Request, res: Response): Promise<void> {
-  try { res.json(await s.listListino(String(req.query.q ?? ''), String(req.query.marca ?? ''))); } catch { err(res); }
+  const r = req as WithAcc & { account?: { settore?: string; permessi?: Record<string, boolean> } };
+  const canManage = r.account?.role === 'admin' || !!r.account?.permessi?.listino;
+  const all = String(req.query.all ?? '') === '1' && canManage;           // pagina Listino: tutto
+  const userSett = r.account?.settore || 'entrambi';
+  // autocomplete materiali: filtra per settore utente (admin/entrambi vedono tutto)
+  const settore = (all || r.account?.role === 'admin' || userSett === 'entrambi') ? undefined : userSett;
+  try { res.json(await s.listListino(String(req.query.q ?? ''), String(req.query.marca ?? ''), settore)); } catch { err(res); }
 }
 export async function listinoCreate(req: Request, res: Response): Promise<void> {
   if (!req.body?.descrizione?.trim()) { res.status(400).json({ message: 'Descrizione obbligatoria' }); return; }

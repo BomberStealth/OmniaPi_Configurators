@@ -259,6 +259,7 @@
 /* stato "modifiche non salvate" (card account / operaio) */
 .maioli-acc-card.dirty, .maioli-op-row.dirty { border-color: #e11d2a; background: rgba(225,29,42,0.05); box-shadow: 0 0 0 1px rgba(225,29,42,0.25); }
 .maioli-acc-unsaved { margin-left: 8px; font-size: 11px; font-weight: 800; color: #e11d2a; white-space: nowrap; }
+.maioli-ltr-settore { padding: 3px 1px; border: 1px solid var(--border); border-radius: 6px; background: #fff; font-size: 13px; cursor: pointer; }
 
 /* campo Riferimento con autocomplete */
 .maioli-rif-wrap { position: relative; }

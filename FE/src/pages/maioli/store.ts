@@ -44,6 +44,7 @@ export interface ListinoItem {
   attivo: number;
   categoria?: string;
   moduli?: number;
+  settore?: string;
 }
 
 export interface Marca {
@@ -312,9 +313,11 @@ export async function unlockBolla(id: number): Promise<void> {
 }
 
 // ── Listino ──
-export async function listListino(q: string, marca = ''): Promise<ListinoItem[]> {
+// all=true → tutto il listino (pagina Listino / gestione); default → filtrato per
+// settore dell'utente lato BE (autocomplete materiali in bolla)
+export async function listListino(q: string, marca = '', all = false): Promise<ListinoItem[]> {
   await requireApi();
-  return jfetch(`${API}/listino?q=${encodeURIComponent(q)}&marca=${encodeURIComponent(marca)}`);
+  return jfetch(`${API}/listino?q=${encodeURIComponent(q)}&marca=${encodeURIComponent(marca)}${all ? '&all=1' : ''}`);
 }
 
 export async function saveListino(item: Partial<ListinoItem>): Promise<{ id: number }> {

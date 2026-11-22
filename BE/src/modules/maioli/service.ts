@@ -187,6 +187,7 @@ export interface ListinoItem {
   categoria: string;
   moduli: number;
   attivo: number;
+  settore: string;    // elettrico/idraulico/entrambi (filtra l'autocomplete materiali)
 }
 
 export interface Marca {
@@ -564,7 +565,7 @@ export async function unlockBolla(id: number, user: string): Promise<void> {
 }
 
 // ─────────────────────────── Listino ───────────────────────────
-export async function listListino(q: string, marca: string, limit = 500): Promise<ListinoItem[]> {
+export async function listListino(q: string, marca: string, settore?: string, limit = 500): Promise<ListinoItem[]> {
   const where: string[] = [];
   const params: (string | number)[] = [];
   if (q && q.trim()) {
@@ -580,7 +581,12 @@ export async function listListino(q: string, marca: string, limit = 500): Promis
     where.push('l.marca = ?');
     params.push(marca.trim());
   }
-  const sql = `SELECT l.id, l.marca, l.codice, l.descrizione, l.um, l.prezzo, l.categoria, l.moduli, l.attivo,
+  // filtro settore (per l'autocomplete materiali): mostra il settore dell'utente + "entrambi"
+  if (settore && settore !== 'entrambi') {
+    where.push("(l.settore = ? OR l.settore = 'entrambi')");
+    params.push(sanitizeSettore(settore));
+  }
+  const sql = `SELECT l.id, l.marca, l.codice, l.descrizione, l.um, l.prezzo, l.categoria, l.moduli, l.attivo, l.settore,
       COALESCE(m.sconto, 0) AS sconto, COALESCE(m.ricarico, 0) AS ricarico
     FROM maioli_listino l
     LEFT JOIN maioli_marche m ON m.marca = l.marca
@@ -606,17 +612,17 @@ export async function upsertMarca(marca: string, sconto: number, ricarico: numbe
 
 export async function createListino(d: Partial<ListinoItem>): Promise<{ id: number }> {
   const [r] = (await pool.execute(
-    `INSERT INTO maioli_listino (marca, codice, descrizione, um, prezzo, ricarico, attivo)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [d.marca ?? 'Generico', d.codice ?? '', d.descrizione ?? '', d.um ?? '', d.prezzo ?? 0, d.ricarico ?? 0, d.attivo === 0 ? 0 : 1],
+    `INSERT INTO maioli_listino (marca, codice, descrizione, um, prezzo, ricarico, attivo, settore)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [d.marca ?? 'Generico', d.codice ?? '', d.descrizione ?? '', d.um ?? '', d.prezzo ?? 0, d.ricarico ?? 0, d.attivo === 0 ? 0 : 1, sanitizeSettore(d.settore)],
   )) as [{ insertId: number }, unknown];
   return { id: r.insertId };
 }
 
 export async function updateListino(id: number, d: Partial<ListinoItem>): Promise<boolean> {
   const [r] = (await pool.execute(
-    `UPDATE maioli_listino SET marca=?, codice=?, descrizione=?, um=?, prezzo=?, ricarico=?, attivo=? WHERE id=?`,
-    [d.marca ?? 'Generico', d.codice ?? '', d.descrizione ?? '', d.um ?? '', d.prezzo ?? 0, d.ricarico ?? 0, d.attivo === 0 ? 0 : 1, id],
+    `UPDATE maioli_listino SET marca=?, codice=?, descrizione=?, um=?, prezzo=?, ricarico=?, attivo=?, settore=? WHERE id=?`,
+    [d.marca ?? 'Generico', d.codice ?? '', d.descrizione ?? '', d.um ?? '', d.prezzo ?? 0, d.ricarico ?? 0, d.attivo === 0 ? 0 : 1, sanitizeSettore(d.settore), id],
   )) as [{ affectedRows: number }, unknown];
   return r.affectedRows > 0;
 }

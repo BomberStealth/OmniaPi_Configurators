@@ -106,18 +106,19 @@ foglio + ricerca). **Firma in finestra** grande (no segni per sbaglio). Bolla
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.19.1**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.20.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
-(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **29**.
+(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **30**.
 
-## ⚡ PROSSIMO: Tappa 2 reparti (filtro articoli listino per settore)
-I 3 fix tassativi di Edoardo sono FATTI (v1.19.1): demote admin ("Rimuovi admin"
-sulle card admin non-proprie), card account/operaio **rosse con "modifiche non
-salvate"**, e **Salva tutto** (premendo Salva su uno salva tutti i modificati,
-sia account che operai). → Prossimo: **Tappa 2** = ogni articolo del listino ha
-un settore (elettrico/idraulico/entrambi) e in "aggiungi materiale" la tendina
-mostra solo quelli del settore dell'utente (+ Entrambi). Poi Tappa 3 (settore
-sulle bolle: icone ⚡/💧, filtro storico, permessi di modifica).
+## ⚡ PROSSIMO: Tappa 3 reparti (settore sulle BOLLE)
+Fatte: Tappa 1 (operai gestibili + settore account) e **Tappa 2** (v1.20.0 —
+ogni articolo listino ha un settore `maioli_listino.settore`, migrazione 028,
+esistenti→elettrico; l'autocomplete materiali in bolla filtra per settore utente
+lato BE via `?all=1` per il management; selettore ⚡/💧/⚡💧 per riga nel Listino).
+→ **Tappa 3**: settore sulle BOLLE = ogni bolla prende il settore del creatore →
+icona ⚡/💧 nella lista Storico, filtro ⚡/💧 nello storico, e **modifica** solo
+stesso settore + Entrambi/Admin (tutti in lettura). Colonna `settore` su
+maioli_bolle + enforcement BE sull'update + icone/filtro FE.
 
 ## In sospeso / idee
 - ✅ **RUOLI/PERMESSI: FATTO (base)**. Non 4 ruoli fissi ma **permessi per

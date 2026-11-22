@@ -22,7 +22,7 @@ export default function Listino() {
     // il listino si vede lo stesso
     let items: ListinoItem[] = [];
     let marche: { marca: string; sconto: number; ricarico: number }[] = [];
-    try { items = await listListino(''); } catch { items = []; }
+    try { items = await listListino('', '', true); } catch { items = []; }
     try { marche = await listMarche(); } catch { marche = []; }
     setRows(items);
     const s: Record<string, MarcaSet> = {};
@@ -85,14 +85,14 @@ export default function Listino() {
     setRows(rs => rs.map(r => (r.id === id ? { ...r, ...patch, _dirty: true } : r)));
   const addRow = () => {
     const id = -Date.now();
-    setRows(rs => [{ id, marca: 'Generico', codice: '', descrizione: '', um: '', prezzo: 0, ricarico: n2(getSet('Generico').ricarico), sconto: n2(getSet('Generico').sconto), attivo: 1, _new: true, _dirty: true }, ...rs]);
+    setRows(rs => [{ id, marca: 'Generico', codice: '', descrizione: '', um: '', prezzo: 0, ricarico: n2(getSet('Generico').ricarico), sconto: n2(getSet('Generico').sconto), attivo: 1, settore: 'elettrico', _new: true, _dirty: true }, ...rs]);
     setOpen(prev => new Set(prev).add('Generico'));
   };
   const save = async (id: number) => {
     const r = rows.find(x => x.id === id); if (!r) return;
     if (!r.descrizione.trim()) { alert('La descrizione è obbligatoria.'); return; }
     try {
-      const res = await saveListino({ id: r._new ? undefined : r.id, marca: r.marca || 'Generico', codice: r.codice, descrizione: r.descrizione, um: r.um, prezzo: n2(r.prezzo), attivo: r.attivo });
+      const res = await saveListino({ id: r._new ? undefined : r.id, marca: r.marca || 'Generico', codice: r.codice, descrizione: r.descrizione, um: r.um, prezzo: n2(r.prezzo), attivo: r.attivo, settore: r.settore });
       setRows(rs => rs.map(x => (x.id === id ? { ...x, id: res.id ?? x.id, _dirty: false, _new: false } : x)));
     } catch { alert('Salvataggio non riuscito.'); }
   };
@@ -135,6 +135,7 @@ export default function Listino() {
       <div className="maioli-listino-hint">
         <b>Listino</b> = prezzo di listino · <b>Scontato</b> = listino − sconto installatore (quello che paghi) ·
         <b> Finale</b> = scontato + ricarico azienda (quello che va in bolla). Sconto e ricarico si impostano per marca.
+        La tendina <b>⚡/💧</b> su ogni riga imposta il <b>reparto</b>: in bolla, aggiungendo materiale, ognuno vede solo gli articoli del suo settore (⚡💧 = entrambi).
       </div>
 
       {loading ? (
@@ -154,6 +155,11 @@ export default function Listino() {
                 <span className="r maioli-scontato">{eur(scontatoDa(r.prezzo, ms.sconto))}</span>
                 <span className="r maioli-finale">{eur(finaleDa(r.prezzo, ms.sconto, ms.ricarico))}</span>
                 <span className="maioli-row-actions">
+                  <select className="maioli-ltr-settore" title="Settore (reparto)" value={r.settore ?? 'elettrico'} onChange={e => edit(r.id, { settore: e.target.value })}>
+                    <option value="elettrico">⚡</option>
+                    <option value="idraulico">💧</option>
+                    <option value="entrambi">⚡💧</option>
+                  </select>
                   <button className="btn btn-primary btn-sm" disabled={!r._dirty} onClick={() => save(r.id)}>Salva</button>
                   <button className="btn-trash" title="Elimina" onClick={() => del(r.id)}>🗑</button>
                 </span>
