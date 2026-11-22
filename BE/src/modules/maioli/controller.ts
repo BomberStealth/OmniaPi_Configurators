@@ -8,6 +8,8 @@ const parseId = (v: string | string[] | undefined): number | null => {
   const n = parseInt(String(str ?? ''), 10);
   return Number.isNaN(n) ? null : n;
 };
+// email dell'utente che compie l'azione (per l'audit log)
+const who = (req: Request): string | undefined => (req as { user?: { email?: string } }).user?.email;
 
 // ── Clienti ──
 export async function clientiList(req: Request, res: Response): Promise<void> {
@@ -19,15 +21,15 @@ export async function clientiGet(req: Request, res: Response): Promise<void> {
 }
 export async function clientiCreate(req: Request, res: Response): Promise<void> {
   if (!req.body?.nome?.trim()) { res.status(400).json({ message: 'Nome obbligatorio' }); return; }
-  try { res.status(201).json(await s.createCliente(req.body)); } catch { err(res); }
+  try { const r = await s.createCliente(req.body); await s.logAudit(who(req), 'crea', 'cliente', r.id, req.body?.nome); res.status(201).json(r); } catch { err(res); }
 }
 export async function clientiUpdate(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
-  try { const ok = await s.updateCliente(id, req.body); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true }); } catch { err(res); }
+  try { const ok = await s.updateCliente(id, req.body); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), 'modifica', 'cliente', id, req.body?.nome); res.json({ ok: true }); } catch { err(res); }
 }
 export async function clientiDelete(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
-  try { const ok = await s.deleteCliente(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.status(204).end(); } catch { err(res); }
+  try { const ok = await s.deleteCliente(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), 'elimina', 'cliente', id); res.status(204).end(); } catch { err(res); }
 }
 
 export async function riferimentiList(req: Request, res: Response): Promise<void> {
@@ -50,7 +52,7 @@ export async function bolleGet(req: Request, res: Response): Promise<void> {
 export async function bolleCreate(req: Request, res: Response): Promise<void> {
   if (!req.body?.cliente?.trim()) { res.status(400).json({ message: 'Cliente obbligatorio' }); return; }
   const settore = (req as WithAcc).account?.settore; // reparto del creatore
-  try { res.status(201).json(await s.createBolla(req.body, settore)); } catch { err(res); }
+  try { const r = await s.createBolla(req.body, settore); await s.logAudit(who(req), 'crea', 'bolla', r.numero || r.id, req.body?.cliente); res.status(201).json(r); } catch { err(res); }
 }
 export async function bolleUpdate(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
@@ -62,28 +64,28 @@ export async function bolleUpdate(req: Request, res: Response): Promise<void> {
     if (sett && acc && acc.role !== 'admin' && acc.settore !== 'entrambi' && sett !== 'entrambi' && sett !== acc.settore) {
       res.status(403).json({ message: `Bolla del reparto ${sett}: non puoi modificarla` }); return;
     }
-    const ok = await s.updateBolla(id, req.body); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true });
+    const ok = await s.updateBolla(id, req.body); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), 'modifica', 'bolla', id, req.body?.cliente); res.json({ ok: true });
   } catch { err(res); }
 }
 export async function bolleDelete(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
-  try { const ok = await s.deleteBolla(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.status(204).end(); } catch { err(res); }
+  try { const ok = await s.deleteBolla(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), 'cestina', 'bolla', id); res.status(204).end(); } catch { err(res); }
 }
 export async function bolleCancellate(req: Request, res: Response): Promise<void> {
   try { res.json(await s.listBolleCancellate(String(req.query.q ?? ''))); } catch { err(res); }
 }
 export async function bolleRestore(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
-  try { const ok = await s.restoreBolla(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true }); } catch { err(res); }
+  try { const ok = await s.restoreBolla(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), 'ripristina', 'bolla', id); res.json({ ok: true }); } catch { err(res); }
 }
 export async function bollePurge(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
-  try { const ok = await s.purgeBolla(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.status(204).end(); } catch { err(res); }
+  try { const ok = await s.purgeBolla(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), 'elimina definitiva', 'bolla', id); res.status(204).end(); } catch { err(res); }
 }
 export async function bolleConsegna(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
   const consegnata = req.body?.consegnata !== false;
-  try { const ok = await s.setConsegnata(id, consegnata); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true }); } catch { err(res); }
+  try { const ok = await s.setConsegnata(id, consegnata); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), consegnata ? 'da fatturare' : 'rimetti in sospeso', 'bolla', id); res.json({ ok: true }); } catch { err(res); }
 }
 
 // ── Lock bolla (modifica contemporanea) ──
@@ -110,21 +112,21 @@ export async function listinoList(req: Request, res: Response): Promise<void> {
 }
 export async function listinoCreate(req: Request, res: Response): Promise<void> {
   if (!req.body?.descrizione?.trim()) { res.status(400).json({ message: 'Descrizione obbligatoria' }); return; }
-  try { res.status(201).json(await s.createListino(req.body)); } catch { err(res); }
+  try { const r = await s.createListino(req.body); await s.logAudit(who(req), 'crea', 'listino', r.id, req.body?.descrizione); res.status(201).json(r); } catch { err(res); }
 }
 export async function listinoUpdate(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
-  try { const ok = await s.updateListino(id, req.body); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true }); } catch { err(res); }
+  try { const ok = await s.updateListino(id, req.body); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), 'modifica', 'listino', id, req.body?.descrizione); res.json({ ok: true }); } catch { err(res); }
 }
 export async function listinoMarcaSettore(req: Request, res: Response): Promise<void> {
   const raw = req.params.marca;
   const marca = (Array.isArray(raw) ? raw[0] : raw) ?? '';
   if (!marca.trim()) { res.status(400).json({ message: 'Marca non valida' }); return; }
-  try { const n = await s.setMarcaSettore(marca, String(req.body?.settore ?? '')); res.json({ ok: true, updated: n }); } catch { err(res); }
+  try { const n = await s.setMarcaSettore(marca, String(req.body?.settore ?? '')); await s.logAudit(who(req), 'reparto marca', 'listino', marca, `${req.body?.settore} (${n} articoli)`); res.json({ ok: true, updated: n }); } catch { err(res); }
 }
 export async function listinoDelete(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
-  try { const ok = await s.deleteListino(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.status(204).end(); } catch { err(res); }
+  try { const ok = await s.deleteListino(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), 'elimina', 'listino', id); res.status(204).end(); } catch { err(res); }
 }
 // ── Marche (sconto installatore / ricarico azienda) ──
 export async function marcheList(_req: Request, res: Response): Promise<void> {
@@ -167,15 +169,15 @@ export async function operaiList(req: Request, res: Response): Promise<void> {
 }
 export async function operaiCreate(req: Request, res: Response): Promise<void> {
   if (!req.body?.nome?.trim()) { res.status(400).json({ message: 'Nome obbligatorio' }); return; }
-  try { res.status(201).json(await s.createOperaio(req.body)); } catch { err(res); }
+  try { const r = await s.createOperaio(req.body); await s.logAudit(who(req), 'crea', 'operaio', r.id, `${req.body?.nome ?? ''} ${req.body?.cognome ?? ''}`.trim()); res.status(201).json(r); } catch { err(res); }
 }
 export async function operaiUpdate(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
-  try { const ok = await s.updateOperaio(id, req.body || {}); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true }); } catch { err(res); }
+  try { const ok = await s.updateOperaio(id, req.body || {}); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), 'modifica', 'operaio', id, `${req.body?.nome ?? ''} ${req.body?.cognome ?? ''}`.trim()); res.json({ ok: true }); } catch { err(res); }
 }
 export async function operaiDelete(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
-  try { await s.deleteOperaio(id); res.status(204).end(); } catch { err(res); }
+  try { await s.deleteOperaio(id); await s.logAudit(who(req), 'elimina', 'operaio', id); res.status(204).end(); } catch { err(res); }
 }
 export async function accountsList(_req: Request, res: Response): Promise<void> {
   try { res.json(await s.listAccounts()); } catch { err(res); }
@@ -183,12 +185,12 @@ export async function accountsList(_req: Request, res: Response): Promise<void> 
 export async function accountCreate(req: Request, res: Response): Promise<void> {
   const { email, password, permessi, role, settore } = req.body ?? {};
   if (!email || !password || String(password).length < 6) { res.status(400).json({ message: 'Email e password (min 6 caratteri) obbligatorie' }); return; }
-  try { res.status(201).json(await s.createAccount(String(email), String(password), permessi || {}, role, settore)); }
+  try { const r = await s.createAccount(String(email), String(password), permessi || {}, role, settore); await s.logAudit(who(req), 'crea', 'account', r.id, String(email)); res.status(201).json(r); }
   catch { res.status(409).json({ message: 'Email già esistente o dati non validi' }); }
 }
 export async function accountUpdate(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
-  try { const ok = await s.updateAccount(id, req.body || {}); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true }); } catch { err(res); }
+  try { const ok = await s.updateAccount(id, req.body || {}); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), req.body?.password ? 'cambio password' : 'modifica', 'account', id, await s.accountEmail(id)); res.json({ ok: true }); } catch { err(res); }
 }
 export async function accountDelete(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
@@ -197,7 +199,7 @@ export async function accountDelete(req: Request, res: Response): Promise<void> 
     if (!email) { res.status(404).json({ message: 'Non trovato' }); return; }
     const me = ((req as WithAcc).user?.email || '').toLowerCase();
     if (email.toLowerCase() === me) { res.status(400).json({ message: 'Non puoi eliminare il tuo account' }); return; }
-    await s.deleteAccount(id); res.status(204).end();
+    await s.deleteAccount(id); await s.logAudit(who(req), 'elimina', 'account', id, email); res.status(204).end();
   } catch { err(res); }
 }
 
@@ -206,7 +208,12 @@ export async function impostazioniGet(_req: Request, res: Response): Promise<voi
   try { res.json(await s.getImpostazioni()); } catch { err(res); }
 }
 export async function impostazioniUpdate(req: Request, res: Response): Promise<void> {
-  try { await s.setImpostazioni(req.body || {}); res.json(await s.getImpostazioni()); } catch { err(res); }
+  try { await s.setImpostazioni(req.body || {}); await s.logAudit(who(req), 'modifica', 'impostazioni', null, Object.keys(req.body || {}).join(', ')); res.json(await s.getImpostazioni()); } catch { err(res); }
+}
+
+// ── Audit log (storico azioni, admin) ──
+export async function auditList(req: Request, res: Response): Promise<void> {
+  try { res.json(await s.listAudit(300, String(req.query.q ?? ''))); } catch { err(res); }
 }
 
 // ── Foto (file su SSD) ──

@@ -5,6 +5,7 @@ import Clienti from './views/Clienti';
 import Listino from './views/Listino';
 import Account from './views/Account';
 import Impostazioni from './views/Impostazioni';
+import AuditLog from './views/AuditLog';
 import { can, isAdmin, refreshMe } from '../../auth';
 import { LOGO } from './azienda';
 import { MAIOLI_VERSION } from './version';
@@ -14,7 +15,7 @@ import { initStore, storeMode, resetStore, getBolla, beVersionStatus, lockBolla,
 import { ConfirmProvider, useConfirm } from './components/ConfirmDialog';
 import './MaioliPage.css';
 
-type Tab = 'nuova' | 'archivio' | 'clienti' | 'listino' | 'account' | 'impostazioni';
+type Tab = 'nuova' | 'archivio' | 'clienti' | 'listino' | 'account' | 'impostazioni' | 'audit';
 
 const TABS: { id: Tab; label: string; icon: string; cap?: string; adminOnly?: boolean }[] = [
   { id: 'nuova', label: 'Nuova Bolla', icon: '📝', cap: 'nuova' },
@@ -23,6 +24,7 @@ const TABS: { id: Tab; label: string; icon: string; cap?: string; adminOnly?: bo
   { id: 'listino', label: 'Listino prezzi', icon: '🏷', cap: 'listino' },
   { id: 'account', label: 'Account', icon: '👤', adminOnly: true },
   { id: 'impostazioni', label: 'Impostazioni', icon: '⚙️', adminOnly: true },
+  { id: 'audit', label: 'Storico azioni', icon: '📋', adminOnly: true },
 ];
 
 // snapshot per capire se la bolla è "modificata" (ignora le righe materiale vuote,
@@ -190,6 +192,7 @@ function MaioliInner() {
             {tab === 'listino' && can('listino') && <Listino />}
             {tab === 'account' && isAdmin() && <Account />}
             {tab === 'impostazioni' && isAdmin() && <Impostazioni />}
+            {tab === 'audit' && isAdmin() && <AuditLog />}
           </>
         )}
       </div>

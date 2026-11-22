@@ -386,6 +386,16 @@ export async function deleteAccount(id: number): Promise<void> {
   await jfetch(`${API}/accounts/${id}`, { method: 'DELETE' });
 }
 
+// ── Audit log (storico azioni, admin) ──
+export interface AuditRow {
+  id: number; ts: string; user_email: string | null;
+  azione: string; entita: string; entita_id: string | null; dettaglio: string | null;
+}
+export async function listAudit(q = ''): Promise<AuditRow[]> {
+  await requireApi();
+  return jfetch(`${API}/audit?q=${encodeURIComponent(q)}`);
+}
+
 // ── Impostazioni globali bolle ──
 export async function getImpostazioni(): Promise<Impostazioni> {
   await requireApi();

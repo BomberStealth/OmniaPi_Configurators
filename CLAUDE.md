@@ -106,20 +106,33 @@ foglio + ricerca). **Firma in finestra** grande (no segni per sbaglio). Bolla
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.23.0**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.24.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
-(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **33**.
+(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **34**.
 
-## ⚙️ Impostazioni globali bolle (v1.23.0 — solo admin)
-Pagina **Impostazioni** (tab ⚙️, adminOnly) → valori comuni a tutte le bolle
-future: diritto di chiamata (€ + se spuntato di default), tariffa oraria
-⚡elettrico/💧idraulico, IVA di default. Tabella key-value `maioli_settings`
-(migrazione 031). Rotte `GET /impostazioni` (qualsiasi account) + `PUT` (admin).
-Cache FE in `settings.ts` (no import circolari): caricata a `initStore`, letta
-in modo sincrono da `model.ts` (`costoChiamata()`, `datiVuoti` iva/chiamata,
-`defaultManoRiga(nome, settore)` → tariffa per reparto) e `FoglioRapporto`. Se il
-BE è vecchio/irraggiungibile si usano i default (`IMPOST_DEFAULT`). NON tocca le
-bolle già salvate.
+## 🧾 Storico azioni / Audit log (v1.24.0 — solo admin)
+Tabella `maioli_audit` (migrazione 033: ts, user_email, azione, entita,
+entita_id, dettaglio). `logAudit()` in service, chiamato dai controller sulle
+rotte mutanti (bolle crea/modifica/cestina/ripristina/elimina/consegna, clienti,
+listino, operai, account, impostazioni). Il log NON blocca l'operazione (try/catch
+interno). Rotta `GET /audit` (admin), pagina FE tab 📋 "Storico azioni".
+
+## ⚙️ Impostazioni globali bolle (v1.23.0 / v1.24.0 — solo admin)
+Pagina **Impostazioni** (tab ⚙️, adminOnly), divisa in sezioni:
+- **Bolle**: diritto di chiamata (€ + se spuntato di default), tariffa oraria
+  ⚡elettrico/💧idraulico, IVA di default.
+- **Dati azienda** (foglio stampa): ragione sociale, tel, cel, email, indirizzo,
+  cap/città, P.IVA, certificazione, n. cert. (migrazione 032; prima hardcoded in
+  `azienda.ts`, ora rimossi da lì).
+- **Foglio**: testo **dichiarazione** in fondo alla bolla (sopra le firme).
+Tabella key-value `maioli_settings` (migrazione 031). Rotte `GET /impostazioni`
+(qualsiasi account) + `PUT` (admin). Cache FE in `settings.ts` (no import
+circolari): caricata a `initStore`, letta in modo sincrono da `model.ts`
+(`costoChiamata()`, `datiVuoti` iva/chiamata, `defaultManoRiga(nome, settore)` →
+tariffa per reparto) e `FoglioRapporto` (dati azienda + dichiarazione). Se il BE è
+vecchio/irraggiungibile si usano i default (`IMPOST_DEFAULT`). NON tocca le bolle
+già salvate. Per aggiungere un campo: chiave in migrazione, campo
+nell'interfaccia `Impostazioni` (BE+FE) + get/set, e un input nella pagina.
 
 ## 🔒 Lock bolla (v1.22.0 — comportamento aggiornato)
 Il lock si prende **SOLO al tap su "Modifica"**, non all'apertura (aprire per
@@ -181,10 +194,7 @@ tranne che per l'amministrazione (lock di fatturazione).
   "Fatturate" già creato ma VUOTO (placeholder) in attesa di definire gli stati.
   Dettaglio permessi noto: **Listino prezzi = solo ADMIN e Titolare** (non
   Amministrazione). Sezione Clienti: probabilmente non per Dipendente.
-- 🛠 **STORICO AZIONI / AUDIT LOG (richiesto, non ancora fatto)**: tracciare chi
-  (account) crea/modifica/elimina bolle, sposta stati, tocca listino/clienti,
-  con data/ora. Tabella tipo `maioli_audit` (user, azione, entità, id, quando) +
-  log sulle rotte mutanti + una pagina per vederlo (admin). Legato ai ruoli.
+- ✅ **STORICO AZIONI / AUDIT LOG: FATTO (v1.24.0)** — vedi sezione dedicata sopra.
 - 💡 **QoL / gestionale (idee, da prioritizzare con Edoardo)**: impostazioni da
   UI (tariffa oraria, costo chiamata, IVA default, dati azienda) invece che nel
   codice; filtri/ordinamento nello storico (data, cliente, importo, stato);

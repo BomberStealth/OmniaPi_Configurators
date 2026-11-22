@@ -1,4 +1,5 @@
-import { AZIENDA, LOGO } from './azienda';
+import { LOGO } from './azienda';
+import { impostazioni } from './settings';
 import { eur, numFmt, dt, calcola, n2, nomeOperaio, qtaEff, rigaHaContenuto, costoChiamata } from './model';
 import type { RapportoData, MaterialeRiga, ManoRiga } from './model';
 import './foglio.css';
@@ -39,6 +40,7 @@ function RigaMano({ m }: { m: ManoRiga }) {
 
 export default function FoglioRapporto({ data }: { data: RapportoData }) {
   const tot = calcola(data);
+  const az = impostazioni();
   const mat = data.materiali.slice();
   const mano = (data.manodopera ?? []).filter(m => m.operaio && (m.ore || m.tariffa));
 
@@ -124,9 +126,7 @@ export default function FoglioRapporto({ data }: { data: RapportoData }) {
 
             {ultima && (
               <div className="sign">
-                <div className="decl">
-                  Si prende atto che i lavori effettuati sono regolarmente funzionanti e che non sono stati causati danni di qualsiasi natura
-                </div>
+                <div className="decl">{az.bollaDichiarazione}</div>
                 <div className="who">
                   <div>
                     <span className="lbl">FIRMA DEL CLIENTE:</span>
@@ -142,11 +142,11 @@ export default function FoglioRapporto({ data }: { data: RapportoData }) {
 
             <div className="foot">
               <div>
-                Tel. {AZIENDA.tel}<br />Cel. {AZIENDA.cel}<br />Email: {AZIENDA.email}<br />
-                {AZIENDA.certificazione}<br />N. Cert. {AZIENDA.nCert}
+                Tel. {az.azTel}<br />Cel. {az.azCel}<br />Email: {az.azEmail}<br />
+                {az.azCertificazione}<br />N. Cert. {az.azNcert}
               </div>
               <div>
-                {AZIENDA.indirizzo}<br />{AZIENDA.capCitta}<br />C.F./P.IVA {AZIENDA.piva}
+                {az.azIndirizzo}<br />{az.azCapCitta}<br />C.F./P.IVA {az.azPiva}
               </div>
               <Logo small />
             </div>

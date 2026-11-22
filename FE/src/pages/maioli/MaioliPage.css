@@ -404,13 +404,32 @@
 .maioli-acc-del:hover { background: rgba(225,29,42,0.08); }
 
 /* pagina Impostazioni */
-.maioli-imp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 14px 0 18px; }
+.maioli-imp-sec { margin: 16px 0; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--glass); }
+.maioli-imp-sec-tit { font-size: 13.5px; font-weight: 800; color: var(--text); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.maioli-imp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
 .maioli-imp-field { display: flex; flex-direction: column; gap: 6px; }
+.maioli-imp-field.maioli-imp-wide { grid-column: span 2; }
+.maioli-imp-field.maioli-imp-full { grid-column: 1 / -1; }
 .maioli-imp-field > span { font-size: 12.5px; font-weight: 700; color: var(--text); }
-.maioli-imp-field input, .maioli-imp-field select { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-xs); font-size: 15px; background: #fff; }
+.maioli-imp-field input, .maioli-imp-field select, .maioli-imp-field textarea { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-xs); font-size: 15px; background: #fff; font-family: inherit; resize: vertical; }
 .maioli-imp-check { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
 .maioli-imp-check input { width: 20px; height: 20px; accent-color: #16a34a; flex: none; }
 .maioli-imp-check span { font-size: 13.5px; color: var(--text); }
+
+/* storico azioni (audit log) */
+.maioli-audit-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.maioli-audit-row { display: flex; gap: 10px; align-items: flex-start; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; }
+.maioli-audit-ent { font-size: 17px; line-height: 1.2; flex: none; }
+.maioli-audit-main { flex: 1; min-width: 0; }
+.maioli-audit-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.maioli-audit-az { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; padding: 1px 8px; border-radius: 99px; }
+.maioli-audit-az.new { background: rgba(22,163,74,0.14); color: #15803d; }
+.maioli-audit-az.edit { background: rgba(37,99,235,0.14); color: var(--accent); }
+.maioli-audit-az.del { background: rgba(225,29,42,0.12); color: #e11d2a; }
+.maioli-audit-az.move { background: rgba(234,179,8,0.16); color: #a16207; }
+.maioli-audit-ent-lbl { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+.maioli-audit-det { font-size: 13px; color: var(--text); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
+.maioli-audit-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
 
 /* "Informazioni aggiuntive" (accordion) */
 .maioli-extra { margin-bottom: 10px; }

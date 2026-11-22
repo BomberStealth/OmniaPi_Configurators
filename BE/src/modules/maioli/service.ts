@@ -69,37 +69,117 @@ export async function deleteAccount(id: number): Promise<boolean> {
   return r.affectedRows > 0;
 }
 
+// ─────────────── Audit log (storico azioni, admin) ───────────────
+export interface AuditRow {
+  id: number; ts: string; user_email: string | null;
+  azione: string; entita: string; entita_id: string | null; dettaglio: string | null;
+}
+
+// Registra un'azione. Non deve MAI far fallire l'operazione principale → try/catch.
+export async function logAudit(
+  user: string | undefined, azione: string, entita: string,
+  entitaId?: string | number | null, dettaglio?: string | null,
+): Promise<void> {
+  try {
+    await pool.execute(
+      'INSERT INTO maioli_audit (user_email, azione, entita, entita_id, dettaglio) VALUES (?, ?, ?, ?, ?)',
+      [user ?? null, azione.slice(0, 40), entita.slice(0, 40),
+        entitaId != null ? String(entitaId).slice(0, 40) : null,
+        dettaglio ? String(dettaglio).slice(0, 255) : null],
+    );
+  } catch { /* il log non deve bloccare nulla */ }
+}
+
+export async function listAudit(limit = 200, q = ''): Promise<AuditRow[]> {
+  const cond: string[] = [];
+  const params: string[] = [];
+  if (q && q.trim()) {
+    const like = `%${q.trim()}%`;
+    cond.push('(user_email LIKE ? OR azione LIKE ? OR entita LIKE ? OR dettaglio LIKE ?)');
+    params.push(like, like, like, like);
+  }
+  const where = cond.length ? 'WHERE ' + cond.join(' AND ') : '';
+  const [rows] = await pool.execute(
+    `SELECT id, ts, user_email, azione, entita, entita_id, dettaglio FROM maioli_audit ${where} ORDER BY id DESC LIMIT ${lim(limit)}`,
+    params,
+  );
+  return rows as AuditRow[];
+}
+
 // ─────────────── Impostazioni globali bolle (admin) ───────────────
 export interface Impostazioni {
+  // ── bolle ──
   costoChiamata: number;        // € diritto di chiamata
   costoChiamataDefault: number; // 0/1: spuntato di default nelle nuove bolle
   tariffaElettrico: number;     // €/h reparto elettrico
   tariffaIdraulico: number;     // €/h reparto idraulico
   ivaDefault: number;           // % IVA preselezionata
+  // ── dati azienda (foglio di stampa) ──
+  azRagioneSociale: string;
+  azTel: string;
+  azCel: string;
+  azEmail: string;
+  azIndirizzo: string;
+  azCapCitta: string;
+  azPiva: string;
+  azCertificazione: string;
+  azNcert: string;
+  // ── foglio ──
+  bollaDichiarazione: string;   // testo in fondo al foglio sopra le firme
 }
+
+const SET_DEFAULT: Impostazioni = {
+  costoChiamata: 30, costoChiamataDefault: 0, tariffaElettrico: 30, tariffaIdraulico: 30, ivaDefault: 0,
+  azRagioneSociale: 'MAIOLI IDROTERMICA', azTel: '0541 1735714', azCel: '320 1736940',
+  azEmail: 'office@maioli-idrotermicasrl.it', azIndirizzo: 'Via Flaminia Conca, 77/b', azCapCitta: '47923 Rimini',
+  azPiva: '04351490406', azCertificazione: 'Azienda Certificata UNI EN ISO 9001:2015', azNcert: '3147',
+  bollaDichiarazione: 'Si prende atto che i lavori effettuati sono regolarmente funzionanti e che non sono stati causati danni di qualsiasi natura',
+};
 
 export async function getImpostazioni(): Promise<Impostazioni> {
   const [rows] = (await pool.execute('SELECT k, v FROM maioli_settings')) as [{ k: string; v: string }[], unknown];
   const map: Record<string, string> = {};
   for (const r of rows) map[r.k] = r.v;
   const num = (k: string, d: number) => { const n = Number(map[k]); return isFinite(n) ? n : d; };
+  const str = (k: string, d: string) => (map[k] !== undefined && map[k] !== null ? String(map[k]) : d);
   return {
-    costoChiamata: num('costo_chiamata', 30),
+    costoChiamata: num('costo_chiamata', SET_DEFAULT.costoChiamata),
     costoChiamataDefault: map['costo_chiamata_default'] === '1' ? 1 : 0,
-    tariffaElettrico: num('tariffa_elettrico', 30),
-    tariffaIdraulico: num('tariffa_idraulico', 30),
-    ivaDefault: num('iva_default', 0),
+    tariffaElettrico: num('tariffa_elettrico', SET_DEFAULT.tariffaElettrico),
+    tariffaIdraulico: num('tariffa_idraulico', SET_DEFAULT.tariffaIdraulico),
+    ivaDefault: num('iva_default', SET_DEFAULT.ivaDefault),
+    azRagioneSociale: str('az_ragione_sociale', SET_DEFAULT.azRagioneSociale),
+    azTel: str('az_tel', SET_DEFAULT.azTel),
+    azCel: str('az_cel', SET_DEFAULT.azCel),
+    azEmail: str('az_email', SET_DEFAULT.azEmail),
+    azIndirizzo: str('az_indirizzo', SET_DEFAULT.azIndirizzo),
+    azCapCitta: str('az_cap_citta', SET_DEFAULT.azCapCitta),
+    azPiva: str('az_piva', SET_DEFAULT.azPiva),
+    azCertificazione: str('az_certificazione', SET_DEFAULT.azCertificazione),
+    azNcert: str('az_ncert', SET_DEFAULT.azNcert),
+    bollaDichiarazione: str('bolla_dichiarazione', SET_DEFAULT.bollaDichiarazione),
   };
 }
 
 export async function setImpostazioni(d: Partial<Impostazioni>): Promise<void> {
   const nn = (x: unknown) => String(Math.max(0, Number(x) || 0));
+  const ss = (x: unknown) => String(x ?? '').slice(0, 255);
   const pairs: [string, string][] = [];
   if (d.costoChiamata !== undefined) pairs.push(['costo_chiamata', nn(d.costoChiamata)]);
   if (d.costoChiamataDefault !== undefined) pairs.push(['costo_chiamata_default', d.costoChiamataDefault ? '1' : '0']);
   if (d.tariffaElettrico !== undefined) pairs.push(['tariffa_elettrico', nn(d.tariffaElettrico)]);
   if (d.tariffaIdraulico !== undefined) pairs.push(['tariffa_idraulico', nn(d.tariffaIdraulico)]);
   if (d.ivaDefault !== undefined) pairs.push(['iva_default', nn(d.ivaDefault)]);
+  if (d.azRagioneSociale !== undefined) pairs.push(['az_ragione_sociale', ss(d.azRagioneSociale)]);
+  if (d.azTel !== undefined) pairs.push(['az_tel', ss(d.azTel)]);
+  if (d.azCel !== undefined) pairs.push(['az_cel', ss(d.azCel)]);
+  if (d.azEmail !== undefined) pairs.push(['az_email', ss(d.azEmail)]);
+  if (d.azIndirizzo !== undefined) pairs.push(['az_indirizzo', ss(d.azIndirizzo)]);
+  if (d.azCapCitta !== undefined) pairs.push(['az_cap_citta', ss(d.azCapCitta)]);
+  if (d.azPiva !== undefined) pairs.push(['az_piva', ss(d.azPiva)]);
+  if (d.azCertificazione !== undefined) pairs.push(['az_certificazione', ss(d.azCertificazione)]);
+  if (d.azNcert !== undefined) pairs.push(['az_ncert', ss(d.azNcert)]);
+  if (d.bollaDichiarazione !== undefined) pairs.push(['bolla_dichiarazione', ss(d.bollaDichiarazione)]);
   for (const [k, v] of pairs) {
     await pool.execute('INSERT INTO maioli_settings (k, v) VALUES (?, ?) ON DUPLICATE KEY UPDATE v=VALUES(v)', [k, v]);
   }
@@ -423,7 +503,8 @@ export async function listBolle(q: string, stato = 'sospeso', settore?: string, 
     cond.push(stato === 'consegnate' ? 'consegnata_at IS NOT NULL' : 'consegnata_at IS NULL');
     cond.push('sopralluogo = 0');
   }
-  if (settore && settore !== 'entrambi') { cond.push('settore = ?'); params.push(settore); } // filtro ⚡/💧
+  // filtro ⚡/💧: mostra le bolle del reparto + quelle "entrambi" (amministrazione)
+  if (settore && settore !== 'entrambi') { cond.push("(settore = ? OR settore = 'entrambi')"); params.push(settore); }
   if (q && q.trim()) {
     const like = `%${q.trim()}%`;
     cond.push('(cliente LIKE ? OR riferimento LIKE ? OR numero LIKE ? OR indirizzo LIKE ?)');

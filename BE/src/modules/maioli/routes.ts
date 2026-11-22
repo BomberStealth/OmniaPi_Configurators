@@ -62,6 +62,9 @@ router.delete('/operai/:id', requireAdminRole, c.operaiDelete as never);
 router.get('/impostazioni', c.impostazioniGet as never);
 router.put('/impostazioni', requireAdminRole, c.impostazioniUpdate as never);
 
+// Audit log (storico azioni): SOLO admin.
+router.get('/audit', requireAdminRole, c.auditList as never);
+
 // Account (gestione permessi): SOLO admin.
 router.get('/accounts', requireAdminRole, c.accountsList as never);
 router.post('/accounts', requireAdminRole, c.accountCreate as never);
