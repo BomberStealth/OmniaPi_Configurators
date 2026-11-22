@@ -225,6 +225,7 @@
 .maioli-cli-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
 .maioli-cli-badge.sospeso { background: rgba(234,179,8,0.16); color: #a16207; }
 .maioli-cli-badge.dafatt { background: rgba(37,99,235,0.14); color: var(--accent); }
+.maioli-cli-badge.sopral { background: rgba(14,165,233,0.14); color: #0369a1; }
 .maioli-cli-badge.none { background: var(--glass); color: var(--text-muted); }
 
 /* pagina Account (permessi) */

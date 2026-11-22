@@ -178,12 +178,15 @@ export interface Cliente {
   note: string | null;
   n_sospeso?: number;
   n_dafatturare?: number;
+  n_sopralluoghi?: number;
 }
 
-// colonne cliente + conteggio bolle per stato (per la sezione Clienti)
+// colonne cliente + conteggio bolle per stato (per la sezione Clienti).
+// I sopralluoghi hanno un conteggio a parte e NON entrano in sospeso/da fatturare.
 const CLI_COLS = `c.*,
-  (SELECT COUNT(*) FROM maioli_bolle b WHERE b.cliente_id=c.id AND b.deleted_at IS NULL AND b.consegnata_at IS NULL) AS n_sospeso,
-  (SELECT COUNT(*) FROM maioli_bolle b WHERE b.cliente_id=c.id AND b.deleted_at IS NULL AND b.consegnata_at IS NOT NULL) AS n_dafatturare`;
+  (SELECT COUNT(*) FROM maioli_bolle b WHERE b.cliente_id=c.id AND b.deleted_at IS NULL AND b.sopralluogo=0 AND b.consegnata_at IS NULL) AS n_sospeso,
+  (SELECT COUNT(*) FROM maioli_bolle b WHERE b.cliente_id=c.id AND b.deleted_at IS NULL AND b.sopralluogo=0 AND b.consegnata_at IS NOT NULL) AS n_dafatturare,
+  (SELECT COUNT(*) FROM maioli_bolle b WHERE b.cliente_id=c.id AND b.deleted_at IS NULL AND b.sopralluogo=1) AS n_sopralluoghi`;
 
 export interface ListinoItem {
   id: number;

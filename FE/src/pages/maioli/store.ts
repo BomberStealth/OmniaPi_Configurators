@@ -17,6 +17,7 @@ export interface Cliente {
   note?: string | null;
   n_sospeso?: number;
   n_dafatturare?: number;
+  n_sopralluoghi?: number;
 }
 export interface BollaSummary {
   id: number;

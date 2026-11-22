@@ -73,7 +73,8 @@ export default function Clienti() {
                 <div className="maioli-cli-badges">
                   {Number(r.n_sospeso) > 0 && <span className="maioli-cli-badge sospeso">📅 {r.n_sospeso} in sospeso</span>}
                   {Number(r.n_dafatturare) > 0 && <span className="maioli-cli-badge dafatt">🧾 {r.n_dafatturare} da fatturare</span>}
-                  {!Number(r.n_sospeso) && !Number(r.n_dafatturare) && <span className="maioli-cli-badge none">nessuna bolla</span>}
+                  {Number(r.n_sopralluoghi) > 0 && <span className="maioli-cli-badge sopral">🔍 {r.n_sopralluoghi} sopralluogh{Number(r.n_sopralluoghi) === 1 ? 'o' : 'i'}</span>}
+                  {!Number(r.n_sospeso) && !Number(r.n_dafatturare) && !Number(r.n_sopralluoghi) && <span className="maioli-cli-badge none">nessuna bolla</span>}
                 </div>
               </div>
               <div className="maioli-cli-actions">
