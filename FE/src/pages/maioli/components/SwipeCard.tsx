@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react';
 
 interface Props {
-  onRight: () => void;   // swipe verso destra (rosso)
-  onLeft: () => void;    // swipe verso sinistra (verde)
+  onRight: () => void;    // swipe verso destra (rosso)
+  onLeft?: () => void;    // swipe verso sinistra (verde) — opzionale
   rightLabel: string;
-  leftLabel: string;
+  leftLabel?: string;
   children: React.ReactNode;
 }
 
@@ -23,7 +23,8 @@ export default function SwipeCard({ onRight, onLeft, rightLabel, leftLabel, chil
   };
   const move = (e: React.PointerEvent) => {
     const s = st.current; if (!s) return;
-    const d = e.clientX - s.x;
+    let d = e.clientX - s.x;
+    if (!onLeft && d < 0) d = 0; // swipe sinistra disabilitato se non c'è onLeft
     const dy = e.clientY - s.y;
     if (!s.locked) {
       if (Math.abs(d) < 8) return;
@@ -45,7 +46,7 @@ export default function SwipeCard({ onRight, onLeft, rightLabel, leftLabel, chil
     swiped.current = true;
     setTimeout(() => { swiped.current = false; }, 60);
     if (d >= THRESH) onRight();
-    else if (d <= -THRESH) onLeft();
+    else if (d <= -THRESH) onLeft?.();
   };
 
   const p = Math.min(1, Math.abs(dx) / THRESH);

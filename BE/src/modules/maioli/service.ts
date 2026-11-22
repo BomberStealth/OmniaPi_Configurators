@@ -237,6 +237,7 @@ export interface BollaInput {
   lavoro_incompleto?: number;
   da_completare?: string | null;
   costo_chiamata?: number;
+  sopralluogo?: number;
   // se true, aggiorna anche l'anagrafica cliente con questi dati
   salvaCliente?: boolean;
 }
@@ -356,26 +357,38 @@ export interface BollaSummary {
   consegnata_at?: string | null;
   n_foto?: number;
   lavoro_incompleto?: number;
+  settore?: string;
+  sopralluogo?: number;
 }
 
-const SUMMARY_COLS = 'id, numero, cliente, riferimento, indirizzo, data_intervento, totale, updated_at, deleted_at, consegnata_at, lavoro_incompleto, (SELECT COUNT(*) FROM maioli_bolle_foto f WHERE f.bolla_id = maioli_bolle.id) AS n_foto';
+const SUMMARY_COLS = 'id, numero, cliente, riferimento, indirizzo, data_intervento, totale, updated_at, deleted_at, consegnata_at, lavoro_incompleto, settore, sopralluogo, (SELECT COUNT(*) FROM maioli_bolle_foto f WHERE f.bolla_id = maioli_bolle.id) AS n_foto';
 
-export async function listBolle(q: string, stato = 'sospeso', limit = 50): Promise<BollaSummary[]> {
+export async function listBolle(q: string, stato = 'sospeso', settore?: string, limit = 50): Promise<BollaSummary[]> {
   const cond: string[] = ['deleted_at IS NULL'];
   const params: string[] = [];
-  // sospeso = non ancora consegnata; consegnate = contrassegnate consegnate
-  cond.push(stato === 'consegnate' ? 'consegnata_at IS NOT NULL' : 'consegnata_at IS NULL');
+  // sospeso = non consegnata; consegnate = consegnate; sopralluoghi = flag sopralluogo
+  if (stato === 'sopralluoghi') cond.push('sopralluogo = 1');
+  else cond.push(stato === 'consegnate' ? 'consegnata_at IS NOT NULL' : 'consegnata_at IS NULL');
+  if (settore && settore !== 'entrambi') { cond.push('settore = ?'); params.push(settore); } // filtro ⚡/💧
   if (q && q.trim()) {
     const like = `%${q.trim()}%`;
     cond.push('(cliente LIKE ? OR riferimento LIKE ? OR numero LIKE ? OR indirizzo LIKE ?)');
     params.push(like, like, like, like);
   }
-  const order = stato === 'consegnate' ? 'consegnata_at DESC, id DESC' : 'anno ASC, progressivo ASC, id ASC';
+  const order = stato === 'consegnate' ? 'consegnata_at DESC, id DESC'
+    : stato === 'sopralluoghi' ? 'updated_at DESC, id DESC'
+    : 'anno ASC, progressivo ASC, id ASC';
   const [rows] = await pool.execute(
     `SELECT ${SUMMARY_COLS} FROM maioli_bolle WHERE ${cond.join(' AND ')} ORDER BY ${order} LIMIT ${lim(limit)}`,
     params,
   );
   return rows as BollaSummary[];
+}
+
+// settore di una bolla (per controllare chi può modificarla)
+export async function bollaSettore(id: number): Promise<string | null> {
+  const [rows] = (await pool.execute('SELECT settore FROM maioli_bolle WHERE id=? LIMIT 1', [id])) as [{ settore: string }[], unknown];
+  return rows[0]?.settore ?? null;
 }
 
 // bolle nel cestino (soft-deleted); purga prima quelle oltre i 30 giorni
@@ -458,7 +471,7 @@ async function writeRighe(conn: PoolConnection, bollaId: number, b: BollaInput):
   }
 }
 
-export async function createBolla(b: BollaInput): Promise<{ id: number; numero: string }> {
+export async function createBolla(b: BollaInput, settore = 'entrambi'): Promise<{ id: number; numero: string }> {
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
@@ -466,12 +479,13 @@ export async function createBolla(b: BollaInput): Promise<{ id: number; numero: 
     const { numero, anno, progressivo } = await nextNumero(conn);
     const [r] = (await conn.execute(
       `INSERT INTO maioli_bolle
-       (numero, anno, progressivo, cliente_id, cliente, riferimento, telefono, email, indirizzo, condominio, amministratore, preventivo, data_chiamata, data_intervento, data_consegna, richiesta, difetti, iva, imponibile, totale, firma_tecnico, firma_cliente, lavoro_incompleto, da_completare, costo_chiamata)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (numero, anno, progressivo, cliente_id, cliente, riferimento, telefono, email, indirizzo, condominio, amministratore, preventivo, data_chiamata, data_intervento, data_consegna, richiesta, difetti, iva, imponibile, totale, firma_tecnico, firma_cliente, lavoro_incompleto, da_completare, costo_chiamata, settore, sopralluogo)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [numero, anno, progressivo, clienteId, b.cliente, b.riferimento ?? '', b.telefono ?? '', b.email ?? '', b.indirizzo ?? '',
        b.condominio ?? '', b.amministratore ?? '', b.preventivo ?? '', b.data_chiamata || null, b.data_intervento || null,
        b.data_consegna || null, b.richiesta ?? '', b.difetti ?? '', b.iva ?? 0, b.imponibile ?? 0, b.totale ?? 0,
-       b.firma_tecnico ?? null, b.firma_cliente ?? null, b.lavoro_incompleto ? 1 : 0, b.da_completare ?? null, b.costo_chiamata ? 1 : 0],
+       b.firma_tecnico ?? null, b.firma_cliente ?? null, b.lavoro_incompleto ? 1 : 0, b.da_completare ?? null, b.costo_chiamata ? 1 : 0,
+       sanitizeSettore(settore), b.sopralluogo ? 1 : 0],
     )) as [{ insertId: number }, unknown];
     await writeRighe(conn, r.insertId, b);
     await conn.commit();
@@ -495,10 +509,10 @@ export async function updateBolla(id: number, b: BollaInput): Promise<boolean> {
     oldFoto = prevFoto.map(f => f.img);
     const clienteId = await upsertClienteTx(conn, b);
     await conn.execute(
-      `UPDATE maioli_bolle SET cliente_id=?, cliente=?, riferimento=?, telefono=?, email=?, indirizzo=?, condominio=?, amministratore=?, preventivo=?, data_chiamata=?, data_intervento=?, data_consegna=?, richiesta=?, difetti=?, iva=?, imponibile=?, totale=?, firma_tecnico=?, firma_cliente=?, lavoro_incompleto=?, da_completare=?, costo_chiamata=? WHERE id=?`,
+      `UPDATE maioli_bolle SET cliente_id=?, cliente=?, riferimento=?, telefono=?, email=?, indirizzo=?, condominio=?, amministratore=?, preventivo=?, data_chiamata=?, data_intervento=?, data_consegna=?, richiesta=?, difetti=?, iva=?, imponibile=?, totale=?, firma_tecnico=?, firma_cliente=?, lavoro_incompleto=?, da_completare=?, costo_chiamata=?, sopralluogo=? WHERE id=?`,
       [clienteId, b.cliente, b.riferimento ?? '', b.telefono ?? '', b.email ?? '', b.indirizzo ?? '', b.condominio ?? '', b.amministratore ?? '',
        b.preventivo ?? '', b.data_chiamata || null, b.data_intervento || null, b.data_consegna || null, b.richiesta ?? '', b.difetti ?? '', b.iva ?? 0, b.imponibile ?? 0, b.totale ?? 0,
-       b.firma_tecnico ?? null, b.firma_cliente ?? null, b.lavoro_incompleto ? 1 : 0, b.da_completare ?? null, b.costo_chiamata ? 1 : 0, id],
+       b.firma_tecnico ?? null, b.firma_cliente ?? null, b.lavoro_incompleto ? 1 : 0, b.da_completare ?? null, b.costo_chiamata ? 1 : 0, b.sopralluogo ? 1 : 0, id],
     );
     await writeRighe(conn, id, b);
     await conn.commit();

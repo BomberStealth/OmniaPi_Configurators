@@ -10,7 +10,8 @@ interface Props {
 }
 
 const COLORI = ['#2563EB', '#0891B2', '#ea580c', '#16a34a', '#7c3aed', '#db2777', '#ca8a04', '#0d9488'];
-const nameOf = (o: Operaio) => `${o.nome} ${o.cognome}`.trim();
+// nome abbreviato per non occupare spazio: "Edoardo C."
+const nameOf = (o: Operaio) => `${o.nome}${o.cognome ? ' ' + o.cognome.trim()[0].toUpperCase() + '.' : ''}`.trim();
 const initials = (name: string) => name.split(/\s+/).map(p => p[0] || '').slice(0, 2).join('').toUpperCase();
 
 export default function OperaiManodopera({ value, onChange }: Props) {

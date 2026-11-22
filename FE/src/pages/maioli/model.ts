@@ -42,6 +42,7 @@ export interface RapportoData {
   lavoroIncompleto: boolean; // spunta "lavoro non completato" (solo interno)
   daCompletare: string;      // cosa manca da fare (interno, NON stampato)
   costoChiamata: boolean;    // diritto di chiamata (+30€ oltre la manodopera)
+  sopralluogo: boolean;      // spunta "sopralluogo" (categoria a parte in Storico)
 }
 
 // Diritto di chiamata fisso (aggiunto alla manodopera se attivo)
@@ -85,6 +86,7 @@ export function datiVuoti(): RapportoData {
     lavoroIncompleto: false,
     daCompletare: '',
     costoChiamata: false,
+    sopralluogo: false,
   };
 }
 

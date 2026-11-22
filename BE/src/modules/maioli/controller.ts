@@ -38,8 +38,10 @@ export async function riferimentiList(req: Request, res: Response): Promise<void
 
 // ── Bolle ──
 export async function bolleList(req: Request, res: Response): Promise<void> {
-  const stato = String(req.query.stato ?? 'sospeso') === 'consegnate' ? 'consegnate' : 'sospeso';
-  try { res.json(await s.listBolle(String(req.query.q ?? ''), stato)); } catch { err(res); }
+  const raw = String(req.query.stato ?? 'sospeso');
+  const stato = raw === 'consegnate' ? 'consegnate' : raw === 'sopralluoghi' ? 'sopralluoghi' : 'sospeso';
+  const settore = String(req.query.settore ?? '') || undefined; // filtro ⚡/💧
+  try { res.json(await s.listBolle(String(req.query.q ?? ''), stato, settore)); } catch { err(res); }
 }
 export async function bolleGet(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
@@ -47,12 +49,21 @@ export async function bolleGet(req: Request, res: Response): Promise<void> {
 }
 export async function bolleCreate(req: Request, res: Response): Promise<void> {
   if (!req.body?.cliente?.trim()) { res.status(400).json({ message: 'Cliente obbligatorio' }); return; }
-  try { res.status(201).json(await s.createBolla(req.body)); } catch { err(res); }
+  const settore = (req as WithAcc).account?.settore; // reparto del creatore
+  try { res.status(201).json(await s.createBolla(req.body, settore)); } catch { err(res); }
 }
 export async function bolleUpdate(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
   if (!req.body?.cliente?.trim()) { res.status(400).json({ message: 'Cliente obbligatorio' }); return; }
-  try { const ok = await s.updateBolla(id, req.body); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true }); } catch { err(res); }
+  const acc = (req as WithAcc).account;
+  try {
+    // permesso di modifica per reparto: solo stesso settore + entrambi/admin
+    const sett = await s.bollaSettore(id);
+    if (sett && acc && acc.role !== 'admin' && acc.settore !== 'entrambi' && sett !== 'entrambi' && sett !== acc.settore) {
+      res.status(403).json({ message: `Bolla del reparto ${sett}: non puoi modificarla` }); return;
+    }
+    const ok = await s.updateBolla(id, req.body); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } res.json({ ok: true });
+  } catch { err(res); }
 }
 export async function bolleDelete(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }

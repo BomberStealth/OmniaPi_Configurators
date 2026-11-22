@@ -65,6 +65,7 @@ function MaioliInner() {
 
   // ── Lock "bolla in modifica" (una sola persona per volta) ──
   const editingRef = useRef<number | null>(null);
+  const [readOnly, setReadOnly] = useState(false); // bolla di altro reparto = sola lettura
   const releaseLock = useCallback(async () => {
     const id = editingRef.current;
     editingRef.current = null;
@@ -79,19 +80,24 @@ function MaioliInner() {
     return () => clearInterval(iv);
   }, []);
 
-  const openBolla = async (id: number) => {
+  const openBolla = async (id: number, canEdit = true) => {
     if (editingRef.current === id) { setTab('nuova'); return; }
     try {
-      const lock = await lockBolla(id);
-      if (!lock.ok) { await manutenzione(lock.lockedBy || 'un altro utente'); return; }
+      if (canEdit) {
+        const lock = await lockBolla(id);
+        if (!lock.ok) { await manutenzione(lock.lockedBy || 'un altro utente'); return; }
+      }
       await releaseLock();               // rilascia la bolla precedente
-      editingRef.current = id;
+      editingRef.current = canEdit ? id : null; // sola lettura: nessun lock
+      setReadOnly(!canEdit);
       const d = await getBolla(id);
       setData(d);
       baseline.current = snap(d);
       setTab('nuova');
     } catch { alert('Impossibile aprire la bolla.'); }
   };
+
+  const nuovaBolla = () => { releaseLock(); setReadOnly(false); };
 
   const onSaved = (saved?: RapportoData) => {
     if (saved) {
@@ -114,7 +120,8 @@ function MaioliInner() {
     }
     if (tab === 'nuova') await releaseLock(); // lasciando Nuova Bolla rilascia il lock
     // tornando su Nuova Bolla con una bolla ancora caricata, ri-acquisisce il lock
-    if (t === 'nuova' && data.id) {
+    // (solo se modificabile: le bolle in sola lettura non si bloccano)
+    if (t === 'nuova' && data.id && !readOnly) {
       const lock = await lockBolla(data.id);
       if (!lock.ok) { await manutenzione(lock.lockedBy || 'un altro utente'); setData(datiVuoti()); editingRef.current = null; }
       else editingRef.current = data.id;
@@ -171,7 +178,7 @@ function MaioliInner() {
               <div className="maioli-empty">Nessun permesso assegnato. Contatta l'amministratore.</div>
             )}
             {tab === 'nuova' && can('nuova') && (
-              <NuovaBolla data={data} setData={setData} onSaved={onSaved} onReset={releaseLock} />
+              <NuovaBolla data={data} setData={setData} onSaved={onSaved} onReset={nuovaBolla} readOnly={readOnly} />
             )}
             {tab === 'archivio' && can('storico') && (
               <BolleFatte onOpen={openBolla} reloadKey={reloadKey} />

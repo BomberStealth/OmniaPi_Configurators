@@ -31,6 +31,8 @@ export interface BollaSummary {
   consegnata_at?: string | null;
   n_foto?: number;
   lavoro_incompleto?: number;
+  settore?: string;
+  sopralluogo?: number;
 }
 export interface ListinoItem {
   id: number;
@@ -97,6 +99,7 @@ export function toPayload(d: RapportoData) {
     lavoro_incompleto: d.lavoroIncompleto ? 1 : 0,
     da_completare: d.daCompletare || null,
     costo_chiamata: d.costoChiamata ? 1 : 0,
+    sopralluogo: d.sopralluogo ? 1 : 0,
   };
 }
 
@@ -127,6 +130,7 @@ export function fromBolla(row: Record<string, any>): RapportoData {
     lavoroIncompleto: !!row.lavoro_incompleto,
     daCompletare: row.da_completare ?? '',
     costoChiamata: !!row.costo_chiamata,
+    sopralluogo: !!row.sopralluogo,
   };
 }
 
@@ -250,11 +254,11 @@ export async function listRiferimenti(clienteId: number | null, q: string): Prom
 }
 
 // ── Bolle ──
-export type StatoBolla = 'sospeso' | 'consegnate';
+export type StatoBolla = 'sospeso' | 'consegnate' | 'sopralluoghi';
 
-export async function listBolle(q: string, stato: StatoBolla = 'sospeso'): Promise<BollaSummary[]> {
+export async function listBolle(q: string, stato: StatoBolla = 'sospeso', settore = ''): Promise<BollaSummary[]> {
   await requireApi();
-  return jfetch(`${API}/bolle?q=${encodeURIComponent(q)}&stato=${stato}`);
+  return jfetch(`${API}/bolle?q=${encodeURIComponent(q)}&stato=${stato}${settore ? `&settore=${encodeURIComponent(settore)}` : ''}`);
 }
 
 export async function getBolla(id: number): Promise<RapportoData> {

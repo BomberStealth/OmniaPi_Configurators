@@ -29,9 +29,10 @@ interface Props {
   setData: React.Dispatch<React.SetStateAction<RapportoData>>;
   onSaved?: (saved?: RapportoData) => void;
   onReset?: () => void; // rilascia il lock della bolla aperta (quando si fa "Nuovo")
+  readOnly?: boolean;   // bolla di un altro reparto: solo lettura/stampa
 }
 
-export default function NuovaBolla({ data, setData, onSaved, onReset }: Props) {
+export default function NuovaBolla({ data, setData, onSaved, onReset, readOnly }: Props) {
   const confirm = useConfirm();
   const [mobileTab, setMobileTab] = useState<'compila' | 'anteprima'>('compila');
   const [saving, setSaving] = useState(false);
@@ -40,8 +41,12 @@ export default function NuovaBolla({ data, setData, onSaved, onReset }: Props) {
   const [showExtra, setShowExtra] = useState(false); // "Informazioni aggiuntive" (chiuse di default)
   // bolla "bloccata" (già salvata): i campi non si modificano per sbaglio
   const [locked, setLocked] = useState(false);
-  useEffect(() => { setLocked(!!data.id); }, [data.id]);
+  useEffect(() => { setLocked(!!data.id || !!readOnly); }, [data.id, readOnly]);
   const askUnlock = async () => {
+    if (readOnly) {
+      await confirm({ title: 'Sola lettura', message: 'Questa bolla è di un altro reparto: puoi vederla e stamparla, ma non modificarla.', confirmLabel: 'Ho capito' });
+      return;
+    }
     const ok = await confirm({ title: 'Modificare la bolla?', message: 'La bolla è bloccata per non modificarla per sbaglio. Vuoi sbloccarla per modificarla?', confirmLabel: 'Sì, modifica' });
     if (ok) setLocked(false);
   };
@@ -189,6 +194,10 @@ export default function NuovaBolla({ data, setData, onSaved, onReset }: Props) {
               <label className="maioli-field"><span className="form-label">Consegnato il</span>
                 <input type="date" value={data.dataConsegna} onChange={e => set('dataConsegna', e.target.value)} /></label>
             </div>
+            <label className="maioli-check maioli-check-sopralluogo">
+              <input type="checkbox" checked={data.sopralluogo} onChange={e => set('sopralluogo', e.target.checked)} />
+              <span className="maioli-check-lbl">🔍 Sopralluogo</span>
+            </label>
             <div className="maioli-grid2">
               <label className="maioli-field maioli-col2"><span className="form-label">Indirizzo</span>
                 <input value={data.indirizzo} onChange={e => set('indirizzo', e.target.value)} /></label>
@@ -302,7 +311,9 @@ export default function NuovaBolla({ data, setData, onSaved, onReset }: Props) {
             {savedFlash && <span className="maioli-saved-flash">✓ Salvata</span>}
             {locked ? (
               <>
-                <button className="btn btn-secondary maioli-bottom-save" onClick={askUnlock}>✏️ Modifica</button>
+                {readOnly
+                  ? <span className="maioli-readonly-note">🔒 Sola lettura (altro reparto)</span>
+                  : <button className="btn btn-secondary maioli-bottom-save" onClick={askUnlock}>✏️ Modifica</button>}
                 <button className="btn btn-primary maioli-bottom-print" onClick={stampa}>🖨 Stampa</button>
               </>
             ) : (

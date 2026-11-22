@@ -1,33 +1,47 @@
 import { useState, useEffect, useCallback } from 'react';
 import { listBolle, listBolleCancellate, deleteBolla, restoreBolla, deleteBollaPermanent, markConsegnata } from '../store';
 import type { BollaSummary } from '../store';
+import { getSettore, isAdmin } from '../../../auth';
 import { useConfirm } from '../components/ConfirmDialog';
 import SwipeCard from '../components/SwipeCard';
 
-type Tab = 'sospeso' | 'consegnate' | 'fatturate' | 'cancellate';
+type Tab = 'sospeso' | 'consegnate' | 'fatturate' | 'sopralluoghi' | 'cancellate';
+type SettF = '' | 'elettrico' | 'idraulico';
 
 interface Props {
-  onOpen: (id: number) => void;
+  onOpen: (id: number, canEdit: boolean) => void;
   reloadKey: number;
 }
+
+// icona reparto sulla card
+const settIcon = (s?: string) => (s === 'elettrico' ? '⚡' : s === 'idraulico' ? '💧' : '⚡💧');
+// chi può modificare la bolla (stesso reparto, o Entrambi/Admin)
+const puoModificare = (s?: string): boolean => {
+  const mio = getSettore();
+  return isAdmin() || mio === 'entrambi' || !s || s === 'entrambi' || mio === s;
+};
 
 export default function BolleFatte({ onOpen, reloadKey }: Props) {
   const confirm = useConfirm();
   const [tab, setTab] = useState<Tab>('sospeso');
   const [q, setQ] = useState('');
+  const [settF, setSettF] = useState<SettF>('');
   const [rows, setRows] = useState<BollaSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async (query: string, t: Tab) => {
+  const load = useCallback(async (query: string, t: Tab, sf: SettF) => {
     if (t === 'fatturate') { setRows([]); setLoading(false); return; } // sezione vuota (da fare)
     setLoading(true);
     try {
       if (t === 'cancellate') setRows(await listBolleCancellate(query));
-      else setRows(await listBolle(query, t === 'consegnate' ? 'consegnate' : 'sospeso'));
+      else {
+        const stato = t === 'consegnate' ? 'consegnate' : t === 'sopralluoghi' ? 'sopralluoghi' : 'sospeso';
+        setRows(await listBolle(query, stato, sf));
+      }
     } catch { setRows([]); } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { const t = setTimeout(() => load(q, tab), 200); return () => clearTimeout(t); }, [q, tab, load, reloadKey]);
+  useEffect(() => { const t = setTimeout(() => load(q, tab, settF), 200); return () => clearTimeout(t); }, [q, tab, settF, load, reloadKey]);
 
   const fmtData = (s: string | null | undefined) => (s ? new Date(String(s).slice(0, 10) + 'T00:00:00').toLocaleDateString('it-IT') : '—');
   const giorniRimasti = (deleted: string | null | undefined) => {
@@ -38,15 +52,15 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
   const cestina = async (b: BollaSummary) => {
     const ok = await confirm({ title: 'Cancellare la bolla?', message: `La bolla di "${b.cliente}" verrà spostata nel cestino e si cancellerà da sola dopo 30 giorni. Puoi ripristinarla prima di allora.`, confirmLabel: 'Sposta nel cestino', danger: true });
     if (!ok) return;
-    try { await deleteBolla(b.id); load(q, tab); } catch { alert('Operazione non riuscita.'); }
+    try { await deleteBolla(b.id); load(q, tab, settF); } catch { alert('Operazione non riuscita.'); }
   };
   const ripristina = async (b: BollaSummary) => {
-    try { await restoreBolla(b.id); load(q, tab); } catch { alert('Ripristino non riuscito.'); }
+    try { await restoreBolla(b.id); load(q, tab, settF); } catch { alert('Ripristino non riuscito.'); }
   };
   const eliminaDef = async (b: BollaSummary) => {
     const ok = await confirm({ title: 'Eliminare definitivamente?', message: `La bolla di "${b.cliente}" verrà eliminata per sempre. L'operazione non è reversibile.`, confirmLabel: 'Elimina per sempre', danger: true });
     if (!ok) return;
-    try { await deleteBollaPermanent(b.id); load(q, tab); } catch { alert('Eliminazione non riuscita.'); }
+    try { await deleteBollaPermanent(b.id); load(q, tab, settF); } catch { alert('Eliminazione non riuscita.'); }
   };
   const setConsegna = async (b: BollaSummary, consegnata: boolean) => {
     const ok = await confirm({
@@ -57,15 +71,18 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
       confirmLabel: consegnata ? 'Sì, da fatturare' : 'Rimetti in sospeso',
     });
     if (!ok) return;
-    try { await markConsegnata(b.id, consegnata); load(q, tab); } catch { alert('Operazione non riuscita.'); }
+    try { await markConsegnata(b.id, consegnata); load(q, tab, settF); } catch { alert('Operazione non riuscita.'); }
   };
 
   const TABS: { id: Tab; label: string }[] = [
     { id: 'sospeso', label: 'In sospeso' },
     { id: 'consegnate', label: 'Da fatturare' },
     { id: 'fatturate', label: 'Fatturate' },
+    { id: 'sopralluoghi', label: '🔍 Sopralluoghi' },
     { id: 'cancellate', label: '🗑' },
   ];
+
+  const mostraFiltroReparto = tab !== 'cancellate' && tab !== 'fatturate';
 
   return (
     <div className="card maioli-card maioli-archivio">
@@ -80,11 +97,22 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
         ))}
       </div>
 
+      {mostraFiltroReparto && (
+        <div className="maioli-sett-filter">
+          <button className={settF === '' ? 'active' : ''} onClick={() => setSettF('')}>Tutti</button>
+          <button className={settF === 'elettrico' ? 'active' : ''} onClick={() => setSettF('elettrico')}>⚡ Elettrico</button>
+          <button className={settF === 'idraulico' ? 'active' : ''} onClick={() => setSettF('idraulico')}>💧 Idraulico</button>
+        </div>
+      )}
+
       {tab === 'sospeso' && (
         <div className="maioli-swipe-hint"><span className="maioli-swipe-ar left">←</span> scorri per <b>da fatturare</b> · <b>cancella</b> scorrendo <span className="maioli-swipe-ar right">→</span></div>
       )}
       {tab === 'consegnate' && (
         <div className="maioli-swipe-hint"><span className="maioli-swipe-ar left">←</span> scorri per <b>rimettere in sospeso</b> · <b>cancella</b> scorrendo <span className="maioli-swipe-ar right">→</span></div>
+      )}
+      {tab === 'sopralluoghi' && (
+        <div className="maioli-listino-hint">Bolle segnate come <b>sopralluogo</b>. Scorri <span className="maioli-swipe-ar right">→</span> per cancellarle.</div>
       )}
       {tab === 'cancellate' && (
         <div className="maioli-listino-hint">Le bolle cancellate restano qui 30 giorni, poi si eliminano da sole. Puoi ripristinarle o eliminarle subito.</div>
@@ -97,6 +125,7 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
           {tab === 'sospeso' ? 'Nessuna bolla in sospeso.'
             : tab === 'consegnate' ? 'Nessuna bolla da fatturare.'
             : tab === 'fatturate' ? '🚧 Sezione in arrivo — ci lavoreremo presto.'
+            : tab === 'sopralluoghi' ? 'Nessun sopralluogo.'
             : 'Il cestino è vuoto.'}
         </div>
       ) : (
@@ -105,12 +134,13 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
             const consegnate = tab === 'consegnate';
             const incompleto = tab === 'sospeso' && !!Number(b.lavoro_incompleto);
             const dataTxt = consegnate ? `🧾 ${fmtData(b.consegnata_at)}` : `📅 ${fmtData(b.data_intervento)}`;
+            const canEdit = puoModificare(b.settore);
 
             if (tab === 'cancellate') {
               return (
                 <div className="maioli-bcard" key={b.id}>
                   <div className="maioli-bcard-main">
-                    <div className="maioli-bcard-cli">{b.cliente}</div>
+                    <div className="maioli-bcard-cli"><span className="maioli-bcard-sett">{settIcon(b.settore)}</span> {b.cliente}</div>
                     {b.riferimento ? <div className="maioli-bcard-rif">{b.riferimento}</div> : null}
                   </div>
                   <span className="maioli-bcard-right">
@@ -123,15 +153,27 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
             }
 
             const card = (
-              <div className={`maioli-bcard tappable${consegnate ? ' consegnata' : ''}${incompleto ? ' incompleto' : ''}`} onClick={() => onOpen(b.id)}>
+              <div className={`maioli-bcard tappable${consegnate ? ' consegnata' : ''}${incompleto ? ' incompleto' : ''}`} onClick={() => onOpen(b.id, canEdit)}>
                 <div className="maioli-bcard-main">
-                  <div className="maioli-bcard-cli">{b.cliente}</div>
+                  <div className="maioli-bcard-cli">
+                    <span className="maioli-bcard-sett" title={b.settore}>{settIcon(b.settore)}</span> {b.cliente}
+                    {!canEdit ? <span className="maioli-bcard-ro" title="Altro reparto: sola lettura">🔒</span> : null}
+                  </div>
                   {b.riferimento ? <div className="maioli-bcard-rif">{b.riferimento}</div> : null}
                   {incompleto ? <span className="maioli-chip-incompleto">⚠️ Da completare</span> : null}
                 </div>
                 <div className="maioli-bcard-date">{dataTxt}</div>
               </div>
             );
+
+            // nei sopralluoghi: solo cestino (swipe destra), nessuno spostamento stato
+            if (tab === 'sopralluoghi') {
+              return (
+                <SwipeCard key={b.id} onRight={() => cestina(b)} rightLabel="🗑 Cancella">
+                  {card}
+                </SwipeCard>
+              );
+            }
 
             return (
               <SwipeCard key={b.id}

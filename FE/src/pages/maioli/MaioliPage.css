@@ -378,6 +378,19 @@
 .maioli-check input { width: 20px; height: 20px; accent-color: #ca8a04; cursor: pointer; flex: none; }
 .maioli-check-lbl { font-size: 13.5px; font-weight: 700; color: var(--text); }
 .maioli-check-chiamata input { accent-color: #16a34a; }
+.maioli-check-sopralluogo input { accent-color: #0ea5e9; }
+
+/* filtro reparto (⚡/💧) nello Storico */
+.maioli-sett-filter { display: flex; gap: 8px; margin: -4px 0 12px; }
+.maioli-sett-filter button { flex: 1; padding: 7px 4px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.maioli-sett-filter button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* icona reparto + lucchetto sola-lettura sulle card bolla */
+.maioli-bcard-sett { font-size: 13px; }
+.maioli-bcard-ro { font-size: 12px; margin-left: 6px; opacity: 0.75; }
+
+/* nota "sola lettura (altro reparto)" nella barra della bolla */
+.maioli-readonly-note { font-size: 13px; font-weight: 700; color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px; }
 
 /* "Informazioni aggiuntive" (accordion) */
 .maioli-extra { margin-bottom: 10px; }
