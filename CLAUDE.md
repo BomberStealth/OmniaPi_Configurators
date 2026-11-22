@@ -106,19 +106,28 @@ foglio + ricerca). **Firma in finestra** grande (no segni per sbaglio). Bolla
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.20.0**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.21.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
-(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **30**.
+(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **31**.
 
-## ⚡ PROSSIMO: Tappa 3 reparti (settore sulle BOLLE)
-Fatte: Tappa 1 (operai gestibili + settore account) e **Tappa 2** (v1.20.0 —
-ogni articolo listino ha un settore `maioli_listino.settore`, migrazione 028,
-esistenti→elettrico; l'autocomplete materiali in bolla filtra per settore utente
-lato BE via `?all=1` per il management; selettore ⚡/💧/⚡💧 per riga nel Listino).
-→ **Tappa 3**: settore sulle BOLLE = ogni bolla prende il settore del creatore →
-icona ⚡/💧 nella lista Storico, filtro ⚡/💧 nello storico, e **modifica** solo
-stesso settore + Entrambi/Admin (tutti in lettura). Colonna `settore` su
-maioli_bolle + enforcement BE sull'update + icone/filtro FE.
+## ✅ Reparti Elettrico/Idraulico (Tappe 1-3 FATTE)
+- **Tappa 1**: operai gestibili (tabella `maioli_operai`, nome/cognome/foto/
+  settore) + `users.settore` (elettrico/idraulico/entrambi), migrazione 027.
+- **Tappa 2** (v1.20.0): ogni articolo listino ha `maioli_listino.settore`
+  (migrazione 028, esistenti→elettrico); l'autocomplete materiali in bolla
+  filtra per settore utente lato BE (`?all=1` per il management); selettore
+  ⚡/💧/⚡💧 per riga nel Listino.
+- **Tappa 3** (v1.21.0, migrazione 029): colonne `settore` (default `entrambi`)
+  e `sopralluogo` su `maioli_bolle`. La bolla eredita il settore del creatore;
+  **update bloccato lato BE** se la bolla è di un altro reparto (admin/entrambi
+  passano sempre; `entrambi`=bolle vecchie/amministrazione, modificabili da
+  tutti). Storico: 4ª categoria **🔍 Sopralluoghi** (bolle con `sopralluogo=1`),
+  **filtro reparto** ⚡/💧 e icona reparto + 🔒 (sola lettura) sulle card. Bolle
+  di altro reparto si aprono in **sola lettura** (nessun lock, solo Stampa).
+  Spunta **Sopralluogo** sotto la data chiamata. Nomi operai abbreviati
+  "Nome C." in bolla per risparmiare spazio.
+→ **PROSSIMO** (da decidere con Edoardo): stato **Fatturate** (flusso In sospeso
+  → Da fatturare → Fatturate → pagate/non pagate) e **audit log**.
 
 ## In sospeso / idee
 - ✅ **RUOLI/PERMESSI: FATTO (base)**. Non 4 ruoli fissi ma **permessi per
