@@ -58,11 +58,17 @@ export default function OperaiManage() {
     if (d) { const url = await uploadFoto(d); cb(url); }
   };
 
-  const salva = async (r: Row) => {
-    if (!r.nome.trim()) { alert('Il nome è obbligatorio.'); return; }
-    try { await saveOperaio({ id: r.id, nome: r.nome, cognome: r.cognome, settore: r.settore, foto: r.foto, attivo: r.attivo }); load(); }
-    catch { alert('Salvataggio non riuscito.'); }
+  // salva TUTTI gli operai modificati in un colpo (anche premendo Salva su uno)
+  const salvaTutti = async () => {
+    const dirties = rows.filter(r => r._dirty);
+    if (!dirties.length) return;
+    if (dirties.some(r => !r.nome.trim())) { alert('Ogni operaio deve avere un nome.'); return; }
+    try {
+      for (const r of dirties) await saveOperaio({ id: r.id, nome: r.nome, cognome: r.cognome, settore: r.settore, foto: r.foto, attivo: r.attivo });
+      load();
+    } catch { alert('Salvataggio non riuscito.'); }
   };
+  const dirtyCount = rows.filter(r => r._dirty).length;
   const elimina = async (r: Row) => {
     const ok = await confirm({ title: 'Eliminare l\'operaio?', message: `"${r.nome} ${r.cognome}" verrà rimosso dalla lista. Le bolle già fatte restano invariate.`, confirmLabel: 'Elimina', danger: true });
     if (!ok) return;
@@ -81,7 +87,10 @@ export default function OperaiManage() {
     <div className="card maioli-card">
       <div className="maioli-sec-title">
         Operai (manodopera)
-        <button className="btn btn-primary btn-sm" onClick={() => setShowNew(s => !s)}>+ Nuovo operaio</button>
+        <div className="maioli-listino-tools">
+          {dirtyCount > 0 && <button className="btn btn-primary btn-sm maioli-salvatutto" onClick={salvaTutti}>💾 Salva tutto ({dirtyCount})</button>}
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowNew(s => !s)}>+ Nuovo operaio</button>
+        </div>
       </div>
       <div className="maioli-listino-hint">Questi nomi compaiono nella manodopera delle bolle, filtrati per settore.</div>
 
@@ -111,7 +120,7 @@ export default function OperaiManage() {
       ) : (
         <div className="maioli-op-list">
           {rows.map(r => (
-            <div className={`maioli-op-row${r.attivo ? '' : ' off'}`} key={r.id}>
+            <div className={`maioli-op-row${r.attivo ? '' : ' off'}${r._dirty ? ' dirty' : ''}`} key={r.id}>
               <OperaioFoto r={r} onFoto={url => patch(r.id, { foto: url })} pickFoto={pickFoto} />
               <div className="maioli-op-fields">
                 <input className="maioli-op-nome" placeholder="Nome" value={r.nome} onChange={e => patch(r.id, { nome: e.target.value })} />
@@ -122,7 +131,7 @@ export default function OperaiManage() {
                 <label className="maioli-op-attivo"><input type="checkbox" checked={!!r.attivo} onChange={e => patch(r.id, { attivo: e.target.checked ? 1 : 0 })} /><span>Attivo</span></label>
               </div>
               <div className="maioli-acc-actions">
-                <button className="btn btn-primary btn-sm" disabled={!r._dirty} onClick={() => salva(r)}>Salva</button>
+                <button className="btn btn-primary btn-sm" disabled={!r._dirty} onClick={salvaTutti}>Salva</button>
                 <button className="btn-trash" title="Elimina" onClick={() => elimina(r)}>🗑</button>
               </div>
             </div>

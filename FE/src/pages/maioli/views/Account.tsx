@@ -41,12 +41,16 @@ export default function Account() {
   const togglePerm = (id: number, key: string) =>
     setRows(rs => rs.map(r => (r.id === id ? { ...r, permessi: { ...r.permessi, [key]: !r.permessi[key] }, _dirty: true } : r)));
 
-  const salva = async (r: Row) => {
+  // salva TUTTI gli account modificati in un colpo (anche premendo Salva su uno)
+  const salvaTutti = async () => {
+    const dirties = rows.filter(r => r._dirty);
+    if (!dirties.length) return;
     try {
-      await updateAccount(r.id, { attivo: r.attivo, permessi: r.permessi, role: r.role, settore: r.settore });
-      setRows(rs => rs.map(x => (x.id === r.id ? { ...x, _dirty: false } : x)));
+      for (const r of dirties) await updateAccount(r.id, { attivo: r.attivo, permessi: r.permessi, role: r.role, settore: r.settore });
+      load();
     } catch { alert('Salvataggio non riuscito.'); }
   };
+  const dirtyCount = rows.filter(r => r._dirty).length;
 
   const resetPwd = async (r: Row) => {
     const pwd = prompt(`Nuova password per "${r.email}" (min 6 caratteri):`);
@@ -77,7 +81,10 @@ export default function Account() {
     <div className="card maioli-card">
       <div className="maioli-sec-title">
         Account
-        <button className="btn btn-primary btn-sm" onClick={() => setShowNew(s => !s)}>+ Nuovo account</button>
+        <div className="maioli-listino-tools">
+          {dirtyCount > 0 && <button className="btn btn-primary btn-sm maioli-salvatutto" onClick={salvaTutti}>💾 Salva tutto ({dirtyCount})</button>}
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowNew(s => !s)}>+ Nuovo account</button>
+        </div>
       </div>
       <div className="maioli-listino-hint">Attiva/disattiva gli account e scegli a cosa possono accedere. L'ADMIN ha sempre tutti i permessi.</div>
 
@@ -111,9 +118,9 @@ export default function Account() {
             const isAdmin = r.role === 'admin';
             const isSelf = r.email.toLowerCase() === myEmail;
             return (
-              <div className={`maioli-acc-card${r.attivo ? '' : ' off'}`} key={r.id}>
+              <div className={`maioli-acc-card${r.attivo ? '' : ' off'}${r._dirty ? ' dirty' : ''}`} key={r.id}>
                 <div className="maioli-acc-head2">
-                  <div className="maioli-acc-email">{r.email}{isSelf ? ' (tu)' : ''}</div>
+                  <div className="maioli-acc-email">{r.email}{isSelf ? ' (tu)' : ''}{r._dirty ? <span className="maioli-acc-unsaved">● modifiche non salvate</span> : null}</div>
                   <label className="maioli-acc-attivo">
                     <input type="checkbox" checked={!!r.attivo} disabled={isSelf}
                       onChange={e => confermaDisattiva(r, e.target.checked)} />
@@ -122,7 +129,10 @@ export default function Account() {
                 </div>
 
                 {isAdmin ? (
-                  <div className="maioli-acc-adminbadge">👑 Amministratore — tutti i permessi e settori</div>
+                  <div className="maioli-acc-adminbadge">
+                    👑 Amministratore — tutti i permessi e settori
+                    {!isSelf && <button className="btn btn-secondary btn-sm" onClick={() => patch(r.id, { role: 'user' })}>Rimuovi admin</button>}
+                  </div>
                 ) : (
                   <>
                   <div className="maioli-acc-settore">
@@ -147,7 +157,7 @@ export default function Account() {
                 )}
 
                 <div className="maioli-acc-actions">
-                  <button className="btn btn-primary btn-sm" disabled={!r._dirty} onClick={() => salva(r)}>Salva</button>
+                  <button className="btn btn-primary btn-sm" disabled={!r._dirty} onClick={salvaTutti}>Salva</button>
                   <button className="btn btn-secondary btn-sm" onClick={() => resetPwd(r)}>Cambia password</button>
                 </div>
               </div>
