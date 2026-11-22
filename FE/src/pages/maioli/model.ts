@@ -1,4 +1,4 @@
-import { DEFAULT_TARIFFA_ORARIA } from './azienda';
+import { impostazioni, tariffaPerSettore } from './settings';
 
 export interface MaterialeRiga {
   qta: string;
@@ -45,8 +45,8 @@ export interface RapportoData {
   sopralluogo: boolean;      // spunta "sopralluogo" (categoria a parte in Storico)
 }
 
-// Diritto di chiamata fisso (aggiunto alla manodopera se attivo)
-export const COSTO_CHIAMATA = 30;
+// Diritto di chiamata: importo dalle Impostazioni (modificabile dall'admin)
+export const costoChiamata = (): number => impostazioni().costoChiamata;
 
 export function oggiISO(): string {
   const n = new Date();
@@ -77,7 +77,7 @@ export function datiVuoti(): RapportoData {
     indirizzo: '',
     richiesta: '',
     difetti: '',
-    iva: 0,
+    iva: impostazioni().ivaDefault,
     manodopera: [],
     materiali: [rigaVuota()],
     foto: [],
@@ -85,7 +85,7 @@ export function datiVuoti(): RapportoData {
     firmaCliente: '',
     lavoroIncompleto: false,
     daCompletare: '',
-    costoChiamata: false,
+    costoChiamata: impostazioni().costoChiamataDefault === 1,
     sopralluogo: false,
   };
 }
@@ -146,7 +146,7 @@ export const qtaEff = (m: MaterialeRiga): number => {
 };
 
 export function calcola(d: RapportoData): Totali {
-  const chiamata = d.costoChiamata ? COSTO_CHIAMATA : 0;
+  const chiamata = d.costoChiamata ? costoChiamata() : 0;
   const manodopera = chiamata + (d.manodopera ?? []).reduce((s, m) => s + n2(m.ore) * n2(m.tariffa), 0);
   const materiali = d.materiali.reduce((s, m) => s + qtaEff(m) * n2(m.prezzo), 0);
   const imponibile = manodopera + materiali;
@@ -160,6 +160,6 @@ export function calcola(d: RapportoData): Totali {
 const OPERAI_LEGACY: Record<string, string> = { edoardo: 'Edoardo', daniele: 'Daniele', sandro: 'Sandro' };
 export const nomeOperaio = (s: string): string => OPERAI_LEGACY[s] ?? s;
 
-export function defaultManoRiga(operaio: string): ManoRiga {
-  return { operaio, ore: '', tariffa: String(DEFAULT_TARIFFA_ORARIA) };
+export function defaultManoRiga(operaio: string, settore?: string): ManoRiga {
+  return { operaio, ore: '', tariffa: String(tariffaPerSettore(settore)) };
 }

@@ -57,6 +57,11 @@ router.post('/operai', requireAdminRole, c.operaiCreate as never);
 router.put('/operai/:id', requireAdminRole, c.operaiUpdate as never);
 router.delete('/operai/:id', requireAdminRole, c.operaiDelete as never);
 
+// Impostazioni globali bolle: lettura a qualsiasi account attivo (servono per
+// compilare le bolle); modifica SOLO admin.
+router.get('/impostazioni', c.impostazioniGet as never);
+router.put('/impostazioni', requireAdminRole, c.impostazioniUpdate as never);
+
 // Account (gestione permessi): SOLO admin.
 router.get('/accounts', requireAdminRole, c.accountsList as never);
 router.post('/accounts', requireAdminRole, c.accountCreate as never);

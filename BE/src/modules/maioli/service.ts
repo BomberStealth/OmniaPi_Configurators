@@ -69,6 +69,42 @@ export async function deleteAccount(id: number): Promise<boolean> {
   return r.affectedRows > 0;
 }
 
+// ─────────────── Impostazioni globali bolle (admin) ───────────────
+export interface Impostazioni {
+  costoChiamata: number;        // € diritto di chiamata
+  costoChiamataDefault: number; // 0/1: spuntato di default nelle nuove bolle
+  tariffaElettrico: number;     // €/h reparto elettrico
+  tariffaIdraulico: number;     // €/h reparto idraulico
+  ivaDefault: number;           // % IVA preselezionata
+}
+
+export async function getImpostazioni(): Promise<Impostazioni> {
+  const [rows] = (await pool.execute('SELECT k, v FROM maioli_settings')) as [{ k: string; v: string }[], unknown];
+  const map: Record<string, string> = {};
+  for (const r of rows) map[r.k] = r.v;
+  const num = (k: string, d: number) => { const n = Number(map[k]); return isFinite(n) ? n : d; };
+  return {
+    costoChiamata: num('costo_chiamata', 30),
+    costoChiamataDefault: map['costo_chiamata_default'] === '1' ? 1 : 0,
+    tariffaElettrico: num('tariffa_elettrico', 30),
+    tariffaIdraulico: num('tariffa_idraulico', 30),
+    ivaDefault: num('iva_default', 0),
+  };
+}
+
+export async function setImpostazioni(d: Partial<Impostazioni>): Promise<void> {
+  const nn = (x: unknown) => String(Math.max(0, Number(x) || 0));
+  const pairs: [string, string][] = [];
+  if (d.costoChiamata !== undefined) pairs.push(['costo_chiamata', nn(d.costoChiamata)]);
+  if (d.costoChiamataDefault !== undefined) pairs.push(['costo_chiamata_default', d.costoChiamataDefault ? '1' : '0']);
+  if (d.tariffaElettrico !== undefined) pairs.push(['tariffa_elettrico', nn(d.tariffaElettrico)]);
+  if (d.tariffaIdraulico !== undefined) pairs.push(['tariffa_idraulico', nn(d.tariffaIdraulico)]);
+  if (d.ivaDefault !== undefined) pairs.push(['iva_default', nn(d.ivaDefault)]);
+  for (const [k, v] of pairs) {
+    await pool.execute('INSERT INTO maioli_settings (k, v) VALUES (?, ?) ON DUPLICATE KEY UPDATE v=VALUES(v)', [k, v]);
+  }
+}
+
 // ─────────────────────────── Operai (manodopera) ───────────────────────────
 export interface Operaio { id: number; nome: string; cognome: string; settore: string; foto: string | null; attivo: number; }
 

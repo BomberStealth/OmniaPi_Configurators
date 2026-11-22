@@ -1,0 +1,31 @@
+// Impostazioni globali delle bolle (costo chiamata, tariffe orarie per settore,
+// IVA di default). Caricate dal BE a inizio sessione e tenute in una cache in
+// memoria qui, così model.ts/FoglioRapporto le leggono in modo sincrono senza
+// import circolari (questo modulo non importa nulla).
+
+export interface Impostazioni {
+  costoChiamata: number;        // € diritto di chiamata
+  costoChiamataDefault: number; // 0/1: spuntato di default nelle nuove bolle
+  tariffaElettrico: number;     // €/h reparto elettrico
+  tariffaIdraulico: number;     // €/h reparto idraulico
+  ivaDefault: number;           // % IVA preselezionata
+}
+
+export const IMPOST_DEFAULT: Impostazioni = {
+  costoChiamata: 30,
+  costoChiamataDefault: 0,
+  tariffaElettrico: 30,
+  tariffaIdraulico: 30,
+  ivaDefault: 0,
+};
+
+let current: Impostazioni = { ...IMPOST_DEFAULT };
+
+export const impostazioni = (): Impostazioni => current;
+export const setImpostazioniLocal = (v: Partial<Impostazioni>): void => {
+  current = { ...current, ...v };
+};
+
+// tariffa oraria di default in base al settore dell'operaio
+export const tariffaPerSettore = (settore?: string): number =>
+  settore === 'idraulico' ? current.tariffaIdraulico : current.tariffaElettrico;

@@ -1,5 +1,5 @@
 import { AZIENDA, LOGO } from './azienda';
-import { eur, numFmt, dt, calcola, n2, nomeOperaio, qtaEff, rigaHaContenuto, COSTO_CHIAMATA } from './model';
+import { eur, numFmt, dt, calcola, n2, nomeOperaio, qtaEff, rigaHaContenuto, costoChiamata } from './model';
 import type { RapportoData, MaterialeRiga, ManoRiga } from './model';
 import './foglio.css';
 
@@ -106,7 +106,7 @@ export default function FoglioRapporto({ data }: { data: RapportoData }) {
               </thead>
               <tbody>
                 {prima && data.costoChiamata && (
-                  <tr className="fixed"><td className="c" /><td className="desc">DIRITTO DI CHIAMATA</td><td className="r">{eur(COSTO_CHIAMATA)}</td></tr>
+                  <tr className="fixed"><td className="c" /><td className="desc">DIRITTO DI CHIAMATA</td><td className="r">{eur(costoChiamata())}</td></tr>
                 )}
                 {prima && mano.map((m, idx) => <RigaMano m={m} key={'mano' + idx} />)}
                 {righe.map((m, idx) => <RigaMateriale m={m} key={idx} />)}

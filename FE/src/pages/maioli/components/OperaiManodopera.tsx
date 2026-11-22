@@ -19,9 +19,9 @@ export default function OperaiManodopera({ value, onChange }: Props) {
   useEffect(() => { listOperai().then(setOperai).catch(() => setOperai([])); }, []);
 
   const byName = (name: string) => value.find(m => m.operaio === name);
-  const toggle = (name: string) => {
+  const toggle = (name: string, settore?: string) => {
     if (byName(name)) onChange(value.filter(m => m.operaio !== name));
-    else onChange([...value, defaultManoRiga(name)]);
+    else onChange([...value, defaultManoRiga(name, settore)]);
   };
   const setField = (name: string, k: 'ore' | 'tariffa', v: string) =>
     onChange(value.map(m => (m.operaio === name ? { ...m, [k]: v } : m)));
@@ -29,9 +29,9 @@ export default function OperaiManodopera({ value, onChange }: Props) {
   const totale = value.reduce((s, m) => s + n2(m.ore) * n2(m.tariffa), 0);
 
   // operai dalla lista + eventuali selezionati "fuori lista" (bolle vecchie/altro settore)
-  const dalDb = operai.map(o => ({ name: nameOf(o), foto: o.foto }));
+  const dalDb = operai.map(o => ({ name: nameOf(o), foto: o.foto, settore: o.settore as string | undefined }));
   const nomiDb = new Set(dalDb.map(x => x.name));
-  const extra = value.filter(m => m.operaio && !nomiDb.has(m.operaio)).map(m => ({ name: m.operaio, foto: null as string | null }));
+  const extra = value.filter(m => m.operaio && !nomiDb.has(m.operaio)).map(m => ({ name: m.operaio, foto: null as string | null, settore: undefined as string | undefined }));
   const items = [...dalDb, ...extra];
 
   return (
@@ -46,7 +46,7 @@ export default function OperaiManodopera({ value, onChange }: Props) {
             return (
               <div className={`op-item${active ? ' op-active' : ''}`} key={op.name} style={{ '--opc': COLORI[i % COLORI.length] } as React.CSSProperties}>
                 <button type="button" className="op-avatar"
-                  onClick={() => toggle(op.name)} title={active ? `Rimuovi ${op.name}` : `Aggiungi ${op.name}`}>
+                  onClick={() => toggle(op.name, op.settore)} title={active ? `Rimuovi ${op.name}` : `Aggiungi ${op.name}`}>
                   {op.foto ? <img src={fotoSrc(op.foto)} alt={op.name} /> : <span className="op-initials">{initials(op.name)}</span>}
                   <span className="op-check">{active ? '✓' : '+'}</span>
                 </button>

@@ -201,6 +201,14 @@ export async function accountDelete(req: Request, res: Response): Promise<void> 
   } catch { err(res); }
 }
 
+// ── Impostazioni globali bolle (admin) ──
+export async function impostazioniGet(_req: Request, res: Response): Promise<void> {
+  try { res.json(await s.getImpostazioni()); } catch { err(res); }
+}
+export async function impostazioniUpdate(req: Request, res: Response): Promise<void> {
+  try { await s.setImpostazioni(req.body || {}); res.json(await s.getImpostazioni()); } catch { err(res); }
+}
+
 // ── Foto (file su SSD) ──
 // upload: riceve { dataUrl } (JPEG compresso dalla FE), salva su disco e
 // ritorna { url } da memorizzare nella bolla.

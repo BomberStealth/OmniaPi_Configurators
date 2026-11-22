@@ -106,9 +106,20 @@ foglio + ricerca). **Firma in finestra** grande (no segni per sbaglio). Bolla
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.22.1**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.23.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
-(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **32**.
+(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **33**.
+
+## ⚙️ Impostazioni globali bolle (v1.23.0 — solo admin)
+Pagina **Impostazioni** (tab ⚙️, adminOnly) → valori comuni a tutte le bolle
+future: diritto di chiamata (€ + se spuntato di default), tariffa oraria
+⚡elettrico/💧idraulico, IVA di default. Tabella key-value `maioli_settings`
+(migrazione 031). Rotte `GET /impostazioni` (qualsiasi account) + `PUT` (admin).
+Cache FE in `settings.ts` (no import circolari): caricata a `initStore`, letta
+in modo sincrono da `model.ts` (`costoChiamata()`, `datiVuoti` iva/chiamata,
+`defaultManoRiga(nome, settore)` → tariffa per reparto) e `FoglioRapporto`. Se il
+BE è vecchio/irraggiungibile si usano i default (`IMPOST_DEFAULT`). NON tocca le
+bolle già salvate.
 
 ## 🔒 Lock bolla (v1.22.0 — comportamento aggiornato)
 Il lock si prende **SOLO al tap su "Modifica"**, non all'apertura (aprire per

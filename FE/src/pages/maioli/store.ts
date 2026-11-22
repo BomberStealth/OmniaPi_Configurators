@@ -2,6 +2,8 @@ import { calcola, n2, numStr, oggiISO, rigaHaContenuto, qtaEff } from './model';
 import type { RapportoData } from './model';
 import { authHeaders, getToken, onAuthExpired } from '../../auth';
 import { REQUIRED_BE_VERSION } from './version';
+import { setImpostazioniLocal } from './settings';
+import type { Impostazioni } from './settings';
 
 const API = '/api/configuratori/maioli';
 const HEALTH = '/api/configuratori/health';
@@ -161,7 +163,11 @@ export async function initStore(): Promise<StoreMode> {
     clearTimeout(t);
     if (res.ok) {
       const probe = await fetch(`${API}/clienti?q=`, { headers: authHeaders() });
-      if (probe.ok) MODE = 'api';
+      if (probe.ok) {
+        MODE = 'api';
+        // carica le impostazioni globali nella cache (se il BE è vecchio resta sui default)
+        try { setImpostazioniLocal(await (await fetch(`${API}/impostazioni`, { headers: authHeaders() })).json()); } catch { /* default */ }
+      }
       else if (probe.status === 401) { onAuthExpired(); MODE = 'offline'; }
       else MODE = 'offline';
     } else {
@@ -378,6 +384,20 @@ export async function updateAccount(id: number, d: { attivo?: number; permessi?:
 export async function deleteAccount(id: number): Promise<void> {
   await requireApi();
   await jfetch(`${API}/accounts/${id}`, { method: 'DELETE' });
+}
+
+// ── Impostazioni globali bolle ──
+export async function getImpostazioni(): Promise<Impostazioni> {
+  await requireApi();
+  const imp = await jfetch(`${API}/impostazioni`);
+  setImpostazioniLocal(imp);
+  return imp;
+}
+export async function saveImpostazioni(d: Partial<Impostazioni>): Promise<Impostazioni> {
+  await requireApi();
+  const imp = await jfetch(`${API}/impostazioni`, { method: 'PUT', body: JSON.stringify(d) });
+  setImpostazioniLocal(imp);
+  return imp;
 }
 
 // ── Operai (manodopera) ──

@@ -403,6 +403,15 @@
 .maioli-acc-del { color: #e11d2a; border-color: rgba(225,29,42,0.4); }
 .maioli-acc-del:hover { background: rgba(225,29,42,0.08); }
 
+/* pagina Impostazioni */
+.maioli-imp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 14px 0 18px; }
+.maioli-imp-field { display: flex; flex-direction: column; gap: 6px; }
+.maioli-imp-field > span { font-size: 12.5px; font-weight: 700; color: var(--text); }
+.maioli-imp-field input, .maioli-imp-field select { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-xs); font-size: 15px; background: #fff; }
+.maioli-imp-check { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+.maioli-imp-check input { width: 20px; height: 20px; accent-color: #16a34a; flex: none; }
+.maioli-imp-check span { font-size: 13.5px; color: var(--text); }
+
 /* "Informazioni aggiuntive" (accordion) */
 .maioli-extra { margin-bottom: 10px; }
 .maioli-extra-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 11px; background: var(--glass); border: 1px dashed var(--border); border-radius: var(--radius-xs); cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--text-muted); }
