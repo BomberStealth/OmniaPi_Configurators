@@ -4,14 +4,17 @@ import type { BollaSummary } from '../store';
 import { getSettore, isAdmin } from '../../../auth';
 
 // stesso criterio dello Storico: chi può modificare la bolla (per aprirla già modificabile)
+const isAmm = () => isAdmin() || getSettore() === 'entrambi';
 const puoModificare = (s?: string): boolean => {
   const mio = getSettore();
   return isAdmin() || mio === 'entrambi' || !s || s === 'entrambi' || mio === s;
 };
+const canEditBolla = (b: BollaSummary) => puoModificare(b.settore) && (!Number(b.bloccata) || isAmm());
+const motivoRO = (b: BollaSummary) => (Number(b.bloccata) && !isAmm()) ? 'blocco' : (!puoModificare(b.settore) ? 'reparto' : '');
 const fmtData = (s: string | null | undefined) => (s ? new Date(String(s).slice(0, 10) + 'T00:00:00').toLocaleDateString('it-IT') : '—');
 
 interface Props {
-  onOpen: (id: number, canEdit: boolean) => void;
+  onOpen: (id: number, canEdit: boolean, reason?: string) => void;
   reloadKey: number;
 }
 
@@ -46,7 +49,7 @@ export default function Segnalazioni({ onOpen, reloadKey }: Props) {
             const senza = Number(b.n_senza_prezzo) || 0;
             const mod = Number(b.n_prezzo_mod) || 0;
             return (
-              <div className={`maioli-bcard tappable${senza > 0 ? ' incompleto' : ''}`} key={b.id} onClick={() => onOpen(b.id, puoModificare(b.settore))}>
+              <div className={`maioli-bcard tappable${senza > 0 ? ' incompleto' : ''}`} key={b.id} onClick={() => onOpen(b.id, canEditBolla(b), motivoRO(b))}>
                 <div className="maioli-bcard-main">
                   <div className="maioli-bcard-cli">{b.cliente}{b.numero ? ` · ${b.numero}` : ''}</div>
                   {b.riferimento ? <div className="maioli-bcard-rif">{b.riferimento}</div> : null}

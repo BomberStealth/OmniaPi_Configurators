@@ -44,6 +44,8 @@ export interface RapportoData {
   daCompletare: string;      // cosa manca da fare (interno, NON stampato)
   costoChiamata: boolean;    // diritto di chiamata (+30€ oltre la manodopera)
   sopralluogo: boolean;      // spunta "sopralluogo" (categoria a parte in Storico)
+  bloccata?: boolean;        // stato (solo lettura): blocco fatturazione amministrazione
+  fatturata?: boolean;       // stato (solo lettura): spostata in "Fatturate"
 }
 
 // Diritto di chiamata: importo dalle Impostazioni (modificabile dall'admin)
@@ -88,6 +90,8 @@ export function datiVuoti(): RapportoData {
     daCompletare: '',
     costoChiamata: impostazioni().costoChiamataDefault === 1,
     sopralluogo: false,
+    bloccata: false,
+    fatturata: false,
   };
 }
 

@@ -7,12 +7,12 @@ import Listino from './views/Listino';
 import Account from './views/Account';
 import Impostazioni from './views/Impostazioni';
 import AuditLog from './views/AuditLog';
-import { can, isAdmin, refreshMe } from '../../auth';
+import { can, isAdmin, getSettore, refreshMe } from '../../auth';
 import { LOGO } from './azienda';
 import { MAIOLI_VERSION } from './version';
 import { datiVuoti, rigaHaContenuto } from './model';
 import type { RapportoData } from './model';
-import { initStore, storeMode, resetStore, getBolla, beVersionStatus, lockBolla, unlockBolla } from './store';
+import { initStore, storeMode, resetStore, getBolla, beVersionStatus, lockBolla, unlockBolla, fatturaBolla, bloccaBolla } from './store';
 import { ConfirmProvider, useConfirm } from './components/ConfirmDialog';
 import './MaioliPage.css';
 
@@ -96,18 +96,35 @@ function MaioliInner() {
 
   // ── Overlay bolla esistente (apri dallo Storico/Segnalazioni senza cambiare
   //    pagina: lo Storico resta sotto, fermo dove sei). ──
-  const [modal, setModal] = useState<{ data: RapportoData; readOnly: boolean } | null>(null);
-  const modalRef = useRef<{ data: RapportoData; readOnly: boolean } | null>(null);
+  type Modal = { data: RapportoData; readOnly: boolean; reason: string };
+  const [modal, setModal] = useState<Modal | null>(null);
+  const modalRef = useRef<Modal | null>(null);
   modalRef.current = modal;
   const modalBaseline = useRef('');
 
-  const openBolla = async (id: number, canEdit = true) => {
+  const openBolla = async (id: number, canEdit = true, reason = '') => {
     try {
       const d = await getBolla(id);
       modalBaseline.current = snap(d);
-      setModal({ data: d, readOnly: !canEdit });
+      setModal({ data: d, readOnly: !canEdit, reason });
       try { window.history.pushState({ maioliModal: 1 }, ''); } catch { /* ignore */ }
     } catch { alert('Impossibile aprire la bolla.'); }
+  };
+
+  // ricarica la bolla aperta nell'overlay (dopo blocco/fatturazione)
+  const reloadModal = async (id: number) => {
+    try { const d = await getBolla(id); modalBaseline.current = snap(d); setModal(m => (m ? { ...m, data: d } : m)); setReloadKey(k => k + 1); }
+    catch { /* ignore */ }
+  };
+  // azioni amministrazione dall'overlay
+  const amm = isAdmin() || getSettore() === 'entrambi';
+  const toggleBlocco = async () => {
+    const m = modalRef.current; if (!m?.data.id) return;
+    try { await bloccaBolla(m.data.id, !m.data.bloccata); await reloadModal(m.data.id); } catch { alert('Operazione non riuscita.'); }
+  };
+  const toggleFattura = async () => {
+    const m = modalRef.current; if (!m?.data.id) return;
+    try { await fatturaBolla(m.data.id, !m.data.fatturata); await reloadModal(m.data.id); } catch { alert('Operazione non riuscita.'); }
   };
   const setModalData: React.Dispatch<React.SetStateAction<RapportoData>> = (upd) => {
     setModal(m => (m ? { ...m, data: typeof upd === 'function' ? (upd as (p: RapportoData) => RapportoData)(m.data) : upd } : m));
@@ -242,16 +259,29 @@ function MaioliInner() {
         <div className="maioli-modal" role="dialog" aria-modal="true">
           <div className="maioli-modal-bar">
             <span className="maioli-modal-title">
-              {modal.data.numero ? `Bolla ${modal.data.numero}` : 'Bolla'}{modal.data.cliente ? ` · ${modal.data.cliente}` : ''}
+              {modal.data.bloccata ? '🔒 ' : ''}{modal.data.numero ? `Bolla ${modal.data.numero}` : 'Bolla'}{modal.data.cliente ? ` · ${modal.data.cliente}` : ''}
             </span>
             <button className="maioli-modal-close" onClick={() => closeModal(false)} aria-label="Chiudi">✕ Chiudi</button>
           </div>
+          {amm && modal.data.id && (
+            <div className="maioli-modal-actions">
+              <button className="maioli-modal-act" onClick={toggleFattura}>
+                {modal.data.fatturata ? '↩ Togli da Fatturate' : '✅ Segna fatturata'}
+              </button>
+              <button className={`maioli-modal-act${modal.data.bloccata ? ' on' : ''}`} onClick={toggleBlocco}>
+                {modal.data.bloccata ? '🔓 Sblocca fatturazione' : '🔒 Blocca per fatturazione'}
+              </button>
+            </div>
+          )}
           <div className="maioli-modal-body">
             <NuovaBolla
               data={modal.data}
               setData={setModalData}
               onSaved={onModalSaved}
               readOnly={modal.readOnly}
+              readOnlyMsg={modal.reason === 'blocco'
+                ? 'BOLLA BLOCCATA: è in fatturazione, modificabile solo dall\'amministrazione.'
+                : undefined}
               onRequestEdit={() => acquireLock(modal.data.id)}
               onClose={() => closeModal(false)}
             />

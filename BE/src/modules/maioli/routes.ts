@@ -33,6 +33,8 @@ router.post('/bolle', requirePerm('nuova'), c.bolleCreate as never);
 router.put('/bolle/:id', requirePerm('nuova'), c.bolleUpdate as never);
 router.post('/bolle/:id/restore', requirePerm('storico'), c.bolleRestore as never);
 router.post('/bolle/:id/consegna', requirePerm('storico'), c.bolleConsegna as never);
+router.post('/bolle/:id/fattura', requirePerm('storico'), c.bolleFattura as never);
+router.post('/bolle/:id/blocca', requirePerm('storico'), c.bolleBlocca as never);
 router.post('/bolle/:id/lock', requirePerm('storico'), c.bolleLock as never);
 router.post('/bolle/:id/unlock', requirePerm('storico'), c.bolleUnlock as never);
 router.delete('/bolle/:id/permanent', requirePerm('storico'), c.bollePurge as never);

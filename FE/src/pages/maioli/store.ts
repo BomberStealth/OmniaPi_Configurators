@@ -36,6 +36,9 @@ export interface BollaSummary {
   lavoro_incompleto?: number;
   settore?: string;
   sopralluogo?: number;
+  fatturata_at?: string | null;
+  bloccata?: number;
+  bloccata_by?: string | null;
   n_senza_prezzo?: number;  // righe con articolo ma prezzo 0/vuoto (🔴)
   n_prezzo_mod?: number;    // righe col prezzo cambiato dal listino (🟡)
 }
@@ -128,6 +131,8 @@ export function fromBolla(row: Record<string, any>): RapportoData {
     difetti: row.difetti ?? '',
     iva: Number(row.iva ?? 0),
     manodopera: (row.manodopera ?? []).map((m: any) => ({ operaio: m.operaio, ore: numStr(m.ore), tariffa: numStr(m.tariffa) })),
+    bloccata: !!Number(row.bloccata),
+    fatturata: row.fatturata_at != null,
     materiali: (row.materiali ?? []).map((r: any) => ({ qta: String(r.qta ?? ''), codice: r.codice ?? '', marca: r.marca ?? '', descrizione: r.descrizione ?? '', prezzo: String(r.prezzo ?? ''), prezzo_listino: r.prezzo_listino != null ? Number(r.prezzo_listino) : null, listino_id: r.listino_id ?? null })),
     foto: Array.isArray(row.foto) ? row.foto.filter(Boolean) : [],
     firmaTecnico: row.firma_tecnico ?? '',
@@ -263,7 +268,7 @@ export async function listRiferimenti(clienteId: number | null, q: string): Prom
 }
 
 // ── Bolle ──
-export type StatoBolla = 'sospeso' | 'consegnate' | 'sopralluoghi';
+export type StatoBolla = 'sospeso' | 'consegnate' | 'fatturate' | 'sopralluoghi';
 
 export async function listBolle(q: string, stato: StatoBolla = 'sospeso', settore = ''): Promise<BollaSummary[]> {
   await requireApi();
@@ -312,6 +317,16 @@ export async function deleteBollaPermanent(id: number): Promise<void> {
 export async function markConsegnata(id: number, consegnata: boolean): Promise<void> {
   await requireApi();
   await jfetch(`${API}/bolle/${id}/consegna`, { method: 'POST', body: JSON.stringify({ consegnata }) });
+}
+// sposta in "Fatturate" / indietro (amministrazione/admin o permesso 'fatturate')
+export async function fatturaBolla(id: number, fatturata: boolean): Promise<void> {
+  await requireApi();
+  await jfetch(`${API}/bolle/${id}/fattura`, { method: 'POST', body: JSON.stringify({ fatturata }) });
+}
+// blocco fatturazione (amministrazione/admin)
+export async function bloccaBolla(id: number, bloccata: boolean): Promise<void> {
+  await requireApi();
+  await jfetch(`${API}/bolle/${id}/blocca`, { method: 'POST', body: JSON.stringify({ bloccata }) });
 }
 
 // ── Lock bolla (modifica contemporanea) ──

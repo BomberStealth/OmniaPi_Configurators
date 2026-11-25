@@ -106,9 +106,26 @@ foglio + ricerca). **Firma in finestra** grande (no segni per sbaglio). Bolla
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.26.0**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.27.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
-(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **35**.
+(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **36**.
+
+## 🧾 Stato Fatturate + blocco fatturazione (v1.27.0)
+Flusso stati (raccoglitore, NON sostituisce il gestionale): In sospeso →
+Da fatturare (`consegnata_at`) → **Fatturate** (`fatturata_at`, migr. 035).
+`listBolle` stato `fatturate` = `fatturata_at IS NOT NULL`; In sospeso/Da
+fatturare ora escludono anche le fatturate. Spostamento in Fatturate: rotta
+`POST /bolle/:id/fattura` — solo admin, amministrazione (settore entrambi) o
+permesso `fatturate`. Tab "Fatturate" nello Storico ora popolato (apri la bolla
+nell'overlay per toglierla da Fatturate).
+**Blocco fatturazione**: `maioli_bolle.bloccata`/`bloccata_by`. Rotta
+`POST /bolle/:id/blocca` (solo admin/amministrazione). Quando bloccata, l'update
+è rifiutato lato BE per tutti tranne admin/amministrazione ("BOLLA BLOCCATA…"),
+e la FE la apre in sola lettura con quel messaggio; icona 🔒 sulle card.
+I pulsanti **Blocca/Sblocca** e **Segna/Togli fatturata** sono nella barra scura
+dell'overlay (solo amministrazione/admin): `toggleBlocco`/`toggleFattura` in
+MaioliPage → `reloadModal`. `bollaGuard(id)` (settore+bloccata) usato
+nell'enforcement di `bolleUpdate`.
 
 ## 🚩 Segnalazioni prezzi (v1.26.0 — la vedono tutti)
 Rileva problemi di prezzo nelle bolle, SENZA bloccare nulla:

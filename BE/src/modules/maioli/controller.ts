@@ -59,12 +59,45 @@ export async function bolleUpdate(req: Request, res: Response): Promise<void> {
   if (!req.body?.cliente?.trim()) { res.status(400).json({ message: 'Cliente obbligatorio' }); return; }
   const acc = (req as WithAcc).account;
   try {
-    // permesso di modifica per reparto: solo stesso settore + entrambi/admin
-    const sett = await s.bollaSettore(id);
-    if (sett && acc && acc.role !== 'admin' && acc.settore !== 'entrambi' && sett !== 'entrambi' && sett !== acc.settore) {
-      res.status(403).json({ message: `Bolla del reparto ${sett}: non puoi modificarla` }); return;
+    const g = await s.bollaGuard(id);
+    const isAmm = acc?.role === 'admin' || acc?.settore === 'entrambi'; // amministrazione = settore entrambi
+    if (g) {
+      // blocco fatturazione: solo amministrazione/admin
+      if (g.bloccata && !isAmm) {
+        res.status(403).json({ message: 'BOLLA BLOCCATA: è in fatturazione, modificabile solo da amministrazione' }); return;
+      }
+      // permesso di modifica per reparto: solo stesso settore + entrambi/admin
+      if (g.settore && acc && !isAmm && g.settore !== 'entrambi' && g.settore !== acc.settore) {
+        res.status(403).json({ message: `Bolla del reparto ${g.settore}: non puoi modificarla` }); return;
+      }
     }
     const ok = await s.updateBolla(id, req.body); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), 'modifica', 'bolla', id, req.body?.cliente); res.json({ ok: true });
+  } catch { err(res); }
+}
+// Sposta in "Fatturate"/indietro — solo amministrazione/admin o permesso 'fatturate'
+export async function bolleFattura(req: Request, res: Response): Promise<void> {
+  const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
+  const acc = (req as WithAcc).account;
+  const canFatt = acc?.role === 'admin' || acc?.settore === 'entrambi' || !!acc?.permessi?.fatturate;
+  if (!canFatt) { res.status(403).json({ message: 'Solo amministrazione/admin possono spostare in Fatturate' }); return; }
+  const fatturata = req.body?.fatturata !== false;
+  try {
+    const ok = await s.setFatturata(id, fatturata); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; }
+    await s.logAudit(who(req), 'sposta', 'bolla', id, fatturata ? 'Da «Da fatturare» → «Fatturate»' : 'Da «Fatturate» → «Da fatturare»');
+    res.json({ ok: true });
+  } catch { err(res); }
+}
+// Blocco/sblocco fatturazione — solo amministrazione/admin
+export async function bolleBlocca(req: Request, res: Response): Promise<void> {
+  const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
+  const acc = (req as WithAcc).account;
+  if (!(acc?.role === 'admin' || acc?.settore === 'entrambi')) { res.status(403).json({ message: 'Solo amministrazione/admin' }); return; }
+  const bloccata = req.body?.bloccata !== false;
+  const user = (req as WithAcc).user?.email || 'amministrazione';
+  try {
+    const ok = await s.setBloccata(id, bloccata, user); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; }
+    await s.logAudit(who(req), 'blocco', 'bolla', id, bloccata ? 'Bloccata per fatturazione' : 'Sbloccata');
+    res.json({ ok: true });
   } catch { err(res); }
 }
 export async function bolleDelete(req: Request, res: Response): Promise<void> {

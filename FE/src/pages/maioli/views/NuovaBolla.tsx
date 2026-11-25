@@ -32,9 +32,11 @@ interface Props {
   readOnly?: boolean;   // bolla di un altro reparto: solo lettura/stampa
   onRequestEdit?: () => Promise<boolean>; // "Modifica": prende il lock, false = occupata
   onClose?: () => void; // presente = aperta nell'overlay (dallo Storico): niente "Nuovo"
+  readOnlyMsg?: string; // messaggio sola-lettura (default: "altro reparto")
 }
 
-export default function NuovaBolla({ data, setData, onSaved, onReset, readOnly, onRequestEdit, onClose }: Props) {
+export default function NuovaBolla({ data, setData, onSaved, onReset, readOnly, onRequestEdit, onClose, readOnlyMsg }: Props) {
+  const roMsg = readOnlyMsg || 'Questa bolla è di un altro reparto: puoi vederla e stamparla, ma non modificarla.';
   const confirm = useConfirm();
   const [mobileTab, setMobileTab] = useState<'compila' | 'anteprima'>('compila');
   const [saving, setSaving] = useState(false);
@@ -46,7 +48,7 @@ export default function NuovaBolla({ data, setData, onSaved, onReset, readOnly, 
   useEffect(() => { setLocked(!!data.id || !!readOnly); }, [data.id, readOnly]);
   const askUnlock = async () => {
     if (readOnly) {
-      await confirm({ title: 'Sola lettura', message: 'Questa bolla è di un altro reparto: puoi vederla e stamparla, ma non modificarla.', confirmLabel: 'Ho capito' });
+      await confirm({ title: 'Sola lettura', message: roMsg, confirmLabel: 'Ho capito' });
       return;
     }
     const ok = await confirm({ title: 'Modificare la bolla?', message: 'La bolla è bloccata per non modificarla per sbaglio. Vuoi sbloccarla per modificarla?', confirmLabel: 'Sì, modifica' });
@@ -318,7 +320,7 @@ export default function NuovaBolla({ data, setData, onSaved, onReset, readOnly, 
             {locked ? (
               <>
                 {readOnly
-                  ? <span className="maioli-readonly-note">🔒 Sola lettura (altro reparto)</span>
+                  ? <span className="maioli-readonly-note">🔒 {readOnlyMsg ? 'Bloccata (fatturazione)' : 'Sola lettura (altro reparto)'}</span>
                   : <button className="btn btn-secondary maioli-bottom-save" onClick={askUnlock}>✏️ Modifica</button>}
                 <button className="btn btn-primary maioli-bottom-print" onClick={stampa}>🖨 Stampa</button>
               </>

@@ -489,11 +489,14 @@ export interface BollaSummary {
   lavoro_incompleto?: number;
   settore?: string;
   sopralluogo?: number;
+  fatturata_at?: string | null;
+  bloccata?: number;
+  bloccata_by?: string | null;
   n_senza_prezzo?: number;  // righe con articolo ma prezzo 0/vuoto (🔴)
   n_prezzo_mod?: number;    // righe col prezzo cambiato dal listino (🟡)
 }
 
-const SUMMARY_COLS = `id, numero, cliente, riferimento, indirizzo, data_intervento, totale, updated_at, deleted_at, consegnata_at, lavoro_incompleto, settore, sopralluogo,
+const SUMMARY_COLS = `id, numero, cliente, riferimento, indirizzo, data_intervento, totale, updated_at, deleted_at, consegnata_at, fatturata_at, bloccata, bloccata_by, lavoro_incompleto, settore, sopralluogo,
   (SELECT COUNT(*) FROM maioli_bolle_foto f WHERE f.bolla_id = maioli_bolle.id) AS n_foto,
   (SELECT COUNT(*) FROM maioli_bolle_righe r WHERE r.bolla_id = maioli_bolle.id AND (TRIM(r.descrizione) <> '' OR TRIM(r.codice) <> '') AND (r.prezzo IS NULL OR r.prezzo = 0)) AS n_senza_prezzo,
   (SELECT COUNT(*) FROM maioli_bolle_righe r WHERE r.bolla_id = maioli_bolle.id AND r.listino_id IS NOT NULL AND r.prezzo_listino IS NOT NULL AND ABS(r.prezzo - r.prezzo_listino) > 0.005) AS n_prezzo_mod`;
@@ -501,13 +504,16 @@ const SUMMARY_COLS = `id, numero, cliente, riferimento, indirizzo, data_interven
 export async function listBolle(q: string, stato = 'sospeso', settore?: string, limit = 50): Promise<BollaSummary[]> {
   const cond: string[] = ['deleted_at IS NULL'];
   const params: string[] = [];
-  // sospeso = non consegnata; consegnate = consegnate; sopralluoghi = flag sopralluogo.
-  // I sopralluoghi vivono SOLO nella loro categoria (di solito non si fatturano),
-  // quindi vanno esclusi da "In sospeso" e "Da fatturare".
+  // sospeso = non consegnata; consegnate = "Da fatturare"; fatturate = chiuse;
+  // sopralluoghi = flag sopralluogo (vivono SOLO nella loro categoria, esclusi
+  // dagli altri stati perché di solito non si fatturano).
   if (stato === 'sopralluoghi') cond.push('sopralluogo = 1');
+  else if (stato === 'fatturate') cond.push('fatturata_at IS NOT NULL');
   else {
-    cond.push(stato === 'consegnate' ? 'consegnata_at IS NOT NULL' : 'consegnata_at IS NULL');
+    // In sospeso / Da fatturare: comunque NON ancora fatturate e non sopralluoghi
+    cond.push('fatturata_at IS NULL');
     cond.push('sopralluogo = 0');
+    cond.push(stato === 'consegnate' ? 'consegnata_at IS NOT NULL' : 'consegnata_at IS NULL');
   }
   // filtro ⚡/💧: mostra le bolle del reparto + quelle "entrambi" (amministrazione)
   if (settore && settore !== 'entrambi') { cond.push("(settore = ? OR settore = 'entrambi')"); params.push(settore); }
@@ -516,7 +522,8 @@ export async function listBolle(q: string, stato = 'sospeso', settore?: string, 
     cond.push('(cliente LIKE ? OR riferimento LIKE ? OR numero LIKE ? OR indirizzo LIKE ?)');
     params.push(like, like, like, like);
   }
-  const order = stato === 'consegnate' ? 'consegnata_at DESC, id DESC'
+  const order = stato === 'fatturate' ? 'fatturata_at DESC, id DESC'
+    : stato === 'consegnate' ? 'consegnata_at DESC, id DESC'
     : stato === 'sopralluoghi' ? 'updated_at DESC, id DESC'
     : 'anno ASC, progressivo ASC, id ASC';
   const [rows] = await pool.execute(
@@ -544,10 +551,29 @@ export async function listSegnalazioni(q: string, limit = 200): Promise<BollaSum
   return rows as BollaSummary[];
 }
 
-// settore di una bolla (per controllare chi può modificarla)
-export async function bollaSettore(id: number): Promise<string | null> {
-  const [rows] = (await pool.execute('SELECT settore FROM maioli_bolle WHERE id=? LIMIT 1', [id])) as [{ settore: string }[], unknown];
-  return rows[0]?.settore ?? null;
+// settore + blocco di una bolla (per controllare chi può modificarla)
+export async function bollaGuard(id: number): Promise<{ settore: string | null; bloccata: number } | null> {
+  const [rows] = (await pool.execute('SELECT settore, bloccata FROM maioli_bolle WHERE id=? LIMIT 1', [id])) as [{ settore: string; bloccata: number }[], unknown];
+  return rows[0] ? { settore: rows[0].settore ?? null, bloccata: Number(rows[0].bloccata) || 0 } : null;
+}
+
+// Sposta in "Fatturate" (fatturata=true) o indietro a "Da fatturare" (false).
+export async function setFatturata(id: number, fatturata: boolean): Promise<boolean> {
+  const [r] = (await pool.execute(
+    fatturata ? 'UPDATE maioli_bolle SET fatturata_at=NOW() WHERE id=? AND deleted_at IS NULL'
+              : 'UPDATE maioli_bolle SET fatturata_at=NULL WHERE id=? AND deleted_at IS NULL',
+    [id],
+  )) as [{ affectedRows: number }, unknown];
+  return r.affectedRows > 0;
+}
+
+// Blocco fatturazione: solo amministrazione/admin potranno poi modificarla.
+export async function setBloccata(id: number, bloccata: boolean, user: string): Promise<boolean> {
+  const [r] = (await pool.execute(
+    'UPDATE maioli_bolle SET bloccata=?, bloccata_by=? WHERE id=? AND deleted_at IS NULL',
+    [bloccata ? 1 : 0, bloccata ? user : null, id],
+  )) as [{ affectedRows: number }, unknown];
+  return r.affectedRows > 0;
 }
 
 // bolle nel cestino (soft-deleted); purga prima quelle oltre i 30 giorni

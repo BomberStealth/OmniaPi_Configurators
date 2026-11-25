@@ -10,17 +10,24 @@ type Tab = 'sospeso' | 'consegnate' | 'fatturate' | 'sopralluoghi' | 'cancellate
 type SettF = '' | 'elettrico' | 'idraulico';
 
 interface Props {
-  onOpen: (id: number, canEdit: boolean) => void;
+  onOpen: (id: number, canEdit: boolean, reason?: string) => void;
   reloadKey: number;
 }
 
 // icona reparto sulla card
 const settIcon = (s?: string) => (s === 'elettrico' ? '⚡' : s === 'idraulico' ? '💧' : '⚡💧');
-// chi può modificare la bolla (stesso reparto, o Entrambi/Admin)
+// amministrazione = settore "entrambi" (o admin): può tutto, blocco incluso
+const isAmm = () => isAdmin() || getSettore() === 'entrambi';
+// chi può modificare la bolla (stesso reparto o Entrambi/Admin) e non bloccata
 const puoModificare = (s?: string): boolean => {
   const mio = getSettore();
   return isAdmin() || mio === 'entrambi' || !s || s === 'entrambi' || mio === s;
 };
+// motivo della sola lettura (per il messaggio in apertura)
+const motivoRO = (b: BollaSummary): string =>
+  (Number(b.bloccata) && !isAmm()) ? 'blocco' : (!puoModificare(b.settore) ? 'reparto' : '');
+const canEditBolla = (b: BollaSummary): boolean =>
+  puoModificare(b.settore) && (!Number(b.bloccata) || isAmm());
 
 export default function BolleFatte({ onOpen, reloadKey }: Props) {
   const confirm = useConfirm();
@@ -31,12 +38,11 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async (query: string, t: Tab, sf: SettF) => {
-    if (t === 'fatturate') { setRows([]); setLoading(false); return; } // sezione vuota (da fare)
     setLoading(true);
     try {
       if (t === 'cancellate') setRows(await listBolleCancellate(query));
       else {
-        const stato = t === 'consegnate' ? 'consegnate' : t === 'sopralluoghi' ? 'sopralluoghi' : 'sospeso';
+        const stato = t === 'consegnate' ? 'consegnate' : t === 'fatturate' ? 'fatturate' : t === 'sopralluoghi' ? 'sopralluoghi' : 'sospeso';
         setRows(await listBolle(query, stato, sf));
       }
     } catch { setRows([]); } finally { setLoading(false); }
@@ -115,6 +121,9 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
       {tab === 'sopralluoghi' && (
         <div className="maioli-listino-hint">Bolle segnate come <b>sopralluogo</b>. Scorri <span className="maioli-swipe-ar right">→</span> per cancellarle.</div>
       )}
+      {tab === 'fatturate' && (
+        <div className="maioli-listino-hint">Bolle <b>fatturate</b> (raccoglitore). Aprile per rimetterle in "Da fatturare" (solo amministrazione).</div>
+      )}
       {tab === 'cancellate' && (
         <div className="maioli-listino-hint">Le bolle cancellate restano qui 30 giorni, poi si eliminano da sole. Puoi ripristinarle o eliminarle subito.</div>
       )}
@@ -125,7 +134,7 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
         <div className="maioli-empty">
           {tab === 'sospeso' ? 'Nessuna bolla in sospeso.'
             : tab === 'consegnate' ? 'Nessuna bolla da fatturare.'
-            : tab === 'fatturate' ? '🚧 Sezione in arrivo — ci lavoreremo presto.'
+            : tab === 'fatturate' ? 'Nessuna bolla fatturata.'
             : tab === 'sopralluoghi' ? 'Nessun sopralluogo.'
             : 'Il cestino è vuoto.'}
         </div>
@@ -134,8 +143,9 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
           {rows.map(b => {
             const consegnate = tab === 'consegnate';
             const incompleto = tab === 'sospeso' && !!Number(b.lavoro_incompleto);
-            const dataTxt = consegnate ? `🧾 ${fmtData(b.consegnata_at)}` : `📅 ${fmtData(b.data_intervento)}`;
-            const canEdit = puoModificare(b.settore);
+            const dataTxt = tab === 'fatturate' ? `✅ ${fmtData(b.fatturata_at)}` : consegnate ? `🧾 ${fmtData(b.consegnata_at)}` : `📅 ${fmtData(b.data_intervento)}`;
+            const canEdit = canEditBolla(b);
+            const bloccata = !!Number(b.bloccata);
 
             if (tab === 'cancellate') {
               return (
@@ -154,11 +164,12 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
             }
 
             const card = (
-              <div className={`maioli-bcard tappable${consegnate ? ' consegnata' : ''}${incompleto ? ' incompleto' : ''}`} onClick={() => onOpen(b.id, canEdit)}>
+              <div className={`maioli-bcard tappable${consegnate ? ' consegnata' : ''}${incompleto ? ' incompleto' : ''}`} onClick={() => onOpen(b.id, canEdit, motivoRO(b))}>
                 <div className="maioli-bcard-main">
                   <div className="maioli-bcard-cli">
                     <span className="maioli-bcard-sett" title={b.settore}>{settIcon(b.settore)}</span> {b.cliente}
-                    {!canEdit ? <span className="maioli-bcard-ro" title="Altro reparto: sola lettura">🔒</span> : null}
+                    {bloccata ? <span className="maioli-bcard-ro" title="Bloccata per fatturazione">🔒</span>
+                      : !canEdit ? <span className="maioli-bcard-ro" title="Altro reparto: sola lettura">🔒</span> : null}
                   </div>
                   {b.riferimento ? <div className="maioli-bcard-rif">{b.riferimento}</div> : null}
                   {incompleto ? <span className="maioli-chip-incompleto">⚠️ Da completare</span> : null}
@@ -170,8 +181,9 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
               </div>
             );
 
-            // nei sopralluoghi: solo cestino (swipe destra), nessuno spostamento stato
-            if (tab === 'sopralluoghi') {
+            // sopralluoghi e fatturate: solo cestino (swipe destra), gli spostamenti
+            // di stato si fanno aprendo la bolla (overlay)
+            if (tab === 'sopralluoghi' || tab === 'fatturate') {
               return (
                 <SwipeCard key={b.id} onRight={() => cestina(b)} rightLabel="🗑 Cancella">
                   {card}
