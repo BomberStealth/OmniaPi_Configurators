@@ -416,6 +416,14 @@
 .maioli-imp-check input { width: 20px; height: 20px; accent-color: #16a34a; flex: none; }
 .maioli-imp-check span { font-size: 13.5px; color: var(--text); }
 
+/* overlay bolla (apertura dallo Storico/Segnalazioni senza cambiare pagina) */
+.maioli-modal { position: fixed; inset: 0; z-index: 1000; background: var(--bg, #f1f4fb); display: flex; flex-direction: column; }
+.maioli-modal-bar { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: #1e293b; color: #fff; }
+.maioli-modal-title { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.maioli-modal-close { flex: none; background: rgba(255,255,255,0.14); color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.maioli-modal-close:hover { background: rgba(255,255,255,0.24); }
+.maioli-modal-body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 16px 0; }
+
 /* storico azioni (audit log) */
 .maioli-audit-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
 .maioli-audit-row { display: flex; gap: 10px; align-items: flex-start; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: #fff; }

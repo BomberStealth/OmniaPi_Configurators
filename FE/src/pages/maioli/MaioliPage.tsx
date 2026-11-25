@@ -69,7 +69,6 @@ function MaioliInner() {
 
   // ── Lock "bolla in modifica" (una sola persona per volta) ──
   const editingRef = useRef<number | null>(null);
-  const [readOnly, setReadOnly] = useState(false); // bolla di altro reparto = sola lettura
   const releaseLock = useCallback(async () => {
     const id = editingRef.current;
     editingRef.current = null;
@@ -78,6 +77,14 @@ function MaioliInner() {
   const manutenzione = async (lockedBy: string) => {
     await confirm({ title: 'Bolla in uso', message: `LA BOLLA È SOTTO MANUTENZIONE da: ${lockedBy}`, confirmLabel: 'Ho capito' });
   };
+  // "Modifica": prova a prendere il lock di una bolla (null = nuova non salvata).
+  const acquireLock = async (id: number | null | undefined): Promise<boolean> => {
+    if (!id) return true;
+    const lock = await lockBolla(id);
+    if (!lock.ok) { await manutenzione(lock.lockedBy || 'un altro utente'); return false; }
+    editingRef.current = id;
+    return true;
+  };
   // heartbeat: tiene vivo il lock SOLO mentre si sta modificando (ogni 30s;
   // il BE libera la bolla dopo 90s senza heartbeat)
   useEffect(() => {
@@ -85,37 +92,67 @@ function MaioliInner() {
     return () => clearInterval(iv);
   }, []);
 
-  // Apre una bolla: NON prende il lock (solo "Modifica" lo prende).
+  // ── Overlay bolla esistente (apri dallo Storico/Segnalazioni senza cambiare
+  //    pagina: lo Storico resta sotto, fermo dove sei). ──
+  const [modal, setModal] = useState<{ data: RapportoData; readOnly: boolean } | null>(null);
+  const modalRef = useRef<{ data: RapportoData; readOnly: boolean } | null>(null);
+  modalRef.current = modal;
+  const modalBaseline = useRef('');
+
   const openBolla = async (id: number, canEdit = true) => {
     try {
-      await releaseLock();               // rilascia l'eventuale lock precedente
-      editingRef.current = null;
-      setReadOnly(!canEdit);
       const d = await getBolla(id);
-      setData(d);
-      baseline.current = snap(d);
-      setTab('nuova');
+      modalBaseline.current = snap(d);
+      setModal({ data: d, readOnly: !canEdit });
+      try { window.history.pushState({ maioliModal: 1 }, ''); } catch { /* ignore */ }
     } catch { alert('Impossibile aprire la bolla.'); }
   };
-
-  // Tasto "Modifica": prova a prendere il lock. false = occupata da un altro
-  // (viene mostrato "sotto manutenzione" e la bolla resta in sola lettura).
-  const requestEdit = async (): Promise<boolean> => {
-    const id = data.id;
-    if (!id) return true;                // nuova non ancora salvata: modificabile
-    const lock = await lockBolla(id);
-    if (!lock.ok) { await manutenzione(lock.lockedBy || 'un altro utente'); return false; }
-    editingRef.current = id;
-    return true;
+  const setModalData: React.Dispatch<React.SetStateAction<RapportoData>> = (upd) => {
+    setModal(m => (m ? { ...m, data: typeof upd === 'function' ? (upd as (p: RapportoData) => RapportoData)(m.data) : upd } : m));
   };
+  const suppressPop = useRef(false);
+  const closeModal = useCallback(async (viaPop = false): Promise<void> => {
+    const m = modalRef.current;
+    if (!m) return;
+    // conferma modifiche non salvate solo alla chiusura col tasto (col "indietro"
+    // del telefono si chiude e basta, rilasciando il lock)
+    if (!viaPop) {
+      const isDirty = !m.readOnly && snap(m.data) !== modalBaseline.current && snap(m.data) !== snap(datiVuoti());
+      if (isDirty) {
+        const ok = await confirm({ title: 'Chiudere la bolla?', message: 'Ci sono modifiche non salvate: se chiudi le perdi.', confirmLabel: 'Chiudi senza salvare', danger: true });
+        if (!ok) return; // resta aperta
+      }
+    }
+    await releaseLock();
+    setModal(null);
+    if (!viaPop) { suppressPop.current = true; try { window.history.back(); } catch { suppressPop.current = false; } } // consuma la voce di cronologia (senza richiudere)
+  }, [confirm, releaseLock]);
 
-  const nuovaBolla = () => { releaseLock(); setReadOnly(false); };
+  // tasto "indietro" del telefono e tasto Esc chiudono l'overlay
+  useEffect(() => {
+    const onPop = () => {
+      if (suppressPop.current) { suppressPop.current = false; return; }
+      if (modalRef.current) void closeModal(true);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && modalRef.current) void closeModal(false); };
+    window.addEventListener('popstate', onPop);
+    window.addEventListener('keydown', onKey);
+    return () => { window.removeEventListener('popstate', onPop); window.removeEventListener('keydown', onKey); };
+  }, [closeModal]);
 
-  const onSaved = (saved?: RapportoData) => {
-    if (saved) baseline.current = snap(saved);
-    releaseLock();                       // dopo il salvataggio il lock si libera (si riprende con "Modifica")
+  const onModalSaved = (saved?: RapportoData) => {
+    if (saved) { modalBaseline.current = snap(saved); setModal(m => (m ? { ...m, data: saved } : m)); }
+    releaseLock();
     setReloadKey(k => k + 1);
   };
+
+  // ── Tab "Nuova bolla" (solo creazione nuove) ──
+  const onSaved = (saved?: RapportoData) => {
+    if (saved) baseline.current = snap(saved);
+    releaseLock();
+    setReloadKey(k => k + 1);
+  };
+  const nuovaBolla = () => { releaseLock(); };
 
   const goTab = async (t: Tab) => {
     if (t === tab) return;
@@ -128,9 +165,7 @@ function MaioliInner() {
       if (!ok) return;
       setData(datiVuoti()); // azzera la bolla
     }
-    if (tab === 'nuova') await releaseLock(); // lasciando Nuova Bolla rilascia il lock
-    // tornando su Nuova Bolla la bolla si riapre "bloccata": il lock si riprende
-    // solo ri-cliccando "Modifica" (niente lock automatico).
+    if (tab === 'nuova') await releaseLock();
     setTab(t);
   };
 
@@ -183,7 +218,7 @@ function MaioliInner() {
               <div className="maioli-empty">Nessun permesso assegnato. Contatta l'amministratore.</div>
             )}
             {tab === 'nuova' && can('nuova') && (
-              <NuovaBolla data={data} setData={setData} onSaved={onSaved} onReset={nuovaBolla} readOnly={readOnly} onRequestEdit={requestEdit} />
+              <NuovaBolla data={data} setData={setData} onSaved={onSaved} onReset={nuovaBolla} readOnly={false} onRequestEdit={() => acquireLock(data.id)} />
             )}
             {tab === 'archivio' && can('storico') && (
               <BolleFatte onOpen={openBolla} reloadKey={reloadKey} />
@@ -196,6 +231,28 @@ function MaioliInner() {
           </>
         )}
       </div>
+
+      {/* Overlay bolla esistente (apre sopra lo Storico, senza cambiare pagina) */}
+      {modal && (
+        <div className="maioli-modal" role="dialog" aria-modal="true">
+          <div className="maioli-modal-bar">
+            <span className="maioli-modal-title">
+              {modal.data.numero ? `Bolla ${modal.data.numero}` : 'Bolla'}{modal.data.cliente ? ` · ${modal.data.cliente}` : ''}
+            </span>
+            <button className="maioli-modal-close" onClick={() => closeModal(false)} aria-label="Chiudi">✕ Chiudi</button>
+          </div>
+          <div className="maioli-modal-body">
+            <NuovaBolla
+              data={modal.data}
+              setData={setModalData}
+              onSaved={onModalSaved}
+              readOnly={modal.readOnly}
+              onRequestEdit={() => acquireLock(modal.data.id)}
+              onClose={() => closeModal(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

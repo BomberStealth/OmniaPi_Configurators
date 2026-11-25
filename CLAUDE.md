@@ -106,9 +106,19 @@ foglio + ricerca). **Firma in finestra** grande (no segni per sbaglio). Bolla
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.24.1**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.25.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
 (BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **34**.
+
+## 🪟 Apertura bolla in overlay (v1.25.0)
+Le bolle esistenti NON aprono più nel tab "Nuova bolla": si aprono in un
+**overlay a tutto schermo** sopra lo Storico/Segnalazioni (stato `modal` in
+`MaioliPage`), così lo Storico resta montato e fermo (scroll preservato). Il tab
+"Nuova bolla" serve SOLO a crearne di nuove. L'overlay usa lo stesso `NuovaBolla`
+(nuova prop `onClose` = modalità overlay, nasconde "Nuovo"). Modifica dentro
+l'overlay: tasto Modifica → lock → Salva; chiusura con ✕/Esc/«indietro» del
+telefono (pushState + popstate, con `suppressPop` per non richiudere due volte).
+Lock unificato: `acquireLock(id)` (tab nuova + overlay condividono `editingRef`).
 
 ## 🧾 Storico azioni / Audit log (v1.24.0 — solo admin)
 Tabella `maioli_audit` (migrazione 033: ts, user_email, azione, entita,

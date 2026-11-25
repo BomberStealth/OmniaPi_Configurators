@@ -31,9 +31,10 @@ interface Props {
   onReset?: () => void; // rilascia il lock della bolla aperta (quando si fa "Nuovo")
   readOnly?: boolean;   // bolla di un altro reparto: solo lettura/stampa
   onRequestEdit?: () => Promise<boolean>; // "Modifica": prende il lock, false = occupata
+  onClose?: () => void; // presente = aperta nell'overlay (dallo Storico): niente "Nuovo"
 }
 
-export default function NuovaBolla({ data, setData, onSaved, onReset, readOnly, onRequestEdit }: Props) {
+export default function NuovaBolla({ data, setData, onSaved, onReset, readOnly, onRequestEdit, onClose }: Props) {
   const confirm = useConfirm();
   const [mobileTab, setMobileTab] = useState<'compila' | 'anteprima'>('compila');
   const [saving, setSaving] = useState(false);
@@ -159,7 +160,7 @@ export default function NuovaBolla({ data, setData, onSaved, onReset, readOnly, 
                    : <span className="maioli-chip maioli-chip-new">Nuova bolla</span>}
         </div>
         <div className="maioli-toolbar">
-          <button className="btn btn-secondary btn-sm" onClick={nuovo}>✕ Nuovo</button>
+          {!onClose && <button className="btn btn-secondary btn-sm" onClick={nuovo}>✕ Nuovo</button>}
         </div>
       </div>
 
