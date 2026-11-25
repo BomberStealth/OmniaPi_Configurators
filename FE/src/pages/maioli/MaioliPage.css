@@ -202,7 +202,8 @@
 
 /* ── card bolle (archivio) ── */
 .maioli-bcards { display: flex; flex-direction: column; gap: 10px; }
-.maioli-bcard { display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--card-gradient); }
+/* niente selezione testo sulle card: se sottolinei (su PC) lo swipe non parte più */
+.maioli-bcard { display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--card-gradient); user-select: none; -webkit-user-select: none; }
 .maioli-bcard.tappable { cursor: pointer; transition: background 0.12s, border-color 0.12s; }
 .maioli-bcard.tappable:hover { background: var(--glass-hover); }
 .maioli-bcard.tappable:active { transform: scale(0.995); }
@@ -292,7 +293,7 @@
 .maioli-chip-incompleto { font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 99px; white-space: nowrap; background: rgba(234,179,8,0.18); color: #a16207; }
 
 /* swipe-to-action */
-.swipe { position: relative; overflow: hidden; border-radius: var(--radius-sm); touch-action: pan-y; }
+.swipe { position: relative; overflow: hidden; border-radius: var(--radius-sm); touch-action: pan-y; user-select: none; -webkit-user-select: none; }
 .swipe-bg { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 22px; border-radius: var(--radius-sm); }
 .swipe-bg-lbl { color: #fff; font-weight: 800; font-size: 14px; transition: transform 0.12s; }
 .swipe-bg-lbl.past { transform: scale(1.18); }
