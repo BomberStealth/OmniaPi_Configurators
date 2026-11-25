@@ -36,6 +36,8 @@ export interface BollaSummary {
   lavoro_incompleto?: number;
   settore?: string;
   sopralluogo?: number;
+  n_senza_prezzo?: number;  // righe con articolo ma prezzo 0/vuoto (🔴)
+  n_prezzo_mod?: number;    // righe col prezzo cambiato dal listino (🟡)
 }
 export interface ListinoItem {
   id: number;
@@ -92,7 +94,7 @@ export function toPayload(d: RapportoData) {
     totale: tot.totale,
     materiali: d.materiali
       .filter(rigaHaContenuto)
-      .map(m => ({ qta: qtaEff(m), codice: m.codice, marca: m.marca ?? null, descrizione: m.descrizione, prezzo: n2(m.prezzo), listino_id: m.listino_id ?? null })),
+      .map(m => ({ qta: qtaEff(m), codice: m.codice, marca: m.marca ?? null, descrizione: m.descrizione, prezzo: n2(m.prezzo), prezzo_listino: m.prezzo_listino ?? null, listino_id: m.listino_id ?? null })),
     manodopera: d.manodopera
       .filter(x => x.operaio)
       .map(x => ({ operaio: x.operaio, ore: n2(x.ore), tariffa: n2(x.tariffa) })),
@@ -126,7 +128,7 @@ export function fromBolla(row: Record<string, any>): RapportoData {
     difetti: row.difetti ?? '',
     iva: Number(row.iva ?? 0),
     manodopera: (row.manodopera ?? []).map((m: any) => ({ operaio: m.operaio, ore: numStr(m.ore), tariffa: numStr(m.tariffa) })),
-    materiali: (row.materiali ?? []).map((r: any) => ({ qta: String(r.qta ?? ''), codice: r.codice ?? '', marca: r.marca ?? '', descrizione: r.descrizione ?? '', prezzo: String(r.prezzo ?? ''), listino_id: r.listino_id ?? null })),
+    materiali: (row.materiali ?? []).map((r: any) => ({ qta: String(r.qta ?? ''), codice: r.codice ?? '', marca: r.marca ?? '', descrizione: r.descrizione ?? '', prezzo: String(r.prezzo ?? ''), prezzo_listino: r.prezzo_listino != null ? Number(r.prezzo_listino) : null, listino_id: r.listino_id ?? null })),
     foto: Array.isArray(row.foto) ? row.foto.filter(Boolean) : [],
     firmaTecnico: row.firma_tecnico ?? '',
     firmaCliente: row.firma_cliente ?? '',
@@ -271,6 +273,12 @@ export async function listBolle(q: string, stato: StatoBolla = 'sospeso', settor
 export async function getBolla(id: number): Promise<RapportoData> {
   await requireApi();
   return fromBolla(await jfetch(`${API}/bolle/${id}`));
+}
+
+// Segnalazioni: bolle con prezzi mancanti o cambiati dal listino
+export async function listSegnalazioni(q = ''): Promise<BollaSummary[]> {
+  await requireApi();
+  return jfetch(`${API}/segnalazioni?q=${encodeURIComponent(q)}`);
 }
 
 export async function saveBolla(d: RapportoData): Promise<{ id: number; numero: string }> {

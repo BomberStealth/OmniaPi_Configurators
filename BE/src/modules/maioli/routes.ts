@@ -27,6 +27,7 @@ router.delete('/clienti/:id', requirePerm('clienti'), c.clientiDelete as never);
 // Bolle: lettura/stato = "storico"; creazione/modifica = "nuova".
 router.get('/bolle', requirePerm('storico'), c.bolleList as never);
 router.get('/bolle/cancellate', requirePerm('storico'), c.bolleCancellate as never);
+router.get('/segnalazioni', c.segnalazioniList as never); // la vedono tutti gli account attivi
 router.get('/bolle/:id', requirePerm('storico'), c.bolleGet as never);
 router.post('/bolle', requirePerm('nuova'), c.bolleCreate as never);
 router.put('/bolle/:id', requirePerm('nuova'), c.bolleUpdate as never);

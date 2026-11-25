@@ -4,6 +4,7 @@ import type { BollaSummary } from '../store';
 import { getSettore, isAdmin } from '../../../auth';
 import { useConfirm } from '../components/ConfirmDialog';
 import SwipeCard from '../components/SwipeCard';
+import ProblemiBadge from '../components/ProblemiBadge';
 
 type Tab = 'sospeso' | 'consegnate' | 'fatturate' | 'sopralluoghi' | 'cancellate';
 type SettF = '' | 'elettrico' | 'idraulico';
@@ -162,7 +163,10 @@ export default function BolleFatte({ onOpen, reloadKey }: Props) {
                   {b.riferimento ? <div className="maioli-bcard-rif">{b.riferimento}</div> : null}
                   {incompleto ? <span className="maioli-chip-incompleto">⚠️ Da completare</span> : null}
                 </div>
-                <div className="maioli-bcard-date">{dataTxt}</div>
+                <div className="maioli-bcard-date">
+                  <ProblemiBadge senza={b.n_senza_prezzo} mod={b.n_prezzo_mod} />
+                  {dataTxt}
+                </div>
               </div>
             );
 

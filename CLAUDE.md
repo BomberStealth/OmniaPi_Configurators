@@ -106,9 +106,24 @@ foglio + ricerca). **Firma in finestra** grande (no segni per sbaglio). Bolla
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.25.0**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.26.0**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
-(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **34**.
+(BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **35**.
+
+## 🚩 Segnalazioni prezzi (v1.26.0 — la vedono tutti)
+Rileva problemi di prezzo nelle bolle, SENZA bloccare nulla:
+- 🔴 **manca prezzo**: riga con articolo ma prezzo 0/vuoto.
+- 🟡 **prezzo cambiato dal listino**: se prendi un articolo dall'autocomplete salvo
+  il prezzo-listino sulla riga (`maioli_bolle_righe.prezzo_listino`, migr. 034); se
+  poi in bolla lo cambi a mano → giallo. Righe a mano / bolle vecchie: nessun 🟡.
+Conteggi in `SUMMARY_COLS` (`n_senza_prezzo`, `n_prezzo_mod`), quindi li hanno sia
+Storico (iconcina `ProblemiBadge` sulle card) sia la pagina Segnalazioni. Pagina
+`Segnalazioni` (tab 🚩, visibile a TUTTI → TABS senza `cap`; filtro tab aggiornato
+a `t.cap ? can(t.cap) : true`); clic su una riga → apre la bolla nell'overlay.
+Rotta `GET /segnalazioni` (ogni account attivo), `listSegnalazioni` con HAVING.
+In bolla la casella prezzo diventa gialla (`.mod`) quando il prezzo ≠ prezzo_listino;
+IMPORTANTE: modificare il prezzo NON azzera più `listino_id`/`prezzo_listino`
+(serviva per rilevare il 🟡).
 
 ## 🪟 Apertura bolla in overlay (v1.25.0)
 Le bolle esistenti NON aprono più nel tab "Nuova bolla": si aprono in un

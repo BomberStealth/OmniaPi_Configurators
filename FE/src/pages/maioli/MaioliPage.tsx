@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import NuovaBolla from './views/NuovaBolla';
 import BolleFatte from './views/BolleFatte';
+import Segnalazioni from './views/Segnalazioni';
 import Clienti from './views/Clienti';
 import Listino from './views/Listino';
 import Account from './views/Account';
@@ -15,11 +16,12 @@ import { initStore, storeMode, resetStore, getBolla, beVersionStatus, lockBolla,
 import { ConfirmProvider, useConfirm } from './components/ConfirmDialog';
 import './MaioliPage.css';
 
-type Tab = 'nuova' | 'archivio' | 'clienti' | 'listino' | 'account' | 'impostazioni' | 'audit';
+type Tab = 'nuova' | 'archivio' | 'segnalazioni' | 'clienti' | 'listino' | 'account' | 'impostazioni' | 'audit';
 
 const TABS: { id: Tab; label: string; icon: string; cap?: string; adminOnly?: boolean }[] = [
   { id: 'nuova', label: 'Nuova Bolla', icon: '📝', cap: 'nuova' },
   { id: 'archivio', label: 'Storico bolle', icon: '🗂', cap: 'storico' },
+  { id: 'segnalazioni', label: 'Segnalazioni', icon: '🚩' },
   { id: 'clienti', label: 'Clienti', icon: '👥', cap: 'clienti' },
   { id: 'listino', label: 'Listino prezzi', icon: '🏷', cap: 'listino' },
   { id: 'account', label: 'Account', icon: '👤', adminOnly: true },
@@ -55,7 +57,7 @@ function MaioliInner() {
   // ricarica ruolo+permessi freschi (l'admin può averli cambiati)
   useEffect(() => { refreshMe().then(() => setPermKey(k => k + 1)); }, []);
 
-  const visibleTabs = TABS.filter(t => (t.adminOnly ? isAdmin() : can(t.cap!)));
+  const visibleTabs = TABS.filter(t => (t.adminOnly ? isAdmin() : t.cap ? can(t.cap) : true));
   // se il tab attivo non è permesso, vai al primo disponibile
   useEffect(() => {
     if (conn !== 'api') return;
@@ -222,6 +224,9 @@ function MaioliInner() {
             )}
             {tab === 'archivio' && can('storico') && (
               <BolleFatte onOpen={openBolla} reloadKey={reloadKey} />
+            )}
+            {tab === 'segnalazioni' && (
+              <Segnalazioni onOpen={openBolla} reloadKey={reloadKey} />
             )}
             {tab === 'clienti' && can('clienti') && <Clienti />}
             {tab === 'listino' && can('listino') && <Listino />}

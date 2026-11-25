@@ -44,18 +44,22 @@ export default function MaterialeRow({ m, index, onChange, onDelete }: Props) {
 
   // digitazione libera nell'unico campo "Articolo": cerca e azzera marca/codice (testo libero)
   const typeSearch = (val: string) => {
-    onChange({ descrizione: val, codice: '', marca: '', listino_id: null });
+    onChange({ descrizione: val, codice: '', marca: '', listino_id: null, prezzo_listino: null });
     setQ(val);
     setOpen(true);
   };
 
   const pick = (it: ListinoItem) => {
-    onChange({ codice: it.codice, marca: it.marca, descrizione: it.descrizione, prezzo: String(prezzoFinale(it)), listino_id: it.id });
+    const fin = prezzoFinale(it);
+    // salvo anche il prezzo-listino di questo momento: se poi lo cambi a mano → 🟡
+    onChange({ codice: it.codice, marca: it.marca, descrizione: it.descrizione, prezzo: String(fin), prezzo_listino: fin, listino_id: it.id });
     setOpen(false);
   };
 
   // riga "piena" ma con prezzo 0 → evidenzia la casella prezzo (va bene, ma si nota)
   const prezzoZero = (m.descrizione.trim() !== '' || !!m.codice) && n2(m.prezzo) === 0;
+  // prezzo cambiato rispetto al listino preimpostato → casella gialla (solo segnalazione)
+  const prezzoMod = m.prezzo_listino != null && Math.abs(n2(m.prezzo) - m.prezzo_listino) > 0.005;
 
   return (
     <div className="maioli-mat-row" ref={boxRef}>
@@ -90,7 +94,7 @@ export default function MaterialeRow({ m, index, onChange, onDelete }: Props) {
       </label>
       <label className="mf prezzo">
         <span className="mf-l">Prezzo €</span>
-        <input className={prezzoZero ? 'zero' : ''} inputMode="decimal" value={m.prezzo} onChange={e => onChange({ prezzo: e.target.value, listino_id: null })} placeholder="0,00" />
+        <input className={`${prezzoZero ? 'zero' : ''}${prezzoMod && !prezzoZero ? ' mod' : ''}`} inputMode="decimal" value={m.prezzo} onChange={e => onChange({ prezzo: e.target.value })} placeholder="0,00" />
       </label>
     </div>
   );

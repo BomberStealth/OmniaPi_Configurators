@@ -92,6 +92,11 @@ export async function bolleConsegna(req: Request, res: Response): Promise<void> 
   } catch { err(res); }
 }
 
+// ── Segnalazioni (prezzi mancanti / cambiati) ──
+export async function segnalazioniList(req: Request, res: Response): Promise<void> {
+  try { res.json(await s.listSegnalazioni(String(req.query.q ?? ''))); } catch { err(res); }
+}
+
 // ── Lock bolla (modifica contemporanea) ──
 export async function bolleLock(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }

@@ -331,6 +331,7 @@ export interface RigaInput {
   marca?: string | null;
   descrizione: string;
   prezzo: number;
+  prezzo_listino?: number | null; // prezzo dal listino quando aggiunto (per Segnalazioni)
   listino_id?: number | null;
 }
 
@@ -488,9 +489,14 @@ export interface BollaSummary {
   lavoro_incompleto?: number;
   settore?: string;
   sopralluogo?: number;
+  n_senza_prezzo?: number;  // righe con articolo ma prezzo 0/vuoto (🔴)
+  n_prezzo_mod?: number;    // righe col prezzo cambiato dal listino (🟡)
 }
 
-const SUMMARY_COLS = 'id, numero, cliente, riferimento, indirizzo, data_intervento, totale, updated_at, deleted_at, consegnata_at, lavoro_incompleto, settore, sopralluogo, (SELECT COUNT(*) FROM maioli_bolle_foto f WHERE f.bolla_id = maioli_bolle.id) AS n_foto';
+const SUMMARY_COLS = `id, numero, cliente, riferimento, indirizzo, data_intervento, totale, updated_at, deleted_at, consegnata_at, lavoro_incompleto, settore, sopralluogo,
+  (SELECT COUNT(*) FROM maioli_bolle_foto f WHERE f.bolla_id = maioli_bolle.id) AS n_foto,
+  (SELECT COUNT(*) FROM maioli_bolle_righe r WHERE r.bolla_id = maioli_bolle.id AND (TRIM(r.descrizione) <> '' OR TRIM(r.codice) <> '') AND (r.prezzo IS NULL OR r.prezzo = 0)) AS n_senza_prezzo,
+  (SELECT COUNT(*) FROM maioli_bolle_righe r WHERE r.bolla_id = maioli_bolle.id AND r.listino_id IS NOT NULL AND r.prezzo_listino IS NOT NULL AND ABS(r.prezzo - r.prezzo_listino) > 0.005) AS n_prezzo_mod`;
 
 export async function listBolle(q: string, stato = 'sospeso', settore?: string, limit = 50): Promise<BollaSummary[]> {
   const cond: string[] = ['deleted_at IS NULL'];
@@ -515,6 +521,24 @@ export async function listBolle(q: string, stato = 'sospeso', settore?: string, 
     : 'anno ASC, progressivo ASC, id ASC';
   const [rows] = await pool.execute(
     `SELECT ${SUMMARY_COLS} FROM maioli_bolle WHERE ${cond.join(' AND ')} ORDER BY ${order} LIMIT ${lim(limit)}`,
+    params,
+  );
+  return rows as BollaSummary[];
+}
+
+// Segnalazioni: bolle (non cestinate) con prezzi mancanti o cambiati dal listino.
+export async function listSegnalazioni(q: string, limit = 200): Promise<BollaSummary[]> {
+  const cond: string[] = ['deleted_at IS NULL'];
+  const params: string[] = [];
+  if (q && q.trim()) {
+    const like = `%${q.trim()}%`;
+    cond.push('(cliente LIKE ? OR riferimento LIKE ? OR numero LIKE ?)');
+    params.push(like, like, like);
+  }
+  const [rows] = await pool.execute(
+    `SELECT ${SUMMARY_COLS} FROM maioli_bolle WHERE ${cond.join(' AND ')}
+     HAVING n_senza_prezzo > 0 OR n_prezzo_mod > 0
+     ORDER BY n_senza_prezzo DESC, n_prezzo_mod DESC, updated_at DESC LIMIT ${lim(limit)}`,
     params,
   );
   return rows as BollaSummary[];
@@ -584,9 +608,10 @@ async function writeRighe(conn: PoolConnection, bollaId: number, b: BollaInput):
   let ord = 0;
   for (const m of mats) {
     await conn.execute(
-      `INSERT INTO maioli_bolle_righe (bolla_id, ordine, qta, codice, marca, descrizione, prezzo, listino_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [bollaId, ord++, m.qta || 0, m.codice ?? '', m.marca ?? '', m.descrizione ?? '', m.prezzo || 0, m.listino_id ?? null],
+      `INSERT INTO maioli_bolle_righe (bolla_id, ordine, qta, codice, marca, descrizione, prezzo, prezzo_listino, listino_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [bollaId, ord++, m.qta || 0, m.codice ?? '', m.marca ?? '', m.descrizione ?? '', m.prezzo || 0,
+        m.prezzo_listino != null ? m.prezzo_listino : null, m.listino_id ?? null],
     );
   }
   const mano = (b.manodopera ?? []).filter(x => x.operaio && (x.ore || x.tariffa));

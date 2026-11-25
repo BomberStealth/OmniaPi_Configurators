@@ -6,6 +6,7 @@ export interface MaterialeRiga {
   marca?: string;
   descrizione: string;
   prezzo: string;
+  prezzo_listino?: number | null; // prezzo dal listino quando aggiunto (per Segnalazioni/🟡)
   listino_id?: number | null;
 }
 
@@ -55,7 +56,7 @@ export function oggiISO(): string {
 }
 
 export function rigaVuota(): MaterialeRiga {
-  return { qta: '', codice: '', marca: '', descrizione: '', prezzo: '', listino_id: null };
+  return { qta: '', codice: '', marca: '', descrizione: '', prezzo: '', prezzo_listino: null, listino_id: null };
 }
 
 export function datiVuoti(): RapportoData {
