@@ -513,7 +513,9 @@
   .maioli-split.tab-compila .maioli-preview-col { display: none; }
   .maioli-split.tab-anteprima .maioli-form-col { display: none; }
   /* Salva e Stampa sempre raggiungibile in fondo */
-  .maioli-bottombar { position: sticky; bottom: 0; z-index: 5; padding: 10px 0 12px; margin-top: 8px; background: linear-gradient(to top, var(--bg) 72%, rgba(241,244,251,0)); }
+  /* z-index 25 > 20 del lock-overlay: altrimenti su mobile il "mantello" copre
+     la barra e il tap su Stampa cade sul mantello (→ "Vuoi modificare?") */
+  .maioli-bottombar { position: sticky; bottom: 0; z-index: 25; padding: 10px 0 12px; margin-top: 8px; background: linear-gradient(to top, var(--bg) 72%, rgba(241,244,251,0)); }
   .maioli-bottom-save, .maioli-bottom-print { flex: 1; min-width: 0; padding: 13px; font-size: 14px; }
   .maioli-tr, .maioli-th { grid-template-columns: 70px 1fr 90px 110px; }
   .maioli-tr .maioli-ind, .maioli-th span:nth-child(3), .maioli-tr span:nth-child(4) { display: none; }

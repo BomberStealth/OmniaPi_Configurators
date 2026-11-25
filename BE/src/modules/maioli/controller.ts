@@ -69,14 +69,14 @@ export async function bolleUpdate(req: Request, res: Response): Promise<void> {
 }
 export async function bolleDelete(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
-  try { const ok = await s.deleteBolla(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), 'cestina', 'bolla', id); res.status(204).end(); } catch { err(res); }
+  try { const ok = await s.deleteBolla(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), 'sposta', 'bolla', id, 'Nel cestino'); res.status(204).end(); } catch { err(res); }
 }
 export async function bolleCancellate(req: Request, res: Response): Promise<void> {
   try { res.json(await s.listBolleCancellate(String(req.query.q ?? ''))); } catch { err(res); }
 }
 export async function bolleRestore(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
-  try { const ok = await s.restoreBolla(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), 'ripristina', 'bolla', id); res.json({ ok: true }); } catch { err(res); }
+  try { const ok = await s.restoreBolla(id); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), 'sposta', 'bolla', id, 'Dal cestino → In sospeso'); res.json({ ok: true }); } catch { err(res); }
 }
 export async function bollePurge(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
@@ -85,7 +85,11 @@ export async function bollePurge(req: Request, res: Response): Promise<void> {
 export async function bolleConsegna(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
   const consegnata = req.body?.consegnata !== false;
-  try { const ok = await s.setConsegnata(id, consegnata); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; } await s.logAudit(who(req), consegnata ? 'da fatturare' : 'rimetti in sospeso', 'bolla', id); res.json({ ok: true }); } catch { err(res); }
+  try {
+    const ok = await s.setConsegnata(id, consegnata); if (!ok) { res.status(404).json({ message: 'Non trovato' }); return; }
+    await s.logAudit(who(req), 'sposta', 'bolla', id, consegnata ? 'Da «In sospeso» → «Da fatturare»' : 'Da «Da fatturare» → «In sospeso»');
+    res.json({ ok: true });
+  } catch { err(res); }
 }
 
 // ── Lock bolla (modifica contemporanea) ──

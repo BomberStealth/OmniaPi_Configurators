@@ -8,7 +8,7 @@ const ENT_IC: Record<string, string> = {
 };
 // colore/accento per azione
 const azCls = (a: string) =>
-  /elimina|cestina/.test(a) ? 'del' : /crea/.test(a) ? 'new' : /ripristina|sospeso|fatturare/.test(a) ? 'move' : 'edit';
+  /elimina|cestina/.test(a) ? 'del' : /crea/.test(a) ? 'new' : /sposta|ripristina|sospeso|fatturare/.test(a) ? 'move' : 'edit';
 
 const fmtTs = (s: string) => {
   const d = new Date(String(s).replace(' ', 'T'));
