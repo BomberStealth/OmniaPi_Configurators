@@ -106,7 +106,7 @@ foglio + ricerca). **Firma in finestra** grande (no segni per sbaglio). Bolla
 ## Versione Maioli
 Ad OGNI modifica Maioli che verrà deployata, incrementare `MAIOLI_VERSION` in
 `FE/src/pages/maioli/version.ts` (chip in alto nell'header). Patch per
-correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.28.0**.
+correzioni/piccole aggiunte, minor per funzioni nuove. Attuale: **v1.28.1**.
 Quando una modifica FE richiede nuove funzioni BE, alzare anche `BE_VERSION`
 (BE) e `REQUIRED_BE_VERSION` (FE) allo stesso numero. Attuale BE: **37**.
 
@@ -131,11 +131,16 @@ nell'enforcement di `bolleUpdate`.
 Controllo a livello di SINGOLA RIGA (Segnalazioni è a livello di bolla). Tab 🧰
 "Articoli". Lista di tutte le righe materiale (da bolle non cestinate) che sono
 **create a mano** (`listino_id IS NULL`) **oppure senza prezzo** (`prezzo=0`).
-Clic su una riga → editor inline **"Trasformare in:"** = un `MaterialeRow` (stessa
-ricerca listino + prezzo) su una bozza; **Salva** scrive sulla riga e **ricalcola
-il totale della bolla** (`updateRiga` → `recomputeBollaTotale`, stessa logica di
-`calcola` FE, legge il costo chiamata dalle impostazioni). Agganciando un articolo
-di listino la riga esce dalla lista. Rotte admin `GET /articoli` + `PUT /righe/:id`.
+Clic su una riga → editor inline **"Trasformare in:"** (`ArticoloEditor`, v1.28.1):
+ricerca listino col testo attuale come **placeholder** (non da cancellare), campi
+marca/codice/descrizione/qtà/prezzo, e 3 bottoni **Salva · Annulla · 📥 Salva a
+listino**. **Salva** scrive sulla riga e **ricalcola il totale della bolla**
+(`updateRiga` → `recomputeBollaTotale`). **Salva a listino** (solo se c'è la marca)
+crea l'articolo nel listino (`saveListino`) e aggancia la riga al nuovo id.
+La lista si ricarica dopo il salva + bottone 🔄 Ricarica (una riga agganciata a un
+listino SENZA prezzo resta in lista perché è ancora senza prezzo). Rotte admin
+`GET /articoli` + `PUT /righe/:id`. NB: `.maioli-art-item` NON ha `overflow:hidden`
+(altrimenti taglia la tendina).
 
 ## 🚩 Segnalazioni prezzi (v1.26.0 — la vedono tutti)
 Rileva problemi di prezzo nelle bolle, SENZA bloccare nulla:
