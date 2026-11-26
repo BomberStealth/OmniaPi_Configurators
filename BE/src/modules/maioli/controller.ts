@@ -125,6 +125,19 @@ export async function bolleConsegna(req: Request, res: Response): Promise<void> 
   } catch { err(res); }
 }
 
+// ── Gestione articoli registrati (admin): righe a mano o senza prezzo ──
+export async function articoliList(req: Request, res: Response): Promise<void> {
+  try { res.json(await s.listArticoliDaSistemare(String(req.query.q ?? ''))); } catch { err(res); }
+}
+export async function rigaUpdate(req: Request, res: Response): Promise<void> {
+  const id = parseId(req.params.id); if (id === null) { res.status(400).json({ message: 'ID non valido' }); return; }
+  try {
+    const ok = await s.updateRiga(id, req.body || {}); if (!ok) { res.status(404).json({ message: 'Riga non trovata' }); return; }
+    await s.logAudit(who(req), 'modifica', 'articolo', id, req.body?.descrizione);
+    res.json({ ok: true });
+  } catch { err(res); }
+}
+
 // ── Segnalazioni (prezzi mancanti / cambiati) ──
 export async function segnalazioniList(req: Request, res: Response): Promise<void> {
   try { res.json(await s.listSegnalazioni(String(req.query.q ?? ''))); } catch { err(res); }

@@ -3,4 +3,4 @@
 // aggiornare". INCREMENTARE quando si aggiungono rotte/funzioni di cui la FE
 // ha bisogno (così dopo un deploy della sola FE si capisce subito se manca
 // il deploy del BE).
-export const BE_VERSION = 36;
+export const BE_VERSION = 37;

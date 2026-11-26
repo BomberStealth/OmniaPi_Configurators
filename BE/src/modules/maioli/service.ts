@@ -657,6 +657,75 @@ async function writeRighe(conn: PoolConnection, bollaId: number, b: BollaInput):
   }
 }
 
+// ─────── Gestione articoli registrati (admin): righe a mano o senza prezzo ───────
+export interface ArticoloRiga {
+  id: number; bolla_id: number; numero: string | null; cliente: string; settore?: string;
+  data_intervento: string | null; qta: number; codice: string; marca: string | null;
+  descrizione: string; prezzo: number; prezzo_listino: number | null; listino_id: number | null;
+}
+
+export async function listArticoliDaSistemare(q: string, limit = 300): Promise<ArticoloRiga[]> {
+  const cond: string[] = [
+    'b.deleted_at IS NULL',
+    "(TRIM(r.descrizione) <> '' OR TRIM(r.codice) <> '')",       // riga con contenuto
+    '(r.listino_id IS NULL OR r.prezzo IS NULL OR r.prezzo = 0)', // a mano OPPURE senza prezzo
+  ];
+  const params: string[] = [];
+  if (q && q.trim()) {
+    const like = `%${q.trim()}%`;
+    cond.push('(b.cliente LIKE ? OR b.numero LIKE ? OR r.descrizione LIKE ? OR r.codice LIKE ?)');
+    params.push(like, like, like, like);
+  }
+  const [rows] = await pool.execute(
+    `SELECT r.id, r.bolla_id, r.qta, r.codice, r.marca, r.descrizione, r.prezzo, r.prezzo_listino, r.listino_id,
+            b.numero, b.cliente, b.settore, b.data_intervento
+     FROM maioli_bolle_righe r JOIN maioli_bolle b ON b.id = r.bolla_id
+     WHERE ${cond.join(' AND ')}
+     ORDER BY (r.prezzo IS NULL OR r.prezzo = 0) DESC, b.id DESC, r.ordine ASC LIMIT ${lim(limit)}`,
+    params,
+  );
+  return rows as ArticoloRiga[];
+}
+
+// ricalcola imponibile/totale della bolla dopo una modifica (stessa logica della FE)
+async function recomputeBollaTotale(conn: PoolConnection, bollaId: number): Promise<void> {
+  const [[b]] = (await conn.execute('SELECT iva, costo_chiamata FROM maioli_bolle WHERE id=?', [bollaId])) as [{ iva: number; costo_chiamata: number }[], unknown];
+  if (!b) return;
+  const [righe] = (await conn.execute('SELECT qta, codice, descrizione, prezzo FROM maioli_bolle_righe WHERE bolla_id=?', [bollaId])) as [{ qta: number; codice: string; descrizione: string; prezzo: number }[], unknown];
+  const [mano] = (await conn.execute('SELECT ore, tariffa FROM maioli_bolle_manodopera WHERE bolla_id=?', [bollaId])) as [{ ore: number; tariffa: number }[], unknown];
+  const imp = await getImpostazioni();
+  const chiamata = Number(b.costo_chiamata) ? imp.costoChiamata : 0;
+  const manod = chiamata + mano.reduce((s, m) => s + (Number(m.ore) || 0) * (Number(m.tariffa) || 0), 0);
+  const materiali = righe.reduce((s, r) => {
+    const q = Number(r.qta) || 0;
+    const content = !!((r.descrizione && r.descrizione.trim()) || (r.codice && r.codice.trim()) || Number(r.prezzo));
+    const qe = q > 0 ? q : (content ? 1 : 0);
+    return s + qe * (Number(r.prezzo) || 0);
+  }, 0);
+  const imponibile = manod + materiali;
+  const totale = imponibile * (1 + (Number(b.iva) || 0) / 100);
+  const r2 = (x: number) => Math.round(x * 100) / 100;
+  await conn.execute('UPDATE maioli_bolle SET imponibile=?, totale=? WHERE id=?', [r2(imponibile), r2(totale), bollaId]);
+}
+
+// aggiorna una singola riga (dalla gestione articoli) e ricalcola il totale della bolla
+export async function updateRiga(rigaId: number, p: Partial<RigaInput>): Promise<boolean> {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [rows] = (await conn.execute('SELECT bolla_id FROM maioli_bolle_righe WHERE id=? FOR UPDATE', [rigaId])) as [{ bolla_id: number }[], unknown];
+    if (!rows[0]) { await conn.rollback(); return false; }
+    await conn.execute(
+      'UPDATE maioli_bolle_righe SET qta=?, codice=?, marca=?, descrizione=?, prezzo=?, prezzo_listino=?, listino_id=? WHERE id=?',
+      [p.qta ?? 0, p.codice ?? '', p.marca ?? '', p.descrizione ?? '', p.prezzo ?? 0,
+        p.prezzo_listino != null ? p.prezzo_listino : null, p.listino_id ?? null, rigaId],
+    );
+    await recomputeBollaTotale(conn, rows[0].bolla_id);
+    await conn.commit();
+    return true;
+  } catch (e) { await conn.rollback(); throw e; } finally { conn.release(); }
+}
+
 export async function createBolla(b: BollaInput, settore = 'entrambi'): Promise<{ id: number; numero: string }> {
   const conn = await pool.getConnection();
   try {

@@ -286,6 +286,25 @@ export async function listSegnalazioni(q = ''): Promise<BollaSummary[]> {
   return jfetch(`${API}/segnalazioni?q=${encodeURIComponent(q)}`);
 }
 
+// ── Gestione articoli registrati (admin): righe a mano o senza prezzo ──
+export interface ArticoloRiga {
+  id: number; bolla_id: number; numero: string | null; cliente: string; settore?: string;
+  data_intervento: string | null; qta: number; codice: string; marca: string | null;
+  descrizione: string; prezzo: number; prezzo_listino: number | null; listino_id: number | null;
+}
+export async function listArticoli(q = ''): Promise<ArticoloRiga[]> {
+  await requireApi();
+  return jfetch(`${API}/articoli?q=${encodeURIComponent(q)}`);
+}
+export interface RigaPatch {
+  qta?: number; codice?: string; marca?: string | null; descrizione?: string;
+  prezzo?: number; prezzo_listino?: number | null; listino_id?: number | null;
+}
+export async function updateRiga(id: number, patch: RigaPatch): Promise<void> {
+  await requireApi();
+  await jfetch(`${API}/righe/${id}`, { method: 'PUT', body: JSON.stringify(patch) });
+}
+
 export async function saveBolla(d: RapportoData): Promise<{ id: number; numero: string }> {
   await requireApi();
   const payload = toPayload(d);

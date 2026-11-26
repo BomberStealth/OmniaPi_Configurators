@@ -7,6 +7,7 @@ import Listino from './views/Listino';
 import Account from './views/Account';
 import Impostazioni from './views/Impostazioni';
 import AuditLog from './views/AuditLog';
+import GestioneArticoli from './views/GestioneArticoli';
 import { can, isAdmin, getSettore, refreshMe } from '../../auth';
 import { LOGO } from './azienda';
 import { MAIOLI_VERSION } from './version';
@@ -16,7 +17,7 @@ import { initStore, storeMode, resetStore, getBolla, beVersionStatus, lockBolla,
 import { ConfirmProvider, useConfirm } from './components/ConfirmDialog';
 import './MaioliPage.css';
 
-type Tab = 'nuova' | 'archivio' | 'segnalazioni' | 'clienti' | 'listino' | 'account' | 'impostazioni' | 'audit';
+type Tab = 'nuova' | 'archivio' | 'segnalazioni' | 'clienti' | 'listino' | 'articoli' | 'account' | 'impostazioni' | 'audit';
 
 const TABS: { id: Tab; label: string; icon: string; cap?: string; adminOnly?: boolean }[] = [
   { id: 'nuova', label: 'Nuova Bolla', icon: '📝', cap: 'nuova' },
@@ -24,6 +25,7 @@ const TABS: { id: Tab; label: string; icon: string; cap?: string; adminOnly?: bo
   { id: 'segnalazioni', label: 'Segnalazioni', icon: '🚩' },
   { id: 'clienti', label: 'Clienti', icon: '👥', cap: 'clienti' },
   { id: 'listino', label: 'Listino prezzi', icon: '🏷', cap: 'listino' },
+  { id: 'articoli', label: 'Articoli', icon: '🧰', adminOnly: true },
   { id: 'account', label: 'Account', icon: '👤', adminOnly: true },
   { id: 'impostazioni', label: 'Impostazioni', icon: '⚙️', adminOnly: true },
   { id: 'audit', label: 'Storico azioni', icon: '📋', adminOnly: true },
@@ -247,6 +249,7 @@ function MaioliInner() {
             )}
             {tab === 'clienti' && can('clienti') && <Clienti />}
             {tab === 'listino' && can('listino') && <Listino />}
+            {tab === 'articoli' && isAdmin() && <GestioneArticoli />}
             {tab === 'account' && isAdmin() && <Account />}
             {tab === 'impostazioni' && isAdmin() && <Impostazioni />}
             {tab === 'audit' && isAdmin() && <AuditLog />}

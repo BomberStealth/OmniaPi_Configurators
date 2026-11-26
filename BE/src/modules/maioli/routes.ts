@@ -65,6 +65,10 @@ router.delete('/operai/:id', requireAdminRole, c.operaiDelete as never);
 router.get('/impostazioni', c.impostazioniGet as never);
 router.put('/impostazioni', requireAdminRole, c.impostazioniUpdate as never);
 
+// Gestione articoli registrati (righe a mano / senza prezzo): SOLO admin.
+router.get('/articoli', requireAdminRole, c.articoliList as never);
+router.put('/righe/:id', requireAdminRole, c.rigaUpdate as never);
+
 // Audit log (storico azioni): SOLO admin.
 router.get('/audit', requireAdminRole, c.auditList as never);
 
