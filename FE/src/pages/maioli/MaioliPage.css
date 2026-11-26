@@ -443,6 +443,7 @@
 .maioli-art-f input, .maioli-art-f select { padding: 9px 10px; border: 1px solid var(--border); border-radius: var(--radius-xs); font-size: 14px; background: #fff; }
 .maioli-art-edit-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .maioli-art-tolistino:not(:disabled) { color: #15803d; border-color: rgba(22,163,74,0.4); }
+.maioli-art-flash { background: rgba(22,163,74,0.12); color: #15803d; border: 1px solid rgba(22,163,74,0.3); border-radius: var(--radius-xs); padding: 9px 12px; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
 
 /* iconcina problemi sulle card dello Storico */
 .maioli-prob { font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 99px; margin-right: 8px; white-space: nowrap; }

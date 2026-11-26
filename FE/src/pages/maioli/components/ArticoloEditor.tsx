@@ -9,7 +9,7 @@ import { useConfirm } from './ConfirmDialog';
 
 const MARCHE = Object.keys(MARCA_SIGLE);
 
-interface Props { a: ArticoloRiga; onSaved: () => void; onCancel: () => void; }
+interface Props { a: ArticoloRiga; onSaved: (sistemato: boolean) => void; onCancel: () => void; }
 
 export default function ArticoloEditor({ a, onSaved, onCancel }: Props) {
   const confirm = useConfirm();
@@ -51,10 +51,13 @@ export default function ArticoloEditor({ a, onSaved, onCancel }: Props) {
     prezzo: n2(draft.prezzo), prezzo_listino: draft.prezzo_listino ?? null, listino_id: draft.listino_id ?? null,
   });
 
+  // "sistemato" = esce dalla lista: ha un prezzo E è agganciato al listino
   const salva = async () => {
     setSaving(true);
-    try { await updateRiga(a.id, patchFromDraft()); onSaved(); }
-    catch { alert('Salvataggio non riuscito.'); } finally { setSaving(false); }
+    try {
+      await updateRiga(a.id, patchFromDraft());
+      onSaved(n2(draft.prezzo) > 0 && draft.listino_id != null);
+    } catch { alert('Salvataggio non riuscito.'); } finally { setSaving(false); }
   };
 
   // "Salva a listino": serve la marca (altrimenti non si saprebbe dove metterlo)
@@ -68,7 +71,7 @@ export default function ArticoloEditor({ a, onSaved, onCancel }: Props) {
       const sett = a.settore === 'elettrico' || a.settore === 'idraulico' ? a.settore : 'entrambi';
       const created = await saveListino({ marca: draft.marca ?? 'Generico', codice: draft.codice, descrizione: draft.descrizione, prezzo: n2(draft.prezzo), settore: sett });
       await updateRiga(a.id, { ...patchFromDraft(), listino_id: created.id, prezzo_listino: n2(draft.prezzo) });
-      onSaved();
+      onSaved(n2(draft.prezzo) > 0);
     } catch { alert('Operazione non riuscita.'); } finally { setSaving(false); }
   };
 

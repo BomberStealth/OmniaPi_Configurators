@@ -199,6 +199,7 @@ async function requireApi(): Promise<void> {
 async function jfetch(url: string, opts?: RequestInit) {
   const res = await fetch(url, {
     ...opts,
+    cache: 'no-store', // sempre dati freschi (niente risposte in cache del browser)
     headers: { 'Content-Type': 'application/json', ...authHeaders(), ...(opts?.headers ?? {}) },
   });
   if (res.status === 401) { onAuthExpired(); throw new Error('HTTP 401'); }

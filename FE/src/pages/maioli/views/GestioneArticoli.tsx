@@ -11,6 +11,7 @@ export default function GestioneArticoli() {
   const [rows, setRows] = useState<ArticoloRiga[]>([]);
   const [loading, setLoading] = useState(true);
   const [editId, setEditId] = useState<number | null>(null);
+  const [flash, setFlash] = useState('');
 
   const load = useCallback(async (query: string) => {
     setLoading(true);
@@ -18,7 +19,14 @@ export default function GestioneArticoli() {
   }, []);
   useEffect(() => { const t = setTimeout(() => load(q), 200); return () => clearTimeout(t); }, [q, load]);
 
-  const onSaved = () => { setEditId(null); load(q); };
+  const onSaved = (sistemato: boolean) => {
+    setEditId(null);
+    setFlash(sistemato
+      ? '✓ Articolo sistemato: ha prezzo ed è a listino, tolto dalla lista.'
+      : '✓ Salvato — ancora senza prezzo: resta in lista (in alto).');
+    setTimeout(() => setFlash(''), 5000);
+    load(q);
+  };
 
   return (
     <div className="card maioli-card">
@@ -29,6 +37,7 @@ export default function GestioneArticoli() {
         </div>
       </div>
       <input className="maioli-search maioli-search-full" value={q} onChange={e => setQ(e.target.value)} placeholder="🔎 Cerca per cliente, articolo o codice…" />
+      {flash && <div className="maioli-art-flash">{flash}</div>}
       <div className="maioli-listino-hint">
         Articoli <b>creati a mano</b> (non scelti dal listino) o <b>senza prezzo</b>, presi da tutte le bolle.
         Tocca un articolo → <b>Trasformare in:</b> aggancialo al listino o sistema il prezzo. Il salvataggio aggiorna
